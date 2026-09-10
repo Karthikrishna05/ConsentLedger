@@ -1,0 +1,38 @@
+# Environments (never commit)
+.venv/
+.venv-annotation/
+env/
+venv/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets
+.env
+
+# Model artifacts (large)
+artifacts_out/
+*.ckpt
+wandb/
+
+# Datasets & derived data — NEVER commit.
+# Reasons: OPP-115/MAPP/APP-350 are CC BY-NC (no redistribution); large; and fully regenerable from
+# the download + our seeded scripts. Recreate empty dirs after clone with `python scaffold.py`.
+# (Comments must be on their OWN line — inline "# ..." after a pattern is treated as part of the pattern.)
+data/external/
+data/aa/raw/
+data/ner_bio/
+
+# COMMITTED (team's own work, needed for collaboration in this private repo, tracked by default):
+#   data/aa/annotated/   data/aa/consent_artefacts/   data/splits/
+
+# Node (Phase 4)
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db

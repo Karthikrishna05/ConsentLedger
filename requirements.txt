@@ -1,0 +1,53 @@
+# ConsentLedger — core environment (Python 3.11, pip venv)
+# ---------------------------------------------------------------------------
+# torch is NOT listed here — it must come from the CUDA index, see SETUP.md:
+#   pip install torch==2.3.1 --index-url https://download.pytorch.org/whl/cu121
+# Install THIS file AFTER torch:
+#   pip install -r requirements.txt
+# ---------------------------------------------------------------------------
+# Pins chosen as one coherent, conflict-free set. The load-bearing pin is
+# numpy<2.0 — everything below is compatible with it. Do not bump numpy to 2.x
+# without re-testing torch/spacy/bert-score/pandas together.
+
+# --- numerical core (pin first; everything else follows it) ---
+numpy==1.26.4
+scipy==1.13.1
+pandas==2.2.3
+scikit-learn==1.5.2
+
+# --- NLP / transformers stack ---
+transformers==4.46.3          # 4.46 renamed evaluation_strategy -> eval_strategy
+datasets==2.20.0
+accelerate==0.34.2
+evaluate==0.4.3
+seqeval==1.2.2                # entity-level NER metrics
+rouge-score==0.1.2            # summarizer ROUGE
+bert-score==0.3.13            # summarizer BERTScore (pin scorer model+version at runtime)
+sentencepiece==0.2.0          # REQUIRED for T5 tokenizer
+protobuf==4.25.5              # sentencepiece/T5 dep; 4.x avoids 5.x breakage
+spacy==3.7.6                  # noun-chunk trimming / auxiliary NLP
+# en_core_web_sm is installed separately (see SETUP.md): python -m spacy download en_core_web_sm
+
+# --- statistics for the user study (Phase 6) ---
+statsmodels==0.14.2           # Holm correction, effect sizes (scipy covers MWU/Kruskal/bootstrap)
+
+# --- blockchain (Python side; web3 v6 syntax per plan) ---
+web3==6.20.3
+
+# --- data acquisition / corpus building ---
+requests==2.32.3
+beautifulsoup4==4.12.3
+lxml==5.3.0
+pdfplumber==0.11.4            # PDF corpus docs (Perfios, Digio, NADL, ICICI HFC)
+openpyxl==3.1.5               # read the gold-standard corpus .xlsx
+
+# --- config / plumbing ---
+pyyaml==6.0.2
+python-dotenv==1.0.1
+matplotlib==3.9.2
+tqdm==4.66.5
+
+# --- dev tooling ---
+ruff==0.6.9
+black==24.10.0
+pytest==8.3.3

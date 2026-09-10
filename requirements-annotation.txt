@@ -1,0 +1,16 @@
+# ConsentLedger — annotation tool (Label Studio), INSTALL IN A SEPARATE VENV.
+# ---------------------------------------------------------------------------
+# WHY separate: Label Studio pulls a large Django/pydantic/uvicorn stack that
+# frequently pins versions conflicting with the numpy/torch/transformers env.
+# Keeping it out of .venv is what prevents the dependency issues. It is only
+# needed later, for annotating the AA documents — NOT for the loader/mapping work.
+#
+# Install (do NOT reuse .venv):
+#   py -3.11 -m venv .venv-annotation
+#   .venv-annotation\Scripts\activate
+#   pip install -r requirements-annotation.txt
+#
+# Most reliable alternative (no Python deps at all): Docker
+#   docker run -it -p 8080:8080 -v %cd%/data/annotated:/label-studio/data heartexlabs/label-studio:latest
+# ---------------------------------------------------------------------------
+label-studio

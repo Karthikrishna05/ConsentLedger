@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "consentledger"
+version = "0.0.1"
+description = "Consent-aware NLP + blockchain reference system for the RBI Account Aggregator framework."
+requires-python = ">=3.11"
+# Runtime dependencies are pinned in requirements.txt (installed separately, torch from the CUDA index).
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.black]
+line-length = 100
