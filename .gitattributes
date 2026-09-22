@@ -1,0 +1,13 @@
+# Normalize line endings: store LF in the repo and check out LF everywhere.
+# Silences the "LF will be replaced by CRLF" warnings and avoids cross-OS whole-file diffs.
+* text=auto eol=lf
+
+# Binary files — never touch their bytes / line endings
+*.xlsx binary
+*.zip  binary
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gz   binary
+*.ckpt binary

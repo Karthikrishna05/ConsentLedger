@@ -66,11 +66,11 @@ def bio_for_segment(text: str, spans: list[dict]) -> list[tuple[str, str]]:
     return [(t[0], tag) for t, tag in zip(toks, tags)]
 
 
-def load_opp115_segments() -> dict[str, dict[int, dict]]:
+def load_opp115_segments(spans_jsonl: Path = SPANS_JSONL) -> dict[str, dict[int, dict]]:
     """policy_id -> {segment_id -> {"text": str, "spans": [span, ...]}}, ALL segments incl. negatives."""
     spans_by_key: dict[tuple[str, int], list[dict]] = defaultdict(list)
     policies: set[str] = set()
-    with SPANS_JSONL.open(encoding="utf-8") as fh:
+    with spans_jsonl.open(encoding="utf-8") as fh:
         for line in fh:
             r = json.loads(line)
             spans_by_key[(r["policy_id"], r["segment_id"])].append(r)
@@ -134,12 +134,14 @@ def main() -> None:
     ap.add_argument("--dev-frac", type=float, default=0.1)
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--out-dir", type=Path, default=OUT_DIR)
+    ap.add_argument("--spans", type=Path, default=SPANS_JSONL,
+                    help="span records JSONL (use opp115_spans_trimmed.jsonl for the trimmed variant)")
     args = ap.parse_args()
 
-    if not SPANS_JSONL.is_file():
-        raise SystemExit(f"Missing {SPANS_JSONL} — run consentledger.data.load_opp115 first.")
+    if not args.spans.is_file():
+        raise SystemExit(f"Missing {args.spans} — run load_opp115 (or trim_spans) first.")
 
-    data = load_opp115_segments()
+    data = load_opp115_segments(args.spans)
     policies = sorted(data)
     rng = random.Random(args.seed)
     rng.shuffle(policies)

@@ -1,0 +1,30 @@
+doc_id,rank,organization,role,doc_type,tier,format,url
+01_setu_aa_terms,1,Setu AA (Agya Technologies),AA,Terms & Conditions,A,html,https://setu-aa.com/terms
+02_digio_terms,2,Digio (Live Digital),AA_FIU,Terms & Conditions PDF (15 pages),A,pdf,https://www.digio.link/assets/Terms_and_Conditions.pdf
+03_oms_aa_terms,3,OMS AA (OMS Fintech),AA,Terms & Conditions,A,html,https://www.omsaa.com/terms
+04_pb_fintech_aa_terms,4,PB Fintech AA (Policybazaar parent),AA,Terms & Conditions,A,html,https://www.pbfintechaa.com/account-aggregator/term-and-condition
+05_onemoney_terms,5,OneMoney (FinSec AA),AA,Terms & Conditions,A,html,https://www.onemoney.in/onemoney/termsconditions/
+06_setu_aa_privacy,6,Setu AA,AA,Privacy Policy,A,html,https://setu-aa.com/privacy-policy
+07_finvu_tos,7,Finvu (Cookiejar Technologies),AA,Terms of Service,A,html,https://finvu.in/terms
+08_pennydrop_terms,8,PennyDrop (Shankar Fininvest),FIU,Terms & Conditions,A,html,https://pennydrop.in/terms-%26-conditions/
+09_saafe_terms,9,Saafe (Dashboard Account Aggregation Services),AA,Terms & Conditions,A,html,https://saafe.in/terms.html
+10_perfios_terms,10,Perfios/Anumati (Perfios AA),AA_FIU,FIU Terms of Use PDF (8 pages),A,pdf,https://fiu.perfios.com/ssp/aa_terms_of_use.pdf
+11_protean_suraks_charter,11,Protean SurakshAA (Protean eGov Technologies),AA,Citizens Charter,A,html,https://proteansurakshaa.in/citizens-charter
+12_scoremeaa_terms,12,ScoremeAA (Scoreme Account Aggregation Solutions),AA,Terms & Conditions,A,html,https://www.scoremeaa.com/term-and-condition.html
+13_camsfinserv_privacy,13,CAMSfinserv (CAMS Financial Information Services),AA,Privacy Policy,A,html,https://www.camsfinserv.com/PrivacyPolicy
+14_nadl_charter,14,"NADL (NeSL Asset Data Ltd, Govt of India)",AA,Citizens Charter PDF (9 pages),A,pdf,https://www.nadl.co.in/assets/img/pdfDocs/Citizen_s_charter_NADL.pdf
+15_finvu_charter,15,Finvu (Cookiejar Technologies),AA,Citizens Charter,A,html,https://finvu.in/charter/index.html
+16_oms_aa_privacy,16,OMS AA,AA,Privacy Policy,B,html,https://www.omsaa.com/privacy-policy
+17_pb_fintech_aa_privacy,17,PB Fintech AA,AA,Privacy Policy,B,html,https://www.pbfintechaa.com/account-aggregator/privacy-policy
+18_finvu_privacy,18,Finvu (Cookiejar Technologies),AA,Privacy Policy (9 sections),B,html,https://finvu.in/privacy
+19_saafe_privacy,19,Saafe (Dashboard AA Services),AA,Privacy Policy (12 sections),B,html,https://saafe.in/privacy.html
+20_scoremeaa_charter,20,ScoremeAA,AA,Citizens Charter,B,html,https://www.scoremeaa.com/citizen-policy.html
+21_nadl_terms,21,NADL (NeSL Asset Data Ltd),AA,Customer Terms & Conditions PDF (5 pages),B,pdf,https://www.nadl.co.in/assets/img/pdfDocs/9g_NADL_Customer_Terms_and_Conditions.pdf
+22_setu_aa_charter,22,Setu AA,AA,Citizens Charter,B,html,https://setu-aa.com/citizen-charter
+23_upmint_aa_tos,23,Upmint AA (RBI CoR Oct 2025),AA,Terms of Service,B,html,https://www.upmintaa.com/terms
+24_credbuddha_terms,24,CredBuddha,FIU,Terms & Conditions,B,html,https://www.credbuddha.com/terms-and-conditions
+25_the_financiali_privacy,25,"The Financialist (RBI-licensed FIU, dated May 2026)",FIU,Privacy Policy,B,html,https://thefinancialist.co/privacy-policy
+26_zerodha_tos,26,Zerodha,FIU,Account Aggregator Terms of Service,C,html,https://zerodha.com/tos/account-aggregator/
+27_bajaj_finance_consent_form,27,Bajaj Finance Ltd (NBFC),FIU,AA Consent & Confirmation Form,C,html,https://www.bajajfinserv.in/tnc-consent-and-confirmation1
+28_indifi_capital_privacy,28,Indifi Capital (RBI-registered NBFC),FIU,Privacy Policy,C,html,https://indificapital.com/privacy-policy
+29_icici_home_fin_terms,29,ICICI Home Finance Ltd,FIU,Terms & Conditions PDF (7 pages),C,pdf,https://www.icicihfc.com/all-pages-pdfs/terms-and-conditions-pdfs/other-terms-and-ccnditions/terms-and-conditions-17-11-25.pdf

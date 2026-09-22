@@ -80,12 +80,28 @@ practice help?*
 [done] 8. To CoNLL      bio_tagging.py DONE: OPP-115 → word-level BIO CoNLL (shared across backbones;
                         subword alignment at train time — D18). 103 train / 12 dev policies; train
                         entities DATA_TYPE 2,950 / PURPOSE 2,696 / THIRD_PARTY 1,130. → data/ner_bio/.
-[now]  9. NER training  ner/dataset.py + ner/train.py + ner/evaluate.py: fine-tune BERT-base /
-                        Legal-BERT / InLegalBERT on data/ner_bio (E1), early stopping on dev, seqeval
-                        entity-level metrics, ≥3 seeds + bootstrap CIs (D5).
-[later] 10. AA corpus   annotate 15 adaptation + 25 gold-test AA docs (D17) → E2 + final evaluation.
-[later] 11. Rest        summarizer + faithfulness, smart contract, end-to-end pipeline, user study, paper.
-[later] 9. Summarizer + faithfulness, smart contract, end-to-end pipeline, user study, paper.
+[~]    9. NER training  Pipeline BUILT + smoke-tested: ner/dataset.py + train.py + evaluate.py.
+                        Smoke (BERT-base, 600 samples, 5 ep) → F1 rises 0.0→0.034, loss 0.80→0.63,
+                        i.e. learns correctly (no alignment/metric bug). NEXT: full E1 run —
+                        3 backbones × full OPP-115, early stopping on dev, seqeval entity metrics
+                        (OPP-115 dev usable now; the AA-test transfer number waits on annotation). D5.
+[done] 10a. AA scrape   data/aa/manifest.csv (29 docs) + scrape_aa.py → 28/29 fetched into
+                        data/aa/raw/ (1 blocked, ~5 JS-shells; ~23 solid — surplus for deadline). D20.
+[done] 10b. AA clean    clean.py DONE → 23 usable docs in data/aa/raw/text/ (median ~3,100 words);
+                        5 JS-shells (0 chars) dropped; 0 errors. 23 ≈ 15 test + 8 adapt (D21). ✓
+[ready]10c. Annotate    Tooling ready: ls_import_export.py (import w/ doc_id) + kappa.py (entity-F1 +
+                        Cohen's κ) + ANNOTATION_GUIDELINE.md (v2, step-by-step). Protocol (D24):
+                        pilot 1 doc → κ≥0.6? → both annotate all 23 → adjudicate → gold →
+                        ~15 test + ~8 adaptation. THIS is the team's manual critical-path step.
+[now]  11. Train/eval   Trimmed spans VALIDATED: BERT-base seed42 OPP-115 dev entity-F1 0.38 /
+                        token-F1 0.53 (was 0.12) — D25. Full 3 backbones x 3 seeds sweep running;
+                        then collect.py -> results/ner/ablation.{csv,md} (mean +/- std).
+                        Pre-training code staged/committed. E1 (eval AA test) + E2 after annotation.
+                        AA test = headline number.
+[par]  A1. Annotation   Kit (guide v3 + ls_import_tasks.json) sent to P4 (D26). Team runs the
+                        calibration pilot -> full double-annotation -> adjudicate -> gold (D24).
+[later] 11. Rest        summarizer + faithfulness (P2 — see P2.md), smart contract (P3 — see P3.md),
+                        end-to-end pipeline, user study, paper.
 ```
 
 **One thing still open (a gate, not a blocker):** the three labels are only *candidate* transferable
@@ -95,3 +111,4 @@ until the loader loads the real files and the spot-check passes (D10). That's th
 
 *Companion docs: `OVERVIEW.md` (plain-language explanations), `DECISIONS.md` (why each choice),
 `NER_LABEL_MAPPING.md` (the translation table), `SETUP.md` (environment).*
+*Per-person implementation guides: `P2.md` (summarizer + faithfulness), `P3.md` (smart contract).*

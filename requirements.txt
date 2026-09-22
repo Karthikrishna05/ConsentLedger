@@ -42,6 +42,7 @@ pdfplumber==0.11.4            # PDF corpus docs (Perfios, Digio, NADL, ICICI HFC
 openpyxl==3.1.5               # read the gold-standard corpus .xlsx
 
 # --- config / plumbing ---
+jsonschema==4.26.0            # validate consent artefacts against the ReBIT schema (D27)
 pyyaml==6.0.2
 python-dotenv==1.0.1
 matplotlib==3.9.2

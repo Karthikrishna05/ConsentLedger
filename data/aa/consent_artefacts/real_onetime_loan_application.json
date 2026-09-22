@@ -1,0 +1,19 @@
+{
+  "_source": "https://sahamati.org.in/consent-artefact-one-time-consent-for-a-loan-application/",
+  "_note": "REAL published example (ReBIT-conformant). Verified 2026-09-14. Canonical nesting: DataConsumer/DataProvider/Customer/Purpose/FIDataRange/DataLife/Frequency live INSIDE ConsentDetail.",
+  "ConsentDetail": {
+    "consentStart": "2019-12-06T11:39:57.153Z",
+    "consentExpiry": "2019-12-26T11:39:57.153Z",
+    "consentMode": "STORE",
+    "fetchType": "ONETIME",
+    "consentTypes": ["PROFILE", "SUMMARY", "TRANSACTIONS"],
+    "DataConsumer": {"id": "DC1", "type": "FIU"},
+    "DataProvider": {"id": "DP1", "type": "FIP"},
+    "Customer": {"id": "customer_identifier@AA_identifier"},
+    "Purpose": {"code": "103", "text": "To process borrower's loan application"},
+    "FIDataRange": {"from": "2019-06-01T11:33:34.509Z", "to": "2019-12-01T11:33:34.509Z"},
+    "DataLife": {"unit": "DAY", "value": 15},
+    "Frequency": {"unit": "DAY", "value": 1},
+    "consentDetailDigitalSignature": "aTRddfhasTY54HAH"
+  }
+}

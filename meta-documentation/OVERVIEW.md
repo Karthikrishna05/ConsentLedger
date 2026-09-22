@@ -320,6 +320,71 @@ Applies to the **AA documents** only (OPP-115 is already annotated) and the **3 
 
 ---
 
+## Which models we train (and which we only use)
+
+**Trained — family 1: NER (token classification).** Same recipe, backbone swapped (D5); each fine-tuned
+twice — **E1** (OPP-115) and **E2** (OPP-115 + 15 AA docs):
+- `bert-base-uncased` — general-domain baseline
+- `nlpaueb/legal-bert-base-uncased` — legal-domain
+- `law-ai/InLegalBERT` — Indian legal-domain
+- *(optional, appendix)* `ProsusAI/finbert` — financial-domain baseline, **not** an NER model
+
+**Trained — family 2: Summarizer (seq2seq):**
+- `t5-small` (fast baseline) · `google/flan-t5-base` (instruction-tuned, the one to beat)
+- *(plan also lists `t5-base`; deadline mode keeps to the two above)*
+
+**Used but NOT trained:** BERTScore scorer (`roberta-large`, scoring only) · GPT-4o/LLM (generates
+summary pairs, external) · the **faithfulness metric** (reuses the trained NER model, no new model) ·
+blockchain (no ML).
+
+**Training runs:** NER = 3 backbones × 2 conditions (E1,E2) = 6 (× seeds); Summarizer = 2. Deadline mode
+uses 1 seed; full rigor ≥3 + bootstrap CIs.
+
+---
+
+## Is ~15 AA documents enough? (corpus size, honestly)
+
+The "15 adaptation + 25 test = 40" figure was from the phantom 2nd-audit doc and **exceeds our real
+corpus** (~29 in the manifest, ~23 genuinely usable after scraping). So the numbers were corrected (D21).
+
+**Judge by entities, not documents.** AA docs are long; on OPP-115 we saw ~59 entities/doc. So ~15 test
+docs ≈ **600–900 entity annotations** — not "15 data points." *Analogy: 15 filled worksheets, each with
+dozens of answers, not 15 answers.*
+
+- **For fine-tuning (E2 adaptation): 8–10 docs is enough** — E2 *adapts* an already-OPP-115-trained
+  model; few-shot adaptation is built for small in-domain data (it's the experiment's variable, not a flaw).
+- **For benchmarking (test): ~15 docs is adequate but noisy** — enough entities for entity-level F1, but
+  few *documents* means wide confidence intervals (esp. THIRD_PARTY). Fix with honesty: report bootstrap
+  CIs + per-label support + a stated small-corpus limitation. Fine for the workshop/college target; not
+  for tight-CI top-tier claims.
+- **Whole-system benchmark** needs no more annotation: summarizer = ~5–10 human summaries; faithfulness
+  reuses the NER model; contract = gas/behaviour.
+
+**Plan:** annotate all ~23 usable docs (feasible: ~30–45 min/doc, 4 people, ~1 week) → ~15 gold test +
+~8 adaptation. If time is tight, do the **test set first** (E1 needs only a test set; E2 is the bonus).
+
+---
+
+## If κ > 0.6, why still adjudicate? (a common confusion)
+
+κ > 0.6 means the two annotators **agree a lot**, not that their files are **identical** — even at κ 0.6–0.8
+there are still spans where P1 and P4 chose differently. So after annotating you have **two** versions of
+each doc, but the test set needs **one** answer key to score the model against. **Adjudication** = resolve
+the leftover disagreements together → produce that single reconciled **gold**.
+
+- **κ (the gate):** *are we reliable enough to proceed?* (> 0.6 → yes)
+- **Adjudication (the output):** *produce the one definitive gold key* by settling the remaining conflicts.
+
+> **Analogy — two examiners, one grade sheet.** κ asks "do the two teachers mostly agree?"; but each
+> student still needs one final grade, so where they differ they settle on one. High κ just makes that
+> settling quick — it doesn't remove the need for a single final sheet.
+
+High κ is good news: few conflicts → fast adjudication. (Low κ → many conflicts → the guideline is
+ambiguous → fix it and re-annotate.) Then "export → CoNLL" runs on that **one gold file** to make
+`aa_test.conll`, the file the model is evaluated against.
+
+---
+
 ## Publication outlook (honest assessment)
 
 *Can this be accepted at well-established international conferences?* **Yes — realistically at the

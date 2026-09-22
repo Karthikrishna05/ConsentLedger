@@ -1,0 +1,19 @@
+{
+  "_source": "https://sahamati.org.in/consent-artefact-periodic-consent-for-monitoring-of-loan-account/",
+  "_note": "REAL published example (ReBIT-conformant). Verified 2026-09-14. As rendered on the source page, some blocks appear as siblings of ConsentDetail rather than nested inside it — the parser must look keys up robustly, not assume one fixed path.",
+  "ConsentDetail": {
+    "consentStart": "2020-01-06T11:39:57.153Z",
+    "consentExpiry": "2022-01-06T11:39:57.153Z",
+    "consentMode": "STORE",
+    "fetchType": "PERIODIC",
+    "consentTypes": ["PROFILE", "SUMMARY", "TRANSACTIONS"]
+  },
+  "DataConsumer": {"id": "DC1", "type": "FIU"},
+  "DataProvider": {"id": "DP1", "type": "FIP"},
+  "Customer": {"id": "customer_identifier@AA_identifier"},
+  "Purpose": {"code": "104", "text": "To monitor a borrower's accounts for loan collection, in case of overdue payments"},
+  "FIDataRange": {"from": "2020-01-06T11:33:34.509Z", "to": "2022-01-06T11:33:34.509Z"},
+  "DataLife": {"unit": "MONTH", "value": 1},
+  "Frequency": {"unit": "MONTH", "value": 5},
+  "consentDetailDigitalSignature": "aTRddfhasTY54HAH"
+}

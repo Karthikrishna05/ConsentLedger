@@ -1,0 +1,4 @@
+model_name,condition,n_seeds,dev_macro_f1_mean,dev_macro_f1_std,dev_token_f1_mean,dev_token_f1_std,test_macro_f1_mean,test_macro_f1_std,test_micro_f1_mean,test_token_f1_mean
+bert-base-uncased,E1,3,0.3815730125775443,0.0025224469431319946,0.5261761463184662,0.001405342839977898,,0.0,,
+law-ai/InLegalBERT,E1,3,0.38619068072183227,0.002796429240918017,0.5132652680300026,0.007980350581236296,,0.0,,
+nlpaueb/legal-bert-base-uncased,E1,3,0.3996490275670758,0.005889777549770478,0.5220365044320685,0.008297422567600299,,0.0,,

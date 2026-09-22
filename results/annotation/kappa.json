@@ -1,0 +1,19 @@
+{
+  "n_docs": 1,
+  "cohen_kappa_token": 0.5867009079521299,
+  "threshold": 0.6,
+  "entity_precision": 0.5384615384615384,
+  "entity_recall": 0.4827586206896552,
+  "entity_f1": 0.509090909090909,
+  "per_doc": [
+    {
+      "doc_id": "29_icici_home_fin_terms",
+      "tokens": 2584,
+      "kappa": 0.5867,
+      "spans_A": 58,
+      "spans_B": 52
+    }
+  ],
+  "only_in_A": [],
+  "only_in_B": []
+}

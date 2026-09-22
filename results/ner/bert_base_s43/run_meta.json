@@ -1,0 +1,31 @@
+{
+  "config": {
+    "model_name": "bert-base-uncased",
+    "labels": [
+      "O",
+      "B-DATA_TYPE",
+      "I-DATA_TYPE",
+      "B-PURPOSE",
+      "I-PURPOSE",
+      "B-THIRD_PARTY",
+      "I-THIRD_PARTY"
+    ],
+    "seed": 42,
+    "learning_rate": 2e-05,
+    "num_train_epochs": 20,
+    "per_device_train_batch_size": 16,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "early_stopping_patience": 3,
+    "metric_for_best_model": "eval_f1",
+    "train_file": "data/ner_bio/train.conll",
+    "dev_file": "data/ner_bio/dev.conll",
+    "output_dir": "artifacts_out/ner/bert_base"
+  },
+  "seed": 43,
+  "epochs": 20,
+  "smoke": false,
+  "condition": "E1",
+  "git_commit": "5f3dec5",
+  "model_name": "bert-base-uncased"
+}

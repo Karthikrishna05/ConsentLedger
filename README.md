@@ -167,7 +167,8 @@ meta-documentation/  ALL project docs (see below)        |  paper/ LaTeX
 ```
 
 ## Documentation (all in `meta-documentation/`)
-`OVERVIEW.md` (start here) · `DECISIONS.md` (every choice + why) · `FLOW.md` (system + build flow) ·
+`OVERVIEW.md` (start here) · **`DETAILED_EXPLANATION.md` (the full "bible" — every file & function
+explained simply)** · `DECISIONS.md` (every choice + why) · `FLOW.md` (system + build flow) ·
 `TEAM.md` (roles) · `SETUP.md` (env detail) · `DEADLINE_PLAN.md` (the 2-week plan) ·
 `ANNOTATION_GUIDELINE.md` (how to annotate) · `NER_LABEL_MAPPING.md` (label table).
 

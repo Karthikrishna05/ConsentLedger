@@ -3,7 +3,7 @@
 .venv-annotation/
 env/
 venv/
-
+labelstudio/
 # Python
 __pycache__/
 *.py[cod]
@@ -26,9 +26,25 @@ wandb/
 data/external/
 data/aa/raw/
 data/ner_bio/
+# LS import scaffold embeds the scraped doc text (regenerable via `ls_import_export make-tasks`)
+data/aa/annotated/ls_import_tasks.json
+# Label Studio EXPORTS + adjudicated gold embed the full scraped doc text too — do NOT commit them
+# (same no-redistribution rule as data/aa/raw/). The safe provenance is results/annotation/kappa.json,
+# which has only doc_id + counts + kappa (no text) and IS committed.
+data/aa/annotated/export*.json
+data/aa/annotated/gold.json
+# Synthetic consent artefacts are regenerable (fixed seed) via `gen_consent_artefacts.py`.
+# The 2 REAL examples + README + schema in data/aa/consent_artefacts/ ARE committed (reference fixtures).
+data/aa/consent_artefacts/synthetic/
+# Summarizer datasets: train/test are regenerable via `summ.make_dataset`; gold_refs.jsonl (P1/P4's
+# handwritten summaries + gold facts — team's own work, no raw scraped text) IS committed.
+data/summ/train.jsonl
+data/summ/test.jsonl
+data/summ/preds.jsonl
 
 # COMMITTED (team's own work, needed for collaboration in this private repo, tracked by default):
-#   data/aa/annotated/   data/aa/consent_artefacts/   data/splits/
+#   data/aa/annotated/ (except exports/gold/import above)   data/aa/consent_artefacts/ (except synthetic/)
+#   data/summ/gold_refs.jsonl   data/splits/   results/   contracts/ (address+ABI, NOT .env)
 
 # Node (Phase 4)
 node_modules/

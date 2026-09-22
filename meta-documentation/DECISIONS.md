@@ -167,6 +167,114 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
 - **Status:** ✅ Done. (Supporting infra: added `pyproject.toml` + `pip install -e .` so
   `python -m consentledger.*` works.)
 
+### D25 — Span-trimming + token-F1 + multi-seed (for citable results)
+- **Diagnosis:** the first full BERT-base run gave dev entity-F1 ~0.12 — NOT undertraining (it converged
+  and early-stopped at epoch 14/20; the "70%" bar = early stopping). Cause: OPP-115 spans are long
+  clauses (PURPOSE median 14 tokens; 42% of entities >10 tokens) and strict exact-match F1 is brutal on
+  long spans. Fix is data+metric, not more epochs.
+- **What (3 changes, all pre-annotation):**
+  1. **Span-trimming** — `trim_spans.py` writes a SEPARATE `opp115_spans_trimmed.jsonl` (original
+     `opp115_spans.jsonl` preserved) reducing each span to its longest noun chunk, capped at 6 tokens
+     (median 6→2). Aligns training spans with the short AA target → exact-match becomes meaningful and
+     transfer improves. Build trimmed CoNLL: `bio_tagging --spans opp115_spans_trimmed.jsonl` (now the
+     default training data in `data/ner_bio/`; original CoNLL regenerable via `bio_tagging` with no flag).
+  2. **token-F1** — added to `train.py` + `evaluate.py` metrics (fairer signal than exact-match on spans).
+  3. **multi-seed** — `train.py --seed N` (suffixes the output dir `_sN`); `collect.py` aggregates
+     mean ± std across seeds and both dev + AA-test, tagged E1/E2.
+- **Why:** citable results need (a) the right span shape, (b) an honest metric, (c) mean±std over ≥3
+  seeds (single-seed isn't citable-grade). The OPP-115 dev number stays a diagnostic; the **AA test is
+  the headline**.
+- **Validated by:** trim ran (24,516 spans, 0 dropped, median 2 tokens); trimmed CoNLL rebuilt (more
+  clean entities: DT 4,233 / PURP 4,167 / TP 1,555); smoke confirmed token-F1 + seed-suffix work.
+- **Result (validates the fix):** first full BERT-base run on **TRIMMED** data (seed 42, OPP-115 dev) →
+  entity micro-F1 **0.38** / macro-F1 **0.38** / **token-F1 0.53** — ~3× the pre-trim 0.12. Early-stopped
+  ~epoch 9. Confirms the low score was span-shape, not training. Full 3×3-seed sweep runs next.
+- **Status:** ✅ Implemented + fix validated. Full multi-seed sweep is the author's VS Code step.
+- **Follow-up (collect.py missing-seed guard):** `collect.py` only *reads* saved per-seed metrics; a
+  crashed seed that never wrote `dev_metrics.json` would be silently omitted, quietly shrinking a group's
+  `n_seeds` and its mean±std. Added a guard that infers the expected seed count (max `n_seeds` across
+  groups) and warns for any `(backbone, condition)` group with fewer, naming which. Cheap insurance so a
+  dropped seed can't silently distort the citable numbers.
+
+### D26 — Sharing the corpus with the annotators (not via git)
+- **What:** `data/aa/annotated/ls_import_tasks.json` (the Label Studio import file) embeds the full
+  scraped text of the 23 AA docs, so it is **git-ignored** and shared with P4 **directly** (Drive/zip/USB),
+  never committed. A handoff bundle `ConsentLedger_annotation_kit_for_P4.zip` (guide v3 + import file) was
+  built in `Downloads/`.
+- **Why:** (a) both annotators must import the **byte-identical** file or character offsets won't align
+  and κ breaks (re-scraping could diverge); (b) it's scraped company text — fine to share privately with
+  the 4-person team (research collaboration) but not to commit/redistribute (consistent with the
+  `data/aa/raw` exclusion); it's regenerable via `ls_import_export make-tasks`.
+- **Status:** ✅ Kit sent to P4; `ANNOTATION_GUIDELINE.md` expanded to **v3** (beginner-proof, click-by-
+  click: install → import → annotate file-by-file → export → κ → adjudicate + FAQ).
+
+### D24 — Annotation executed calibration-first, then full double-annotation of all 23
+- **What:** Concrete protocol (refines D17 for the real 23-doc corpus): (1) **pilot** — P1 & P4 each
+  independently annotate ONE doc (the last, e.g. `29_icici_home_fin_terms`) and run `kappa.py`; (2) if
+  **κ ≥ 0.6 → proceed**, else discuss disagreements, update the guideline, re-annotate, recompute;
+  (3) both then annotate **all 23** independently; (4) re-run κ on all 23 (reported number); (5)
+  adjudicate → one gold corpus → split ~15 test / ~8 adaptation.
+- **Why:** at 23 docs, double-annotating everything is feasible and gives the strongest test set + a real
+  κ; piloting on 1 doc first catches a bad/ambiguous guideline before the team sinks hours into all 23.
+- **Tooling:** `ls_import_export.py make-tasks` (import file preserving `doc_id`); `kappa.py` (entity-F1
+  primary + token Cohen's κ secondary, on ONE shared tokenization — no min_len, D10). Label Studio runs
+  in `.venv-annotation`. Full steps in `ANNOTATION_GUIDELINE.md`.
+- **Status:** ✅ Tooling + guide ready; annotation is the team's manual step (critical path).
+
+### D23 — Trained weights → Hugging Face Hub; metrics → git (via collect.py). Do NOT commit weights.
+- **What:** Model weights are **not** committed to GitHub (each ~400–500 MB; GitHub rejects >100 MB;
+  they're reproducible from config+seed+data). Instead: (a) `collect.py` copies each model's small
+  `dev_metrics.json` + `run_meta.json` into `results/ner/` (committed) and writes `ablation.csv`/`.md`
+  — the **citable numbers**; (b) the actual weights go to the **Hugging Face Hub** (purpose-built, free,
+  gives a citable model URL, builds the author's HF profile).
+- **Why:** keeps the git repo small + reproducible, puts weights where weights belong, and yields both
+  citable metrics (git) and a citable artifact (HF).
+- **License caveat (must honor):** the models are fine-tuned on **OPP-115 (CC BY-NC, research-use)**, so
+  each HF model card must set license `cc-by-nc-4.0`, attribute OPP-115 (Wilson et al. 2016) and the base
+  model, and state research/non-commercial use. Keep the HF write token secret (never committed). Upload
+  **final** models (not smoke runs).
+- **Status:** ✅ Decided. `collect.py` built; HF upload is the author's manual step (see chat/README).
+
+### D22 — Text normalization applied in clean.py (before annotation)
+- **What:** `clean.py` normalizes all output text: unicode spaces (incl. `\xa0`) → normal space; curly
+  quotes → straight (`"`,`'`); zero-width chars + stray UI symbols (bullets `•●·`, icons `⛔⚠ℹ↓`) removed.
+  **Em/en dashes (—,–) and all real content are preserved.**
+- **Why:** annotation offsets index this exact text, so it must be finalized *now*. `\xa0` is a
+  space-in-disguise that breaks tokenization/offsets; straight quotes match OPP-115; UI icons are
+  page-chrome noise. (A prior full-character scan had already confirmed **no** corruption — no U+FFFD,
+  control chars, or mojibake; these are consistency fixes, not repairs.)
+- **Validated by:** post-regeneration re-scan → only `—`/`–` remain (legitimate); word counts unchanged
+  (min 850 / median 3,106 / max 7,990), so no content lost.
+- **Status:** ✅ Done. 23 docs in `data/aa/raw/text/` are annotation-final.
+
+### D21 — AA split corrected to the REAL corpus size (~23 usable, not 40)
+- **What:** The "15 adaptation + 25 test = 40" figure (from the phantom 2nd-audit doc) exceeds our
+  corpus and is **dropped**. Real split on ~23 solid docs: **~15 gold TEST** (double-annotated +
+  adjudicated) + **~8 adaptation** (single-annotated, E2). If time is tight, annotate the **test set
+  first** — E1 (pure transfer) needs only a test set; E2 is the bonus.
+- **Why (is it enough?):** judge by *entities*, not docs. At ~59 entities/doc (OPP-115 rate), ~15 test
+  docs ≈ 600–900 entity annotations — a reasonable entity-level F1 size. Few-shot **adaptation** needs
+  only 8–10 docs by design. Adequate for the workshop/college target (D19) **with** honest reporting:
+  entity-level F1 + **bootstrap CIs** + per-label support + a stated small-corpus limitation. NOT enough
+  for tight-CI top-tier claims (never the goal).
+- **Whole-system benchmark** needs no more annotation: summarizer test = ~5–10 human-written summaries;
+  faithfulness reuses the NER model; contract eval = gas/behaviour.
+- **Supersedes:** the "15+25" numbers wherever they appear (D3/D10/D16 context).
+- **Status:** ✅ Corrected plan.
+
+### D20 — AA corpus manifest + scrape (28/29 fetched)
+- **What:** Built `data/aa/manifest.csv` (29 unique docs; row-30 bundle dropped as a duplicate of
+  rows 1/6/22, per A2) with stable `doc_id`s; wrote `scrape_aa.py` (polite: UA + delay + timeout, logs
+  status/bytes/sha256 to `data/aa/raw/scrape_log.csv`). Scraped into `data/aa/raw/{html,pdf}/`.
+- **Result (2026-09-10):** **28/29 OK.** Failures/caveats: `27_bajaj_finance_consent_form` → HTTP 403
+  (bot-blocked; it was the only *filled* consent form — not needed for the 3 prose labels). ~5 responses
+  are thin JS-rendered shells (Finvu ×3, Protean charter, CAMS — 12–27 consent-term hits vs ~130 in a
+  real doc) → likely unusable without a headless browser.
+- **Why it's fine:** deadline mode needs only ~12–15 annotated docs (D19); ~23 solid docs is a surplus.
+  Thin/blocked docs are dropped now; a teammate can browser-"Save As" any we later want.
+- **Validated by:** scrape log + a consent-term-density check on the small files.
+- **Status:** ✅ Done. Next: `clean.py` (HTML/PDF → text; will filter shells by text length).
+
 ### D19 — Deadline descope: MVP project + written paper in ~2 weeks; user study → future work
 - **What:** Target a working project (demo) + a *written* paper in ~2 weeks. **Cut the IRB + formal user
   study** (deferred to future work). Shrink annotation to ~12 AA docs (double-annotate ~4 for a κ
@@ -230,3 +338,33 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
   pretraining) if we choose — optional, not core.
 - **Status:** ✅ Decided. This is exactly the kind of assumption the D10 gate exists to catch before
   building on it.
+
+### D27 — Verified the ReBIT consent-artefact schema against a primary source (grounds D2)
+- **Trigger:** while annotating, P1 noticed the scraped prose docs (T&C/privacy) contain **no** frequency
+  /duration/recipient values — and asked whether the "split by source" assumption (D2: those 3 come from
+  the structured ReBIT consent artefact, not NER) is actually factual or just assumed.
+- **What we checked:** fetched two REAL published consent artefacts from Sahamati (the AA industry body,
+  ReBIT-conformant), one ONETIME + one PERIODIC, and confirmed the exact fields/nesting.
+  - Sources: sahamati.org.in/consent-artefact-one-time-consent-for-a-loan-application/ and
+    …/consent-artefact-periodic-consent-for-monitoring-of-loan-account/ (verified 2026-09-14).
+  - Confirmed field→label map: **DURATION**=`consentStart`/`consentExpiry`; **FREQUENCY**=`Frequency{unit,
+    value}`; **RECIPIENT**=`DataConsumer{id,type:"FIU"}`; plus `FIDataRange{from,to}` (DATA_RANGE),
+    `DataLife{unit,value}` (DATA_LIFE), `fetchType` (ONETIME/PERIODIC), `Purpose{code,text}`.
+- **Findings that shape the parser:** (a) RECIPIENT is a **coded id** (`DC1`), not a prose name → resolve
+  id→entity, don't expect text; (b) **nesting varies** between the two examples (some blocks nested in
+  `ConsentDetail`, some siblings) → `parse.py` must look keys up **robustly** (recursive), not by fixed
+  path; (c) PURPOSE appears in BOTH sources (prose for NER + a canonical code in the artefact) — no
+  conflict.
+- **The real gap:** schema/examples are now confirmed, but the scraped corpus has **~0 filled artefacts**.
+  So the structured-parser eval set = the 2 real examples + **synthetic** variants. Built
+  `gen_consent_artefacts.py` (varies values on the real templates; `--selfcheck` passes) and saved the 2
+  real examples + a field-map README + a **formal JSON Schema** (`consent_artefact_schema.json`, draft-07)
+  into `data/aa/consent_artefacts/` (committed reference fixtures). `--validate` confirms the real ONETIME
+  example + 50 synthetic artefacts conform to the schema (uses `jsonschema`, now pinned in requirements).
+  The schema validates the canonical nesting; the periodic example's sibling nesting is a rendering quirk,
+  handled by robust key lookup in the parser.
+- **Honesty rule (locks framing):** the consent-artefact parser is a **deterministic reader of the ReBIT
+  schema**, demonstrated on real + synthetic artefacts — **NOT** an evaluated ML model. The NER E1/E2
+  study remains the headline contribution; the parser is a supporting pipeline component.
+- **Status:** ✅ D2 confirmed factual (primary-source grounded). P1's annotation observation was correct
+  and expected — prose docs never carried those 3 fields.

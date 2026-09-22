@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "consentledger/consent_artefact_schema.json",
+  "title": "ReBIT AA Consent Artefact (ConsentDetail)",
+  "description": "Blank-form definition of the RBI Account Aggregator consent artefact, per the ReBIT technical spec (verified against Sahamati examples, DECISIONS D27). Validates the CANONICAL nesting where all blocks live inside ConsentDetail. NOTE: one rendered Sahamati example shows some blocks as siblings of ConsentDetail; parse.py must look keys up robustly, but generated + wire-format artefacts use this canonical shape.",
+  "type": "object",
+  "required": ["ConsentDetail"],
+  "properties": {
+    "ConsentDetail": {
+      "type": "object",
+      "required": [
+        "consentStart", "consentExpiry", "consentMode", "fetchType", "consentTypes",
+        "DataConsumer", "DataProvider", "Customer", "Purpose", "FIDataRange", "DataLife", "Frequency"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "consentStart":  {"type": "string", "format": "date-time", "description": "DURATION (start)"},
+        "consentExpiry": {"type": "string", "format": "date-time", "description": "DURATION (end)"},
+        "consentMode":   {"type": "string", "enum": ["VIEW", "STORE", "QUERY", "STREAM"]},
+        "fetchType":     {"type": "string", "enum": ["ONETIME", "PERIODIC"]},
+        "consentTypes":  {"type": "array", "minItems": 1, "items": {"type": "string"}},
+        "fiTypes":       {"type": "array", "items": {"type": "string"}},
+        "DataConsumer":  {"$ref": "#/definitions/party", "description": "RECIPIENT (the FIU, a coded id)"},
+        "DataProvider":  {"$ref": "#/definitions/party"},
+        "Customer": {
+          "type": "object",
+          "required": ["id"],
+          "properties": {"id": {"type": "string"}}
+        },
+        "Purpose": {
+          "type": "object",
+          "required": ["code", "text"],
+          "properties": {
+            "code": {"type": "string", "description": "RBI AA purpose code 101-105"},
+            "text": {"type": "string"},
+            "refUri": {"type": "string"},
+            "Category": {"type": "object"}
+          }
+        },
+        "FIDataRange":   {"$ref": "#/definitions/from_to", "description": "DATA_RANGE"},
+        "DataLife":      {"$ref": "#/definitions/unit_value", "description": "DATA_LIFE"},
+        "Frequency":     {"$ref": "#/definitions/unit_value", "description": "FREQUENCY"},
+        "DataFilter": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": {"type": "string"},
+              "operator": {"type": "string"},
+              "value": {"type": "string"}
+            }
+          }
+        },
+        "consentDetailDigitalSignature": {"type": "string"}
+      }
+    }
+  },
+  "definitions": {
+    "party": {
+      "type": "object",
+      "required": ["id", "type"],
+      "properties": {
+        "id":   {"type": "string"},
+        "type": {"type": "string", "enum": ["FIU", "FIP", "AA"]}
+      }
+    },
+    "from_to": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": {"type": "string", "format": "date-time"},
+        "to":   {"type": "string", "format": "date-time"}
+      }
+    },
+    "unit_value": {
+      "type": "object",
+      "required": ["unit", "value"],
+      "properties": {
+        "unit":  {"type": "string", "enum": ["HOUR", "DAY", "MONTH", "YEAR", "INF"]},
+        "value": {"type": "integer", "minimum": 0}
+      }
+    }
+  }
+}
