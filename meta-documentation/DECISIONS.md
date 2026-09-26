@@ -368,3 +368,178 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
   study remains the headline contribution; the parser is a supporting pipeline component.
 - **Status:** ✅ D2 confirmed factual (primary-source grounded). P1's annotation observation was correct
   and expected — prose docs never carried those 3 fields.
+
+### D28 — Contribution claims REVISED after a systematic novelty search (supersedes D6's framing)
+- **Trigger:** P1 noticed the ICICI policy text restating the RBI NBFC-AA Master Direction — standardized
+  consent artefact, revocation, artefacts "logged, audited, and verified", user-accessible consent record —
+  and asked: *is our system actually novel, or does this already exist?* A systematic search was run
+  (2026-09-24; arXiv + PubMed/PMC + web; full protocol, queries and citations in `RELATED_WORK.md`).
+- **Findings (evidence, not judgement):**
+  - 🔴 **Blockchain consent registry is NOT novel.** *Soteria* (arXiv:2003.10128) already stores hashes of
+    data-access/sharing agreements on a ledger for revocation + compliance proof; *Grant, Verify, Revoke*
+    (arXiv:2603.15721) names our exact lifecycle as a published pattern; a PRISMA review (PMC13287375)
+    covers 55 studies; a GDPR-blockchain SLR names **financial data** as an established domain.
+  - 🔴 **Entity-preservation faithfulness is NOT novel.** arXiv:2102.09130 is the canonical entity-level
+    factual-consistency metric; **EROS** (arXiv:2403.00141) already does entity-controlled summarization
+    *of privacy policy documents* with span-based entity extraction + PD-Sum.
+  - 🟡 **Privacy-policy NER / domain adaptation is an established method** (PLUE arXiv:2212.10011;
+    EURO-5K arXiv:2606.02971; CrossNER) — our E1/E2 design has direct precedent.
+  - 🟢 **Indian AA consent-document NLP is genuinely empty.** A dedicated query returned zero AA papers
+    (top relevance 0.49, all generic fintech NLP); web search returned only regulatory/industry material.
+- **Decision — reposition as a RESOURCE + APPLICATION study, not a methods paper.** Claim: (1) first
+  gold-annotated **AA consent corpus** + released guideline; (2) first **transfer/adaptation benchmark**
+  (E1/E2) into the AA domain; (3) a **reference pipeline** (extraction → disclosure-fidelity audit →
+  on-chain anchoring) motivated by the gap the Master Direction leaves open: it mandates *informing* the
+  user but never verifies the *fidelity* of that informing.
+- **Explicitly DROPPED claims:** novel blockchain consent mechanism; novel faithfulness metric; "first
+  system to record AA consent on-chain". P3 is now framed as a **reference implementation**.
+- **Consequences:** `P2.md` §1 corrected (it had overclaimed the faithfulness metric as novel);
+  `RELATED_WORK.md` created with the search protocol, per-pillar citations and required differentiation
+  statements. Venue expectation unchanged: workshop / short paper.
+- **Caveat carried forward:** the search did NOT cover ACL Anthology, Scopus, IEEE Xplore or ACM DL —
+  re-run queries 1–4 there before submission; only then is "to the best of a systematic search" earned.
+- **Status:** ✅ Decided. P1's instinct was correct and caught a framing error before submission — the
+  finding grounds the paper rather than weakening it.
+
+### D29 — Round-1 double-annotation FAILED the gate (kappa 0.28); guideline -> v4 with Rules 7 & 8
+- **What happened:** P1 and P4 completed independent annotation of all **23/23** AA docs (doc_ids match,
+  every doc has spans). Agreement on the full corpus: **Cohen's kappa 0.2789** vs the 0.6 gate;
+  entity-level P 0.333 / R 0.170 / **F1 0.225**. Only **1 of 23** docs cleared the gate
+  (`14_nadl_charter`, 0.625). The pilot doc `29_icici` had scored 0.587 at calibration and has now
+  *fallen* to 0.451 — the annotators **diverged after the pilot rather than converging**.
+- **Diagnosis (new tool `agreement_report.py`, which buckets every span):**
+  | bucket | n | reading |
+  |---|---|---|
+  | EXACT | 292 | agreed |
+  | BOUNDARY | 108 | span edges — minor |
+  | LABEL | **7** | the 3-label ontology is essentially SOLVED |
+  | A_ONLY | **1432** | one-sided |
+  | B_ONLY | **541** | one-sided |
+  **83% of all disagreement is one-sided marking** — they disagree on *whether to mark at all*, not on
+  which label or where the edges are. This invalidates the earlier "fix the boundaries" hypothesis.
+- **Two confirmed causes (evidence, not guesswork):**
+  1. **Rule 5 (mark every occurrence) applied by A, ignored by B.** In `28_indifi` A marked "third
+     parties" 21x and "cookies" 13x (166 of 438 spans are repeats); B had **0** repeats in the same doc.
+  2. **Different inclusiveness thresholds, flipping per document.** Excluding repeats, `28_indifi`:
+     A 322 unique vs B 50; but `22_setu_charter`: A 8 vs B 38. Each went deep on different docs.
+  - **Ruled out:** incomplete passes. Last-span position covers 85-100% of doc length for both
+    annotators on nearly every doc — they read it all and still marked wildly different amounts.
+- **Decision — guideline bumped to v4 with two new rules** (not a re-annotation from scratch):
+  - **Rule 7 — mark EVERY occurrence, always**, with the reason stated: unmarked repeats are labelled
+    "not an entity" in training data, so skipping them actively teaches the model the wrong thing. A's
+    behaviour is correct; B's must change.
+  - **Rule 8 — a specificity test + an explicit STOPLIST** (`information`, `personal data`, bare
+    `third parties`, `services`, `business purposes`, …) plus default rulings on the round-1 borderline
+    cases (cookies → no; address/mobile → yes; fraud prevention → yes; provision of the services → no).
+    Key ruling: bare **"third parties" is the category name, not a recipient** — mark the named recipient.
+  - Tricky-cases section seeded with all round-1 rulings so they cannot re-diverge.
+- **Recovery path (deadline-aware):** do **not** re-annotate all 23. Because LABEL/BOUNDARY agreement is
+  already high, the remaining work is adjudication — deciding which one-sided spans are real — and
+  `results/annotation/agreement/docs/<doc_id>.md` lists exactly those. Sequence: settle rules (done) ->
+  re-calibrate on 2 docs to kappa>=0.6 -> adjudicate the existing 23 -> if time is short, cut the gold
+  test set to the best-agreeing docs and report n honestly.
+- **For the paper:** report this honestly. Round-1 kappa 0.28 -> guideline refinement -> round-2 kappa is
+  a legitimate and publishable resource-paper narrative (D28 frames the corpus as the contribution).
+- **Repo hygiene:** `ExportA/B.json` and the per-doc diff files quote scraped text -> git-ignored
+  (`[Ee]xport*.json`, `results/annotation/agreement/docs/`). `summary.csv` + `report.md` (numbers only)
+  are committed as the provenance.
+- **Status:** ⚠ Gate NOT met. Guideline v4 shipped; re-calibration + adjudication is the team's next step.
+
+### D30 — Corpus-grounded annotation audit: the failure is mechanical, not conceptual (Rule 8b added)
+- **What we did:** built `annotation_audit.py` to compare both exports against the ORIGINAL corpus text
+  (`ls_import_tasks.json`), not just against each other. Method: a **consensus lexicon** — every
+  (phrase, label) BOTH annotators independently endorsed at least once — is located in the raw text of
+  every document, and each occurrence is scored as marked-by-both / A-only / B-only / missed-by-both.
+  Conservative by construction: only terms the annotators themselves validated can count as a "miss".
+- **Integrity check passed:** corpus, ExportA and ExportB are **byte-identical in text** across all 23
+  docs with matching doc_ids. Offsets are comparable — the disagreement is judgement, not tooling.
+- **⚠ Self-correction (recorded so the number is not misquoted):** the first run reported **55.7%**
+  missed-by-both. That was **inflated** — a single sloppy mark by each annotator promotes a generic word
+  into "consensus", e.g. bare `financial` then matched and "missed" 418 times. A `--strict` lexicon
+  (multi-word, endorsed >=2x by each, generic stoplist removed; 34 terms / 311 occurrences) gives the
+  defensible figures: **both 31.8% | A-only 39.2% | B-only 5.8% | missed-by-both 23.2%**;
+  mean recall A **58%**, B **39%**. Always quote the `--strict` numbers.
+- **Findings stable across every filter setting:**
+  1. Co-marking **never exceeds ~32%**, even on unambiguous multi-word terms both annotators endorse.
+  2. **B's recall problem is mechanical:** A made **442 repeat marks**, B made **10**. B essentially
+     never marks a phrase twice. This one behaviour explains B's low recall and the 7:1 A-only:B-only
+     ratio. Rule 7 is the fix and it is **B** who must change.
+  3. **Both miss ~23%** of even the clearest entities — e.g. `grievance redressal` (49x),
+     `non-banking financial company` (24x), `data sharing` (21x), `authentication` (18x),
+     `agents` (17x), `credit information` (13x), `dispute resolution` (10x).
+- **The two perspectives (label proportions are nearly identical — A 44/29/28, B 39/28/33 — so they
+  agree on priorities; they differ on what they think they are reading):**
+  - **A's lens = web-technical + generic:** `cookie`, `operating system`, `version`, `spi`, `pii`, bare
+    `third party`, `related parties`, `agencies`, `bodies`, `partners`, `services`,
+    `provision of the services` -> these are precisely the **Rule 8 stoplist**.
+  - **B's lens = AA-framework + credentials:** `reserve bank of india`, `rbi`,
+    `financial information user`, `financial information provider`, `sahamati`, `consent artefact`,
+    `login id`, `pins`, `private keys`, `user authentication credentials`.
+  - **Both violate v4 in opposite directions.** B is also self-inconsistent: `financial information`
+    tagged DATA_TYPE 15x and THIRD_PARTY 2x.
+- **Decision — new Rule 8b: AA-framework roles and regulators are NEVER THIRD_PARTY.** Never mark
+  `Account Aggregator`/`AA` (the data-blind pipe), `FIP` (the source), `FIU` (the main company, already
+  covered by Rule 3), `RBI`/`Reserve Bank of India` (regulator — supervising is not receiving),
+  `Sahamati` (industry body), or `consent artefact`/`consent manager` (mechanism names). Test:
+  *"does my data end up in their hands as a result of this consent?"* Worth ~40 of B's spans.
+  Tricky-cases list extended with every ruling above; guideline header now says v4 = Rules 7, 8, 8b.
+- **Why this is good news:** the residual problem is **mechanical, not conceptual** — only 7 LABEL
+  conflicts across 23 documents. Three concrete corrections (B marks repeats; A drops stoplist terms;
+  both apply 8b) address the bulk of the gap without re-teaching the task.
+- **Artifacts:** `results/annotation/audit/corpus_audit.md`, `missed_terms.csv`, `per_doc/<doc_id>.md`
+  (what A marked, what B marked, what both missed, per document). The per-doc files quote scraped text
+  and are git-ignored; the summary tables are committed.
+- **Status:** ✅ Audit complete, guideline updated. Next: re-calibrate on 2 short docs -> kappa >= 0.6
+  (D29 recovery path), then adjudicate.
+
+### D31 — Keep all 23 docs; fix via PER-ANNOTATOR fix lists instead of joint adjudication (supersedes D29's scope cut)
+- **Trigger:** P1 rejected the D29 recommendation to cut the corpus to 12 documents, on the correct
+  grounds that ~8 test + ~4 adaptation leaves too little room for the E1/E2 ablation that IS the study.
+  P1 proposed instead: give each annotator a file telling them what THEY missed and where.
+- **Decision — adopt P1's proposal; the 12-doc cut is withdrawn.** All 23 documents are retained.
+  Built `fixlist.py`, which emits one file per annotator per document with five buckets, ordered
+  most-certain first:
+  1. **DELETE** — your span breaks Rule 8 (stoplist) / 8b (AA roles). No judgement.
+  2. **ADD_REPEAT** — you marked this phrase elsewhere in THIS document but skipped this occurrence.
+     Your own internal inconsistency (Rule 7). No judgement.
+  3. **ADD_MISSED** — the phrase is in the corpus consensus lexicon (both of you endorse it somewhere),
+     it occurs here, and you left it blank. High confidence.
+  4. **SHORTEN** — the other annotator marked a shorter version; Rule 1 prefers shorter.
+  5. **SELF_CHECK** — a phrase only YOU use anywhere in the corpus; re-read against the Rule 8 test.
+  Every item carries exact character offsets so the annotator jumps straight to the spot.
+- **Workload (spans -> DISTINCT phrases to actually decide, which is the real cost):**
+  | bucket | P1 | P4 |
+  |---|---|---|
+  | DELETE | 259 spans -> **23 phrases** | 78 -> **18** |
+  | ADD_REPEAT | 750 -> **168** | 615 -> **131** |
+  | ADD_MISSED | 429 -> **62** | 694 -> **89** |
+  | SHORTEN | 29 | 79 |
+  | SELF_CHECK | 883 -> 696 | 471 -> 394 |
+  Buckets 1-3 collapse to roughly **250 decisions each** — decide "drop `services`" once and every
+  instance follows.
+- **Why this beats joint adjudication:** both annotators work **alone and in parallel** (~3 h each wall
+  clock) instead of ~7 person-hours scheduled together; the corpus stays at **23 docs, not 12**; and the
+  output is **two corrected exports** rather than a hand-merged gold file — so `kappa.py` can be re-run
+  to produce a genuine, reportable **round-2 kappa**, which a merged file could never give.
+- **Root-cause fit:** P4's 615 missed repeats + 694 missed consensus spans are precisely the one-sided
+  gap (A_ONLY 1,432 vs B_ONLY 541) that produced kappa 0.279 in D29/D30. This attacks that directly.
+- **Calibration correction (supersedes D29's advice):** D29 suggested piloting on two SHORT documents.
+  That would give **false confidence** — the failure mode is density/repeats, which barely exists in a
+  5k-char charter. Calibrate on **one short and one dense** document: `26_zerodha_tos` (5k) and
+  `17_pb_fintech_aa_privacy` (15k, one of the worst density gaps).
+- **Pre-registered decision rule for the 2-doc calibration** (a 2-doc kappa has a CI of roughly +/-0.15,
+  so it is a GATE CHECK, not an estimate of the final number):
+  - kappa **>= 0.75** -> the rules worked; proceed across all 23.
+  - kappa **0.60-0.75** -> ambiguous; proceed but re-check after 5 more documents.
+  - kappa **< 0.60** -> rules still insufficient; stop and diagnose rather than grinding through 23.
+- **Known risk:** SELF_CHECK is the bucket that can go wrong. With ~696 (P1) and ~394 (P4) distinct
+  phrases there is a temptation to mass-delete, which would swing the corpus from over-marking to
+  under-marking. Annotators must apply the Rule 8 test honestly — `login id`, `private keys` and
+  `grievance redressal` live in that bucket and SHOULD survive.
+- **Sequence:** calibrate (2 docs, rule above) -> both apply buckets 1-3 across all 23 in parallel ->
+  each does their SELF_CHECK pass -> re-export -> re-run `kappa.py` for the round-2 number -> adjudicate
+  only the residue.
+- **Repo hygiene:** fix lists quote span text -> `results/annotation/fixlist/` is git-ignored; the
+  summary `README.md` counts are the committed record.
+- **Status:** ✅ Tooling shipped (`fixlist.py`, selfcheck passes). D29's 12-doc cut is **withdrawn**.
+  Team's next action is the 2-document calibration.

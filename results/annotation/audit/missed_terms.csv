@@ -1,0 +1,16 @@
+term,label,times_missed_by_both
+service providers,THIRD_PARTY,16
+credit information,DATA_TYPE,13
+sensitive personal information,DATA_TYPE,8
+email address,DATA_TYPE,8
+third-party service provider,THIRD_PARTY,6
+mobile number,DATA_TYPE,6
+contact information,DATA_TYPE,3
+credit bureaus,THIRD_PARTY,3
+kyc documents,DATA_TYPE,2
+group companies,THIRD_PARTY,2
+parent companies,THIRD_PARTY,1
+crif highmark,THIRD_PARTY,1
+parent company,THIRD_PARTY,1
+phone numbers,DATA_TYPE,1
+ip addresses,DATA_TYPE,1

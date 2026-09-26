@@ -31,8 +31,20 @@ data/aa/annotated/ls_import_tasks.json
 # Label Studio EXPORTS + adjudicated gold embed the full scraped doc text too — do NOT commit them
 # (same no-redistribution rule as data/aa/raw/). The safe provenance is results/annotation/kappa.json,
 # which has only doc_id + counts + kappa (no text) and IS committed.
-data/aa/annotated/export*.json
-data/aa/annotated/gold.json
+data/aa/annotated/[Ee]xport*.json
+data/aa/annotated/[Gg]old.json
+# Per-document agreement diffs quote the annotated phrases from the scraped docs.
+# summary.csv + report.md (numbers only) ARE committed.
+results/annotation/agreement/docs/
+results/annotation/audit/per_doc/
+# Adjudication worklists quote span text -> ignored. proposed_gold/ is ALSO ignored: it is a
+# machine-merged snapshot derived from the FAILED round-1 annotation (kappa 0.28) and must never be
+# mistaken for the real answer key. Commit it only once it is regenerated from the round-2 exports.
+# worklist.md (counts only) IS committed.
+results/annotation/adjudication/worklist/
+results/annotation/adjudication/proposed_gold/
+# Per-annotator fix lists quote span text; fixlist/README.md (counts only) IS committed.
+results/annotation/fixlist/P*/
 # Synthetic consent artefacts are regenerable (fixed seed) via `gen_consent_artefacts.py`.
 # The 2 REAL examples + README + schema in data/aa/consent_artefacts/ ARE committed (reference fixtures).
 data/aa/consent_artefacts/synthetic/

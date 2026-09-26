@@ -23,6 +23,9 @@ updated whenever anything new is built** (it is part of the audit trail).
    - 5.4 `bio_tagging.py`
    - 5.5 `scrape_aa.py`
    - 5.6 `clean.py`
+   - 5.7 `ls_import_export.py` + `kappa.py` (annotation tooling)
+   - 5.8 `trim_spans.py`
+   - 5.9 Annotation round 1: the kappa 0.28 failure, its diagnosis, and the rescue tools
 6. NER model pipeline — file by file
    - 6.1 `seed.py`
    - 6.2 `ner/dataset.py`
@@ -343,6 +346,171 @@ disagreed 40% of the time" but the exact replays they called differently.* This 
 
 ---
 
+### 5.9 Round 1 of annotation, and the three tools built to rescue it
+
+This is the single most instructive episode in the project so far, so it is written out in full.
+
+**What happened.** P1 and P4 each independently annotated all 23 AA documents. Both files checked out —
+23 docs each, every one annotated, doc_ids matching. Then we measured agreement with `kappa.py`:
+
+> **Cohen's kappa = 0.279** against a 0.6 gate. Only **1 of 23** documents passed. The pilot document
+> `29_icici`, which had scored **0.587** during calibration, had *fallen* to **0.451**.
+
+*Reading kappa plainly: two referees watch the same match and make calls; kappa asks how often they make
+the SAME call after subtracting the agreement you would get from pure luck. 1.0 = perfect twins, 0.0 =
+guessing. 0.279 means barely better than chance.* And the pilot regression meant they had drifted
+**apart** after calibration, not together — so the problem was getting worse on its own.
+
+#### 5.9.1 `agreement_report.py` — file-wise kappa, and WHY they disagree
+
+A single number says there is an argument; it does not say what the argument is about. This tool takes
+every highlighted phrase from both annotators and drops it into one of five boxes:
+
+| box | meaning | round-1 count |
+|---|---|---|
+| EXACT | same words, same label | 292 |
+| BOUNDARY | both caught it, drew the edges differently | 108 |
+| **LABEL** | both caught it, disagreed on which label | **7** |
+| **A_ONLY** | P1 marked it, P4 marked nothing there | **1,432** |
+| **B_ONLY** | P4 marked it, P1 marked nothing there | **541** |
+
+**This table reframed the whole problem.** LABEL = 7 across 23 documents means the 3-label ontology is
+essentially solved — nobody is confused about the task. BOUNDARY = 108 means the span rules mostly work.
+**83% of the disagreement was one person marking something and the other marking nothing at all** — a
+*thoroughness* problem, not a comprehension problem. The earlier hypothesis ("fix the boundaries", formed
+from the 1-doc pilot) was wrong, and this is what disproved it.
+
+We also tested and **ruled out** the obvious excuse — did someone stop halfway through the long docs? We
+measured how far into each document the last highlight sits: **both covered 85-100% of nearly every
+document.** They both read everything and still marked wildly different amounts.
+
+Outputs: `results/annotation/agreement/summary.csv`, `report.md` (numbers, committed) and
+`docs/<doc_id>.md` (the actual disagreeing phrases — git-ignored, they quote scraped text).
+
+#### 5.9.2 `annotation_audit.py` — what did they BOTH miss?
+
+Comparing A to B can never reveal what both overlooked. For that you need the original text. The method:
+
+> **Consensus lexicon** — every (phrase, label) that BOTH annotators independently marked at least once
+> anywhere in the corpus. If both decided "credit bureaus" is a THIRD_PARTY in some document, that
+> judgement is trustworthy and should hold everywhere the phrase appears.
+
+Then every occurrence of every consensus term is located in the raw text and scored: marked by both /
+only A / only B / **neither**. *Analogy: rather than me inventing the answer key, the key is built out of
+the answers the annotators already agreed on — then their papers are marked against their own key.* It is
+deliberately conservative: a "miss" can never be blamed on a disputed judgement call.
+
+**Integrity first:** `ls_import_tasks.json`, ExportA and ExportB are **byte-identical in text** for all 23
+docs. Every character offset lines up, so the disagreement is genuine judgement, not a tooling artefact.
+
+**A methodological trap, and the correction (recorded so the bad number is never re-quoted).** The first
+run reported **55.7% missed by both**. That was **inflated**: a single sloppy mark from each annotator
+promoted the bare word `financial` into the "consensus" lexicon, where it then matched — and counted as
+missed — **418 times**. Generic words poisoned the measurement. The `--strict` lexicon (multi-word,
+endorsed >=2x by each, generic stoplist removed; 34 terms / 311 occurrences) gives the defensible figures:
+
+| | inflated (do not quote) | **honest (`--strict`)** |
+|---|---|---|
+| both marked it | 12.8% | **31.8%** |
+| only P1 | 22.4% | **39.2%** |
+| only P4 | 9.1% | **5.8%** |
+| missed by both | 55.7% | **23.2%** |
+
+Mean recall against the lexicon: **P1 58%, P4 39%**.
+
+**The mechanical finding — the most important single fact of round 1:**
+
+> **P1 made 442 repeat marks. P4 made 10.**
+
+P4 essentially never highlighted the same phrase twice. That one habit explains P4's low recall and the
+7:1 A-only:B-only ratio. **Why repeats matter so much:** the model learns token by token, so every
+occurrence you do *not* highlight is labelled "NOT an entity" in the training data. Skipping repeats does
+not merely lose data — it teaches the model the *opposite* of what the marked examples teach. *Like
+circling some apples in a photo and leaving others uncircled: you are not being efficient, you are telling
+the computer those other things are not apples.*
+
+**The perspective finding.** Their label *proportions* are nearly identical (P1 44/29/28, P4 39/28/33) —
+they agree on priorities — but they read different worlds:
+- **P1's private vocabulary** is web-technical and generic: `cookie`, `operating system`, `version`,
+  `spi`, `pii`, bare `third party`, `agencies`, `bodies`, `services`.
+- **P4's private vocabulary** is AA-framework and credentials: `Reserve Bank of India`, `RBI`,
+  `Financial Information User`, `Financial Information Provider`, `Sahamati`, `login id`, `pins`,
+  `private keys`.
+
+**Both were breaking the rules, in opposite directions** — P1 marking generic umbrellas, P4 marking the
+machinery of the AA framework itself as third parties. Things both missed ~23% of the time:
+`grievance redressal` (49x), `non-banking financial company` (24x), `data sharing` (21x),
+`authentication` (18x), `dispute resolution` (10x).
+
+Outputs: `results/annotation/audit/corpus_audit.md`, `missed_terms.csv` (committed) and
+`per_doc/<doc_id>.md` (git-ignored).
+
+#### 5.9.3 The rulebook fix — guideline v4 (Rules 7, 8, 8b)
+
+- **Rule 7 — mark EVERY occurrence, always**, with the training-data reason stated. P1 is right; P4 must
+  change.
+- **Rule 8 — a specificity test + stoplist.** The test: *"could I point to this in a real bank record, or
+  name a real organisation?"* Ban list: `information`, `personal data`, bare `third parties`, `services`,
+  `business purposes`… Key ruling: **"third parties" is the category name, not a recipient** — like
+  tagging "fruit" instead of "apple".
+- **Rule 8b — AA-framework roles and regulators are NEVER THIRD_PARTY.** Never mark `Account Aggregator`
+  (the data-blind pipe), `FIP` (the source), `FIU` (the main company), `RBI` (the **regulator** —
+  supervising is not receiving), `Sahamati`, `consent artefact`. Test: *"does my data actually end up in
+  their hands as a result of this consent?"*
+- **Tricky Cases** seeded with every ruling, including the positive ones (`login id`, `pins`,
+  `private keys` → DO mark; `grievance redressal`, `dispute resolution` → DO mark) so it does not read as
+  "stop marking things".
+
+#### 5.9.4 `adjudicate.py` — let the computer do the decided part
+
+The insight: now that the rules are mechanical, **most of the 1,973 disagreements need no human at all.**
+Starting from the union of both annotators' spans, the tool applies every rule it can:
+
+| action | count |
+|---|---|
+| accept — both agreed | 280 |
+| accept — one missed it, but both endorse that phrase elsewhere (consensus lexicon) | 431 |
+| add missed repeats (Rule 7 propagation within the document) | +320 |
+| delete stoplist / AA-role violations (Rules 8, 8b) | −336 |
+| **leave for a human** | **1,351** (label 4, boundary 105, one-sided 1,242) |
+
+**Proposed gold corpus: 1,136 spans.** *Analogy: a spell-checker that silently fixes the obvious typos and
+only stops to ask about the genuinely ambiguous words.* Boundary conflicts default to the **shorter** span
+(Rule 1) but are still flagged for a quick yes/no.
+
+Each `results/annotation/adjudication/worklist/<doc_id>.md` opens with **"YOU ONLY NEED TO READ THIS: N
+items"** and lists every item with **character offsets**, so the annotator jumps straight to the spot in
+Label Studio. `proposed_gold/<doc_id>.json` holds offsets + labels only (no document text) and is
+committed; the worklists quote spans and are git-ignored.
+
+#### 5.9.5 The scope decision
+
+1,351 review items does not fit the deadline. A stratified cut — **12 documents, 7 terms / 3 privacy /
+2 charter**, preserving the corpus mix — gives **385 gold spans and 422 review items: 31% of the work,
+roughly 2.5 hours of joint effort.**
+
+**Honesty requirement for the paper:** review cost tracks document **length** far more than difficulty
+(the deferred documents are the 50k-character ones), so this must be described as *"we adjudicated the
+shorter documents first under time constraints"* — **never** as selecting the documents the annotators
+happened to agree on, which would bias the test set toward easy material. The other 11 documents remain
+available for a later round.
+
+#### 5.9.6 What to take away from round 1
+
+The failure looked catastrophic (kappa 0.279) but was **mechanical, not conceptual** — only 4-7 label
+conflicts in 23 documents means nobody misunderstood the task. Mechanical problems have mechanical fixes,
+which are now written into the guideline and largely automated. Two standing cautions:
+1. **Re-calibrate on 2 short documents and clear kappa 0.6 BEFORE adjudicating.** They diverged after the
+   last pilot, so v4 must be proven, not assumed.
+2. The 431 consensus-accepted and 320 auto-added spans are **rule-derived, not human-confirmed**.
+   Spot-check ~20 in the first document — if the automation admits junk, you want to know at item 20, not
+   item 400.
+
+Decisions logged: **D29** (the failure, diagnosis, recovery path) and **D30** (corpus audit, perspectives,
+Rule 8b, and the inflated-number correction).
+
+---
+
 ## 6. NER model pipeline — file by file
 
 ### 6.1 `seed.py` — make runs repeatable
@@ -478,10 +646,26 @@ pre-training code committed.
 3-backbone × 3-seed sweep is running; **the AA test set (E1/E2) is the headline number**, produced after
 annotation.
 
-**Pending:** finish the 3×3 seed sweep → `collect.py`; team annotates the 23 AA docs (→ ~15 test + ~8
-adaptation, calibration-pilot-first per D24); build the export→`aa_test.conll` converter; run E1/E2 on
-AA; upload weights to HF Hub; summarizer + faithfulness metric; smart contract; integration; paper. See
-`FLOW.md` for live status and `DECISIONS.md` (D1–D26) for the reasoning behind every choice.
+**Annotation round 1 is DONE and FAILED the gate (see 5.9).** All 23 docs were double-annotated;
+Cohen kappa = **0.279** vs the 0.6 gate, only 1/23 docs passing. Diagnosis: **mechanical, not
+conceptual** (only 4-7 label conflicts corpus-wide; 83% of disagreement was one-sided marking, driven by
+P4 making 10 repeat marks against P1s 442). Fixes shipped: guideline **v4** (Rules 7, 8, 8b), three new
+tools (`agreement_report.py`, `annotation_audit.py`, `adjudicate.py`), and an auto-adjudicated
+**proposed gold of 1,136 spans** with only 1,351 human review items left (422 if the recommended 12-doc
+stratified cut is taken). Also done: consent-artefact fixtures + JSON Schema + generator verified against
+the primary ReBIT source (D27); contribution claims revised after a systematic novelty search (D28,
+`RELATED_WORK.md`); per-person guides `P2.md` and `P3.md`.
+
+**Pending — in priority order:**
+1. **BLOCKING: re-calibrate on 2 short docs until kappa >= 0.6**, then adjudicate (D29 recovery path).
+   Nothing downstream is trustworthy until this clears.
+2. Convert the adjudicated gold to `aa_test.conll`; run **E1/E2** on the AA test set (the headline number).
+3. Finish `collect.py` aggregation; upload weights to HF Hub.
+4. Parallel, unblocked now: P2 summarizer + faithfulness (`P2.md`), P3 smart contract (`P3.md`).
+5. Paper: Related Work and Corpus/Annotation-Methodology sections can be written today — the
+   kappa 0.28 -> guideline refinement -> round-2 kappa story is itself reportable.
+
+See `FLOW.md` for live status and `DECISIONS.md` (D1-D30) for the reasoning behind every choice.
 
 ---
 

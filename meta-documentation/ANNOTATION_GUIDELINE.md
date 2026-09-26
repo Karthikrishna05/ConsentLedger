@@ -1,4 +1,7 @@
-# ConsentLedger — AA Annotation Guide (v3, beginner-proof)
+# ConsentLedger — AA Annotation Guide (v4, beginner-proof)
+
+> **v4 (2026-09-26):** adds **Rules 7, 8 and 8b** after round-1 double-annotation scored kappa 0.28, plus **PART G2** (round-2 personal fix lists, D31).
+> If you annotated before this version, re-read Part A — the two new rules are the whole fix.
 
 This guide assumes **zero prior experience**. If you can use a mouse and copy-paste a command, you can do
 this. Follow it top to bottom. Two people do this independently: **P1** and **P4**.
@@ -36,9 +39,96 @@ things the same way.
    for; and a *named main company* (the FIU) is **not** highlighted at all.
 4. **Highlight the phrase, not the whole sentence.** In "we use your data to assess loan eligibility",
    highlight only **assess loan eligibility** (PURPOSE) — not the whole line.
-5. **If a phrase is repeated, highlight every occurrence** (each time it appears).
+5. **If a phrase is repeated, highlight EVERY occurrence** (each time it appears) — see Rule 7, this is
+   not optional.
 6. **When you're unsure, don't guess silently.** Write it down (message the other annotator / add it to
    the "Tricky cases" list at the bottom). You'll settle it together.
+
+---
+
+### ⚠ Rules 7 and 8 — added after round 1 (κ = 0.28). READ THESE TWICE.
+
+The first full double-annotation of all 23 docs scored **κ = 0.28** against a 0.6 gate. The diagnosis was
+clear: you agreed on *which label* (only 7 label conflicts in 23 docs) and mostly on *where spans start
+and end* (108 boundary conflicts) — but you disagreed **1,973 times on whether to mark something at all**.
+These two rules exist to fix exactly that. (Full analysis: `results/annotation/agreement/report.md`.)
+
+#### Rule 7 — Mark EVERY occurrence. Always. No exceptions.
+
+Round 1: in one document A marked *"third parties"* 21 times and *"cookies"* 13 times; B marked each
+phrase **once** and never repeated it. That single difference produced hundreds of disagreements.
+
+**The rule: if a phrase qualifies, highlight it every single time it appears in the document** — 1st, 5th,
+20th occurrence, all of them.
+
+**Why this is not busywork:** the model is trained token-by-token. Every occurrence you *don't* mark is
+labelled "not an entity" in the training data. So skipping repeats doesn't just lose data — it actively
+teaches the model that those words are **not** entities, contradicting the occurrences you did mark. One
+skipped repeat is worse than one missed entity.
+
+*(Tip: Label Studio has no reliable "mark all" button — scroll and mark them. If a phrase appears more
+than ~20 times, note it in Tricky cases rather than silently stopping.)*
+
+#### Rule 8 — The specificity test, and the stoplist
+
+Round 1: even ignoring repeats, one of you marked 322 distinct phrases in a document where the other
+marked 50 — and in a *different* document the ratio flipped. You were reading the same text with very
+different thresholds. This rule sets one threshold.
+
+**The test — before highlighting anything, ask: "could I point to this in an actual bank record, or name
+a real organisation?"**
+- "bank statements", "mutual fund holdings", "PAN", "salary details" → **yes** → mark as DATA_TYPE.
+- "credit bureaus", "affiliates", "ICICI HFC group companies" → **yes, a real kind of organisation** → THIRD_PARTY.
+- "loan eligibility assessment", "credit underwriting" → **yes, a nameable activity** → PURPOSE.
+- "information", "the data", "third parties", "services" → **no** → do not mark.
+
+**The STOPLIST — never highlight these, under any label, however often they appear:**
+
+| Category | Never mark |
+|---|---|
+| Umbrella data words | `information`, `data`, `personal data`, `personal information`, `financial information`, `sensitive information`, `your details`, `such details`, `the information` |
+| Generic recipients | `third parties`, `third party`, `other parties`, `partners` *(mark the **named** recipient instead: "credit bureaus", "lending partners", "group companies")* |
+| Generic service words | `services`, `the services`, `our services`, `the platform` |
+| Vague purposes | `business purposes`, `lawful purposes`, `other purposes`, `related purposes`, `as required`, `reporting` |
+
+> **The key one:** *"third parties"* is the **category name**, not a recipient. Marking it is like tagging
+> the word "fruit" instead of "apple". Mark who they actually are, when the document says.
+
+#### Rule 8b — AA-framework roles and regulators are NEVER THIRD_PARTY
+
+The round-1 audit found one annotator systematically tagging the **machinery of the AA system itself** as
+a third party: `Reserve Bank of India`, `RBI`, `Financial Information User` / `FIU`,
+`Financial Information Provider` / `FIP`, `Account Aggregator` / `AA`, `Sahamati`. That is ~40 spans of
+pure disagreement, and it is wrong.
+
+**Never highlight any of these:**
+
+| Never mark | Why |
+|---|---|
+| `Account Aggregator`, `AA` | the regulated **pipe** the data travels through — data is not "shared with" it |
+| `Financial Information Provider`, `FIP` | the bank **holding** your data — the source, not a recipient |
+| `Financial Information User`, `FIU` | the **main company** the consent is for (Rule 3 already says don't mark it) |
+| `Reserve Bank of India`, `RBI` | the **regulator**. Supervising is not receiving your data |
+| `Sahamati` | the **industry body**, not a data recipient |
+| `consent artefact`, `consent manager` | names of **mechanisms**, not data types |
+
+**THIRD_PARTY means: somebody your data is passed ON to, beyond the main company.** Credit bureaus,
+affiliates, group companies, service providers, lending partners, credit information companies — those
+are real recipients. The framework's own plumbing is not.
+
+*Quick test: "does my data end up in their hands as a result of this consent?" RBI supervises the system
+but does not receive your bank statements. The AA moves the data but is forbidden from reading it.*
+
+**Default rulings on the round-1 borderline cases** (use these unless the team agrees otherwise):
+- `cookies`, `pixels`, `device identifiers` → **do NOT mark.** They are collection *mechanisms*, not
+  financial/personal data types in the AA sense.
+- `address`, `mobile number`, `email` → **DO mark** (DATA_TYPE) — specific, appear as real record fields.
+- `usage data`, `profile` → **do NOT mark** — umbrella terms.
+- `fraud prevention`, `AML/CFT checks`, `credit assessment` → **DO mark** (PURPOSE) — nameable activities.
+- `provision of the services` → **do NOT mark** — a generic service word wearing a purpose costume.
+
+**If you are still torn:** do not mark it, and add it to Tricky cases. Under-marking a genuinely
+ambiguous phrase costs one entity; over-marking a vague one pollutes every document it appears in.
 
 ### Worked examples (exactly what to do)
 - Sentence: *"We collect your bank statements and mutual fund units to perform a credit assessment."*
@@ -231,5 +321,110 @@ training/test format — you don't need to do that part.
 
 ---
 
+---
+
+## PART G2 — Round 2: fixing your own work from your personal fix list (D31)
+
+Round 1 scored **kappa 0.28** against a 0.6 gate. You do **not** need to re-annotate from scratch, and
+you do **not** need to sit together for hours. Each of you gets a **personal fix list** telling you
+exactly what to change and **where** (character positions), so you can work **alone, in parallel**.
+
+### Step G2.1 — Generate the fix lists (P1 runs this once)
+
+```powershell
+python -m consentledger.data.fixlist --corpus data/aa/annotated/ls_import_tasks.json --a data/aa/annotated/ExportA.json --b data/aa/annotated/ExportB.json --name-a P1 --name-b P4
+```
+
+This writes `results/annotation/fixlist/P1/<doc>.md` and `results/annotation/fixlist/P4/<doc>.md`.
+P1 sends P4 their folder. **Each of you only ever reads your OWN folder.**
+
+### Step G2.2 — Calibrate FIRST on two documents (do not skip)
+
+Before touching all 23, both of you re-do just these two under the v4 rules:
+- **`26_zerodha_tos`** — short (5k characters)
+- **`17_pb_fintech_aa_privacy`** — dense (15k characters)
+
+*Why one short and one dense: the round-1 problem was density and repeats, which barely shows up in a
+short document. Calibrating only on short files would give you false confidence.*
+
+Both export, then run:
+```powershell
+python -m consentledger.data.kappa --a exportA.json --b exportB.json
+```
+
+**Read the number against this table — agreed in advance, so nobody argues afterwards:**
+
+| kappa on the 2 docs | what you do |
+|---|---|
+| **0.75 or higher** | The rules worked. Go to G2.3 and do all 23. |
+| **0.60 – 0.75** | Proceed, but re-run the check after 5 more documents before trusting it. |
+| **below 0.60** | **Stop.** The rules are still not enough. Talk to the team and diagnose — do not grind through 23 documents on rules that do not work. |
+
+### Step G2.3 — Work through your fix list, document by document
+
+Open your file for a document. It starts with a line like
+*"26 mechanical fixes (no judgement needed) + 5 to shorten + 11 to re-read."*
+Do the buckets **in order** — the first three need no thinking at all:
+
+1. **DELETE** — these spans break Rule 8 (stoplist) or Rule 8b (AA roles). Delete them.
+   *The file groups them, e.g. "`third parties` x21" — decide once, delete all of them.*
+2. **ADD (Rule 7 repeats)** — you already marked this phrase **in this same document** and skipped these
+   occurrences. Add them. This is your own inconsistency, so there is nothing to debate.
+3. **ADD (missed)** — phrases **both** of you endorse elsewhere, which appear here and you left blank.
+   Add them.
+4. **SHORTEN** — the other annotator used a shorter version of your span. Rule 1 prefers the shorter one.
+5. **RE-READ (self-check)** — phrases that **only you** ever mark anywhere in the corpus. Apply the
+   Rule 8 test to each: *"could I point to this in a real bank record, or name a real organisation?"*
+   If no, delete it.
+
+> ⚠ **The one place this can go wrong.** The self-check list is long, and it is tempting to mass-delete
+> everything in it. **Do not.** You would swing the corpus from over-marking to under-marking, which is
+> just as damaging. Real entities live in that list — `login id`, `private keys`, `grievance redressal`
+> are all things only one annotator caught, and they are all **correct**. Judge each phrase on the test,
+> not on how long the list is.
+
+**Finding a span fast:** every item shows character offsets like `[7979:7996]`. Use your browser's find
+(Ctrl+F) on the phrase shown; the offsets tell you which occurrence if the phrase appears several times.
+
+### Step G2.4 — Re-export and measure
+
+When you have finished all 23 documents, both export again (Project → Export → JSON), put the two files
+together, and run:
+
+```powershell
+python -m consentledger.data.kappa --a exportA.json --b exportB.json
+```
+
+**This is the round-2 kappa, and it is the number reported in the paper.** If it clears 0.6, go to
+PART G Step G3 (adjudicate the small residue) and produce the gold file. If it does not, run
+`agreement_report.py` again — it will show which bucket is still failing.
+
+*Why this route: fixing your own work in parallel keeps all **23 documents** (a smaller corpus leaves too
+little for training and testing), takes about 3 hours each instead of a joint all-day session, and
+produces two corrected exports — so a real agreement number can be measured, which a hand-merged file
+could never give.*
+
+---
+
 ## Tricky cases we've resolved (add every hard case here so future annotation stays consistent)
-- (none yet — add as: *"phrase X → label Y, because …"*)
+Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
+- *"third parties"* (bare phrase) → **do not mark**. It is the category name, not a recipient; mark the
+  named recipient instead ("credit bureaus", "lending partners", "group companies").
+- *"cookies" / "pixels" / "device identifiers"* → **do not mark**. Collection mechanisms, not AA data types.
+- *"personal data" / "financial information" / "usage data" / "profile"* → **do not mark**. Umbrella terms.
+- *"services" / "the services" / "provision of the services"* → **do not mark**. Generic.
+- *"address" / "mobile number" / "email"* → **mark as DATA_TYPE**. Specific, real record fields.
+- *"fraud prevention" / "AML/CFT checks" / "credit assessment"* → **mark as PURPOSE**. Nameable activities.
+- *"RBI" / "Reserve Bank of India"* → **do not mark**. Regulator, not a data recipient (Rule 8b).
+- *"Financial Information User" / "FIU" / "Financial Information Provider" / "FIP" /
+  "Account Aggregator" / "AA" / "Sahamati"* → **do not mark**. AA-framework roles, not third parties.
+- *"consent artefact" / "consent manager"* → **do not mark**. Mechanism names, not data types.
+- *"spi" / "pii" / "cookie" / "operating system" / "version"* → **do not mark**. Web-technical or
+  abbreviation noise, not AA data types.
+- *"login id" / "pins" / "private keys" / "user authentication credentials" / "signature"* → **mark as
+  DATA_TYPE**. Specific credential fields that really do appear in records.
+- *"grievance redressal" / "dispute resolution" / "data sharing" / "authentication"* → **mark as
+  PURPOSE**. Round 1 missed these ~100 times between them.
+- **Repeats:** every occurrence gets marked, always (Rule 7) — skipping repeats poisons the training labels.
+
+Add new cases below as: *"phrase X → label Y (or do not mark), because …"*
