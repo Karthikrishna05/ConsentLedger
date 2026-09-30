@@ -35,7 +35,8 @@ data/aa/annotated/[Ee]xport*.json
 data/aa/annotated/[Gg]old.json
 # Per-document agreement diffs quote the annotated phrases from the scraped docs.
 # summary.csv + report.md (numbers only) ARE committed.
-results/annotation/agreement/docs/
+# ...any agreement_report --out folder, not just the default one (round2_calib etc.)
+results/annotation/*/docs/
 results/annotation/audit/per_doc/
 # Adjudication worklists quote span text -> ignored. proposed_gold/ is ALSO ignored: it is a
 # machine-merged snapshot derived from the FAILED round-1 annotation (kappa 0.28) and must never be
@@ -50,9 +51,11 @@ results/annotation/fixlist/P*/
 data/aa/consent_artefacts/synthetic/
 # Summarizer datasets: train/test are regenerable via `summ.make_dataset`; gold_refs.jsonl (P1/P4's
 # handwritten summaries + gold facts — team's own work, no raw scraped text) IS committed.
-data/summ/train.jsonl
-data/summ/test.jsonl
-data/summ/preds.jsonl
+# Everything the summarizer builds quotes scraped policy text (chunks, prompts, LLM references,
+# train/test pairs, predictions) -> ignored. Regenerate with `summ.build_dataset chunks`.
+data/summ/*.jsonl
+# ...except the team's own hand-written references, which ARE committed.
+!data/summ/gold_refs.jsonl
 
 # COMMITTED (team's own work, needed for collaboration in this private repo, tracked by default):
 #   data/aa/annotated/ (except exports/gold/import above)   data/aa/consent_artefacts/ (except synthetic/)

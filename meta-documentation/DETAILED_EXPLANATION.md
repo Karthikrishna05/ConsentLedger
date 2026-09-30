@@ -25,7 +25,8 @@ updated whenever anything new is built** (it is part of the audit trail).
    - 5.6 `clean.py`
    - 5.7 `ls_import_export.py` + `kappa.py` (annotation tooling)
    - 5.8 `trim_spans.py`
-   - 5.9 Annotation round 1: the kappa 0.28 failure, its diagnosis, and the rescue tools
+   - 5.9 Annotation: round 1 (kappa 0.28), the rescue tools, round-2 calibration, Rules 9-22
+   - 5.10 The summarizer dataset — P2's track (D33, D34)
 6. NER model pipeline — file by file
    - 6.1 `seed.py`
    - 6.2 `ner/dataset.py`
@@ -483,7 +484,11 @@ items"** and lists every item with **character offsets**, so the annotator jumps
 Label Studio. `proposed_gold/<doc_id>.json` holds offsets + labels only (no document text) and is
 committed; the worklists quote spans and are git-ignored.
 
-#### 5.9.5 The scope decision
+#### 5.9.5 The scope decision *(superseded — see 5.9.7)*
+
+> ⚠ **Overruled by D31.** The 12-document cut below was rejected: it would leave too few documents for
+> the E1/E2 study. All 23 documents are kept and fixed with per-annotator fix lists (5.9.7). Kept here
+> as a record of the reasoning.
 
 1,351 review items does not fit the deadline. A stratified cut — **12 documents, 7 terms / 3 privacy /
 2 charter**, preserving the corpus mix — gives **385 gold spans and 422 review items: 31% of the work,
@@ -508,6 +513,144 @@ which are now written into the guideline and largely automated. Two standing cau
 
 Decisions logged: **D29** (the failure, diagnosis, recovery path) and **D30** (corpus audit, perspectives,
 Rule 8b, and the inflated-number correction).
+
+---
+
+#### 5.9.7 Round 2 plan: personal fix lists instead of cutting the corpus (D31) — `fixlist.py`
+
+The 12-document cut in 5.9.5 was **rejected by P1, correctly**: 12 documents leaves about 8 test and 4
+adaptation documents, too few for the E1/E2 comparison that *is* the study. P1's alternative: tell each
+annotator exactly what **they** missed and where.
+
+`fixlist.py` writes **one file per annotator per document**, with five buckets ordered from certain to
+judgement-needed: **DELETE** (breaks Rule 8/8b), **ADD_REPEAT** (you marked this phrase elsewhere in the
+same document but skipped here — Rule 7), **ADD_MISSED** (both of you endorse this phrase elsewhere and it
+appears here unmarked), **SHORTEN**, and **SELF_CHECK** (a phrase only you ever use). Every item carries
+character offsets. The spans collapse into far fewer real decisions — P1's 259 deletions are only 23
+distinct phrases — so each person has roughly 250 mechanical decisions, done **alone and in parallel**.
+*Analogy: instead of a long joint referee meeting, each player gets their own marked-up replay.*
+
+Two safeguards came with it. **Calibrate first, and never on fix-list output**: if both annotators apply
+the same tool-generated corrections and then measure agreement, the number is circular — it only proves
+they can follow the same instruction sheet. And a **decision table fixed in advance** (kappa >= 0.75
+proceed; 0.60-0.75 proceed with a re-check; < 0.60 stop), so a borderline result cannot be argued into a
+pass afterwards. `kappa.py` gained `--docs`, because Label Studio exports the whole project regardless of
+the filters shown on screen.
+
+#### 5.9.8 The second failure, and why "shortest phrase that makes sense" did not work (D32)
+
+Both annotators re-did two documents from scratch under v4. Agreement got **worse**: **0.492 -> 0.374**.
+The per-label view explained it at once: **DATA_TYPE had converged** (both at a median of 2 words, the best
+label at F1 0.465) — so Rules 7/8/8b worked — but **PURPOSE scored F1 = 0.000**. P1's PURPOSE spans had a
+median of **3 words**, P4's **8-10** (`to raise a grievance with the grievance resolution officer of the
+FIU`). A 3-word and a 10-word span can never match exactly.
+
+The lesson that shaped every later rule: **countable rules survive two annotators; judgement rules do
+not.** Rules 7, 8 and 8b could be counted ("every occurrence", "this word is banned") and held. Rule 1
+("the shortest phrase that still makes sense") is a judgement, and P4 was applying it honestly, just
+differently. So **Rule 9** made PURPOSE countable — at most 5 words: drop the leading "to/for", stop at the
+object, count — and **Rule 9b** closed a loophole where banned umbrellas came back with a modifier
+(`client data`, `data received from an FIP`). A small tooling bug surfaced too: a relative `--out` path
+crashed three reports; they now resolve the path first.
+
+#### 5.9.9 Why PURPOSE kept failing: relaxed matching and Rule 10 (D35) — `relaxed_agreement.py`
+
+P1's next suggestion was reasonable: PURPOSE spans carry function words (a, the, to, within), so score them
+with a looser match. `relaxed_agreement.py` computes four levels side by side — **EXACT**, **PARTIAL** (any
+character overlap), **CONTENT** (function words removed, then an overlap coefficient of at least 0.6, so
+`raise a grievance` matches the long version exactly) and **TOKEN** — with one-to-one matching so one long
+span cannot absorb several short ones. Its self-check caught a real bug before any result was trusted: the
+matcher compared the *end offset* where it meant to compare the *label*, which would have made the loose
+levels behave like exact matching.
+
+The result **refuted** the idea: PURPOSE rose only from **0.000 to 0.138**. If the disagreement had been
+about edges, relaxed matching would have lifted it to 0.6-0.8. Listing the spans showed why — the two
+annotators marked purposes in **different parts of the same document** (in `17_pb` one found ten
+purposes at character positions 6,671-9,581, the other four at 222-1,984, sharing one). A "no vague
+annotations" rule was also **tested, not assumed**: deleting every vague PURPOSE span from both left exact
+F1 at 0.000 and relaxed F1 at 0.087. P1's purposes were specific; P4 simply never looked there. (The
+guideline already said "vague" in six places.)
+
+Dropping PURPOSE was considered and **rejected by P1 for a good reason**: the consent artefact's
+`Purpose.code` is standardised but its `Purpose.text` is free-form, so the declared purpose cannot be
+trusted on its own. Comparing it with what the policy text actually describes is a real check the
+framework never performs — the paper's disclosure-fidelity application (D28).
+
+So **Rule 10** gives PURPOSE a **finite list**: a span counts only if it names an activity in one of **10
+categories** — credit/loan assessment, account monitoring, financial management, fetching/sharing
+financial information (the AA service itself), fraud & verification, legal compliance, support &
+grievance, communication, analytics, marketing. Four checks in order: an activity, not a goal -> fits a
+row -> not a phrase that fits any company's policy -> at most 5 words. The official five ReBIT codes were
+too narrow to use directly (no row for fraud checks, grievances or marketing); the comparison with the
+declared code happens later, in analysis. *Analogy: "find anything valuable in this house" produces two
+different bags; "find these ten kinds of thing" produces the same bag.* **There will be no round 4**: the
+next calibration result, whatever it is, leads to the fix pass.
+
+#### 5.9.10 Every small decision, covered: the granular audit and Rules 11-22 (D36)
+
+The last pass looked at **every span both annotators made in all 23 documents** (1,761 and 933) and asked,
+for each small decision an annotator faces, whether the guideline said anything. Where it did not, and
+the annotators had actually faced that decision, a rule was added:
+
+| Rule | Decision | Evidence (P1 / P4) |
+|---|---|---|
+| 11 | no space or punctuation at a span's edge | 14 / 41 spans |
+| 12 | abbreviations: highlight the name as first written, stop at the bracket | 30 / 30 handled 3 ways |
+| 13 | example lists: every item, never the umbrella word, never "etc." | 834 / 347 spans in such lists |
+| 14 | a list whose items share a word written once is **one** highlight | PURPOSE lists 19 / 83 |
+| 15 | never overlap, nest or duplicate; keep the outer span | 0 / 12 |
+| 16 | THIRD_PARTY only if the sentence says data goes to it | ~112 / ~98 without a data-flow verb |
+| 17 | the company that wrote the policy (and its staff) is never a THIRD_PARTY | 0 / 19 |
+| 18 | mark the mention whether the practice is affirmed, possible, or denied | 508 / 276 in negated sentences |
+| 19 | a word named after data is not data (`password mining`, `KYC process`) | 9 / 9 |
+| 20 | never headings; definitions are ordinary sentences | ~67 / ~75 |
+| 21 | one highlight across a line wrap; glued text: select only the entity's letters | 22 / 39 |
+| 22 | one phrase, one label; check the colour before Submit | 9 / 11 phrases with >1 label |
+
+`fixlist.py` enforces three of these automatically — **Rule 11** (edges), **Rule 15** (overlaps and
+duplicates) and **Rule 17** (the policy's own company, matched against each document's real legal
+name) — so they arrive in each annotator's fix list as ready-made corrections. Writing those checks
+also exposed that the shared banned list only knew the *singular* AA roles (`FIP` but not `FIPs`);
+the plurals are now banned too. Plus a decision table for "X data / X information / X details" phrases (mark `contact information`,
+`KYC documents`, `transaction history`; not `personal details`, `technical data`), and new stoplist words
+(`stakeholders`, `persons`, `entities`).
+
+**Rule 18 comes straight from the training data.** The OPP-115 loader keeps every span whether the
+practice is affirmed or denied, so the model learns that *"we do **not** share with advertisers"* contains
+a THIRD_PARTY. The AA test set must be annotated the same way or E1/E2 would compare two different tasks.
+It does mean a denied purpose ("we do not use your data for marketing") will be extracted as `marketing`,
+so the verification analysis must check polarity before flagging anything.
+
+**The audit also found a corpus defect.** In PDF-extracted documents `clean.py` lost spaces, producing
+tokens like `anyinformationprovidedbyyou` — 149 signals, concentrated in `02_digio_terms` and
+`10_perfios_terms`. That second document had just been chosen for the independent calibration round;
+calibrating on it would have measured the extraction bug instead of the guideline. **The calibration
+document is now `23_upmint_aa_tos`.** The two affected documents must not be re-cleaned mid-annotation:
+re-cleaning shifts every character offset and would invalidate the spans already made on them.
+
+### 5.10 The summarizer dataset — P2's track (D33, D34)
+
+This belongs to P2; the builder and its guide were handed to P2 via Drive and are **not committed by P1**.
+It is recorded here so the reasoning is not lost.
+
+P2's first attempt had GPT summarise policy text and got **30 lines in, 25 out** — paraphrase, not
+compression. Two causes: GPT was given no countable length rule, and "lines" hid how small the texts were
+(corpus lines are wrap fragments of about 9 words). The recommended design (D33) is **real policy text ->
+short summary**: documents are cut into 180-260-word chunks at section boundaries (T5 reads at most 512
+tokens), split **by document** (13 train / 10 test), and each chunk carries a must-mention **checklist**
+of the annotated facts inside it. Every reference summary must be **at most 25% of the chunk and at most
+60 words** and keep **at least 80% of its checklist**, or it is rejected automatically with the reason.
+Tested on real chunks: accepted references compressed to 17% with every fact kept; a deliberately bad one
+was rejected on both counts. The alternative — turning a *list of facts* into a sentence — was dropped,
+because when the input is the fact list, "did the summary keep the facts?" is nearly automatic and the
+faithfulness audit would measure almost nothing.
+
+Because P1 and P4 only have time for the gold annotations, the **test set is reference-free** (D34): each
+summary is scored against the **gold facts of its own chunk** — coverage (kept), hallucination (entities
+the NER model finds that are not in the source), compression. No handwritten summaries are needed, and the
+test set grows from a 30-chunk sample to every test chunk with a gold fact (122 of 194). ROUGE/BERTScore
+become optional, scored against GPT references and reported as silver. Switching the checklists from
+silver to gold needs no new code: pass the gold export as both inputs.
 
 ---
 
@@ -634,38 +777,37 @@ small training add-on (E2).
 
 ## 8. Current state: done vs pending
 
-**Done & verified:** environment; `scaffold.py`; OPP-115 downloaded + `load_opp115.py` (24,516 spans,
-gated) + `bio_tagging.py` (train/dev CoNLL); **`trim_spans.py`** (long spans → short noun phrases,
-median 6→2, original preserved) + **token-F1** + **multi-seed (`--seed`)** + **`collect.py`** (mean±std);
-AA scraped (28/29) + cleaned + normalized (23 usable docs); annotation tooling (`ls_import_export
-make-tasks`, `kappa.py`) + **`ANNOTATION_GUIDELINE.md` v3** (beginner-proof) + kit zip sent to P4 (D26);
-pre-training code committed.
+**Done & verified:** environment; OPP-115 loaded (24,516 spans) and BIO-tagged; span trimming
+(D25); multi-seed training + `collect.py`; **the full E1 sweep — 3 backbones x 3 seeds on OPP-115 dev**:
+Legal-BERT 0.400 +/- 0.006, InLegalBERT 0.386 +/- 0.003, BERT-base 0.382 +/- 0.003 entity macro-F1, with
+the ranking flipping on token-F1 — i.e. **no clear backbone winner**, as the honesty rule expects. AA corpus
+scraped, cleaned (23 documents), double-annotated. Consent-artefact schema verified against the primary
+source (D27); contribution claims revised after a systematic search (D28, `RELATED_WORK.md`).
 
-**Key result so far (D25):** the span-trimming fix lifted OPP-115 dev entity-F1 from **0.12 → 0.38**
-(token-F1 0.53) on BERT-base — confirming the earlier low score was span-shape, not training. The full
-3-backbone × 3-seed sweep is running; **the AA test set (E1/E2) is the headline number**, produced after
-annotation.
+**Annotation — where it stands:** round 1 kappa **0.279** (D29); corpus audit found the failure mechanical
+(D30); personal fix lists replace the corpus cut (D31); round-2 calibration kappa **0.374** with PURPOSE
+F1 0.000 (D32); relaxed matching showed PURPOSE failing on *where* to look, not on edges, leading to the
+10-category **Rule 10** (D35); a full granular audit added **Rules 11-22** (D36). **Guideline is v7.**
+Tools: `kappa.py` (`--docs`), `agreement_report.py`, `annotation_audit.py` (`--strict`), `adjudicate.py`,
+`fixlist.py` (Rule 9/9b buckets), `relaxed_agreement.py`.
 
-**Annotation round 1 is DONE and FAILED the gate (see 5.9).** All 23 docs were double-annotated;
-Cohen kappa = **0.279** vs the 0.6 gate, only 1/23 docs passing. Diagnosis: **mechanical, not
-conceptual** (only 4-7 label conflicts corpus-wide; 83% of disagreement was one-sided marking, driven by
-P4 making 10 repeat marks against P1s 442). Fixes shipped: guideline **v4** (Rules 7, 8, 8b), three new
-tools (`agreement_report.py`, `annotation_audit.py`, `adjudicate.py`), and an auto-adjudicated
-**proposed gold of 1,136 spans** with only 1,351 human review items left (422 if the recommended 12-doc
-stratified cut is taken). Also done: consent-artefact fixtures + JSON Schema + generator verified against
-the primary ReBIT source (D27); contribution claims revised after a systematic novelty search (D28,
-`RELATED_WORK.md`); per-person guides `P2.md` and `P3.md`.
+**Summarizer (P2's track):** dataset builder and plan delivered to P2 via Drive (D33, D34); not in P1's
+commits.
 
 **Pending — in priority order:**
-1. **BLOCKING: re-calibrate on 2 short docs until kappa >= 0.6**, then adjudicate (D29 recovery path).
-   Nothing downstream is trustworthy until this clears.
-2. Convert the adjudicated gold to `aa_test.conll`; run **E1/E2** on the AA test set (the headline number).
-3. Finish `collect.py` aggregation; upload weights to HF Hub.
-4. Parallel, unblocked now: P2 summarizer + faithfulness (`P2.md`), P3 smart contract (`P3.md`).
-5. Paper: Related Work and Corpus/Annotation-Methodology sections can be written today — the
-   kappa 0.28 -> guideline refinement -> round-2 kappa story is itself reportable.
+1. **Calibration round 3 (final) on `23_upmint_aa_tos`** under guideline v7 — fresh, independent, no fix
+   lists open. Score with `kappa.py --docs` and `relaxed_agreement.py --docs`. Whatever the result, the
+   next step is the fix pass (no round 4, D35). P4 needs the v7 guideline first.
+2. Fix pass on all 23 documents in parallel (regenerate fix lists first), then round-2 kappa on the full
+   corpus, then adjudicate the residue -> gold.
+3. Glued-text documents (`02_digio_terms`, `10_perfios_terms`): fix `clean.py`, then re-annotate or remap
+   offsets for those two only — never re-clean mid-annotation (D36).
+4. Convert gold to `aa_test.conll`; run **E1/E2** on the AA test set — the headline number.
+5. Hand P2 the gold export for the reference-free summarizer test; P3 contract in parallel.
+6. Paper: Related Work and the annotation-methodology story (0.28 -> 0.37 -> round 3, with the diagnosis
+   at each step) can be written now.
 
-See `FLOW.md` for live status and `DECISIONS.md` (D1-D30) for the reasoning behind every choice.
+See `FLOW.md` for live status and `DECISIONS.md` (D1-D36) for the reasoning behind every choice.
 
 ---
 

@@ -1,7 +1,11 @@
-# ConsentLedger — AA Annotation Guide (v4, beginner-proof)
+# ConsentLedger — AA Annotation Guide (v7, beginner-proof)
 
-> **v4 (2026-09-26):** adds **Rules 7, 8 and 8b** after round-1 double-annotation scored kappa 0.28, plus **PART G2** (round-2 personal fix lists, D31).
-> If you annotated before this version, re-read Part A — the two new rules are the whole fix.
+> **v7 (2026-09-30):** adds **Rules 11-22** — every small decision found in a full audit of all 23
+> documents (D36): clean edges, abbreviations, example lists, shared-word lists, overlaps, when a
+> THIRD_PARTY counts, the policy's own company, negation, headings, glued text, label consistency.
+> Earlier: Rule 10 (PURPOSE list, D35), Rules 9/9b (D32), Rules 7/8/8b (D29/D30), PART G2 (D31).
+> If you annotated before this version, re-read Part A. **Rules 9 and 10 decide every PURPOSE; Rules
+> 16-17 decide every THIRD_PARTY.**
 
 This guide assumes **zero prior experience**. If you can use a mouse and copy-paste a command, you can do
 this. Follow it top to bottom. Two people do this independently: **P1** and **P4**.
@@ -20,7 +24,7 @@ things the same way.
 | Label | Highlight… | Real examples (highlight the **bold** words) |
 |---|---|---|
 | **DATA_TYPE** | a kind of financial/personal information | "we collect your **bank account statements**", "**mutual fund holdings**", "**PAN**", "**salary details**" |
-| **PURPOSE** | the reason data is used/shared | "to carry out **loan eligibility assessment**", "for **credit underwriting**" |
+| **PURPOSE** | an activity your data is used for — **only from the 10-category list in Rule 10** | "to carry out **loan eligibility assessment**", "for **credit underwriting**" |
 | **THIRD_PARTY** | someone the data is shared with **beyond** the main company/FIU | "shared with **credit bureaus**", "**affiliates**", "**service providers**" |
 
 ### Do NOT highlight these (leave them alone)
@@ -34,6 +38,8 @@ things the same way.
    **mutual fund holdings** — leave out "your". Drop leading words like *your, the, a, any, all, such*.
 2. **A list = several separate highlights.** For "bank deposits, mutual funds and insurance", make
    **three** DATA_TYPE highlights: "bank deposits", "mutual funds", "insurance" — not one big highlight.
+   *Exception: if the items share a word written only once ("credit/debit card details"), it is ONE
+   highlight — see Rule 14.*
 3. **One label per highlight.** A phrase gets exactly one colour. If you think something is both a
    RECIPIENT and a THIRD_PARTY, remember: THIRD_PARTY = anyone *beyond* the main company the consent is
    for; and a *named main company* (the FIU) is **not** highlighted at all.
@@ -46,7 +52,7 @@ things the same way.
 
 ---
 
-### ⚠ Rules 7 and 8 — added after round 1 (κ = 0.28). READ THESE TWICE.
+### ⚠ Rules 7, 8, 8b, 9, 9b, 10 — added after the failed rounds. READ THESE TWICE.
 
 The first full double-annotation of all 23 docs scored **κ = 0.28** against a 0.6 gate. The diagnosis was
 clear: you agreed on *which label* (only 7 label conflicts in 23 docs) and mostly on *where spans start
@@ -90,6 +96,7 @@ a real organisation?"**
 | Generic recipients | `third parties`, `third party`, `other parties`, `partners` *(mark the **named** recipient instead: "credit bureaus", "lending partners", "group companies")* |
 | Generic service words | `services`, `the services`, `our services`, `the platform` |
 | Vague purposes | `business purposes`, `lawful purposes`, `other purposes`, `related purposes`, `as required`, `reporting` |
+| Generic people & groups *(added v7)* | `stakeholders`, `persons`, `any person`, `entities`, `others`, `third-party entities` |
 
 > **The key one:** *"third parties"* is the **category name**, not a recipient. Marking it is like tagging
 > the word "fruit" instead of "apple". Mark who they actually are, when the document says.
@@ -129,6 +136,295 @@ but does not receive your bank statements. The AA moves the data but is forbidde
 
 **If you are still torn:** do not mark it, and add it to Tricky cases. Under-marking a genuinely
 ambiguous phrase costs one entity; over-marking a vague one pollutes every document it appears in.
+
+#### Rule 9 — PURPOSE: maximum 5 words. Count them.
+
+Round-2 calibration **failed** (kappa 0.374, *worse* than the 0.492 it replaced) and the reason was
+measured precisely: **PURPOSE entity-F1 was exactly 0.000** — not one purpose span matched between the
+two annotators. Not because they disagreed about *what* the purposes were, but about **how much text to
+highlight**:
+
+| PURPOSE span length | P1 | P4 |
+|---|---|---|
+| `26_zerodha_tos` | median **3.0** words | median **10.0** words (longest 16) |
+| `17_pb_fintech_aa_privacy` | median **3.0** words | median **8.0** words (longest 12) |
+
+A 3-word span and a 10-word span describing the same idea **can never match**. That is the whole of the
+zero. Rules 7, 8 and 8b were countable rules and they worked — DATA_TYPE has now converged at a median of
+2 words for both annotators. Rule 1 ("the shortest phrase that still makes sense") is a *judgement* rule,
+and two careful people read it differently. So PURPOSE now gets a countable rule too.
+
+**THE RULE: a PURPOSE highlight is AT MOST 5 WORDS — the action and its object, nothing else.**
+
+Three steps, in order:
+1. **Drop the leading `to` / `for` / `for the purpose of`.** They are never part of the purpose.
+2. **Stop at the object.** Delete every trailing clause that says *where, with whom, through what, or
+   under which circumstances* — anything starting `with…`, `within…`, `through…`, `of the…`, `during…`,
+   `received from…`, `on the … request`.
+3. **Count the words. More than 5? You are highlighting a sentence — cut it down.**
+
+**Worked examples, taken from real round-2 annotations:**
+
+| What was marked (too long) | What to mark |
+|---|---|
+| `to raise a grievance with the grievance resolution officer of the FIU` | **`raise a grievance`** |
+| `For exploring additional use cases within the Account Aggregator framework` | **`exploring additional use cases`** |
+| `calculate the percentage of users accessing a specific feature of the Services` | **`calculate the percentage of users`** |
+| `Verifying income details during account opening or segment activation processes` | **`Verifying income details`** |
+| `or transfer of data on the client's own request from FIPs to clients through the AA` | **`transfer of data`** |
+| `to independently verify any information request received from an AA` | **`verify information request`** |
+| `to fulfil the purpose` | **do not mark** — vague, says nothing |
+| `for the express purpose mentioned in the consent artefact` | **do not mark** — vague, says nothing |
+
+> **Sanity check before you highlight a PURPOSE:** read your span aloud on its own. If it still sounds
+> like a *sentence fragment from a contract* rather than a *name for an activity*, it is too long.
+> "raise a grievance" names an activity. "to raise a grievance with the grievance resolution officer of
+> the FIU" is a contract clause.
+
+#### Rule 9b — `data` and `information` with a modifier are still umbrella terms
+
+Rule 8 already bans bare `data` and `information`. Round 2 showed the same umbrella sneaking back in
+wearing a modifier: `client data`, `data received from a Financial Information Provider`,
+`data collected from an FIP`, `data in an aggregated and anonymised form`, `related information`.
+
+**The rule: if the head noun is `data` or `information`, only mark it when the modifier names a specific
+financial item.**
+
+- ✅ **mark:** `credit information`, `transaction data`, `account information` — the modifier names a real
+  category you could find in a record.
+- ❌ **do not mark:** `client data`, `data received from an FIP`, `such information`,
+  `data in an aggregated and anonymised form` — the modifier describes *whose* it is, *where it came
+  from*, or *what state it is in*. That is not a kind of data.
+
+*Quick test: strip the modifier. If what is left is just "data" or "information" and the modifier told you
+nothing about the CONTENT, do not mark it.*
+
+#### Rule 10 — PURPOSE comes from a FIXED LIST of 10 categories. Anything else is not a PURPOSE.
+
+Round-2 calibration scored **PURPOSE F1 = 0.000**, and Rule 9 (word count) was not the whole story. The
+two annotators found purposes **in different parts of the same document** — in `17_pb_fintech_aa_privacy`
+one found ten purposes at character positions 6,671-9,581, the other found four at 222-1,984, and they
+shared exactly one. Even with relaxed matching, PURPOSE only reached **F1 0.138**, and deleting every vague
+span made it **worse** (0.087). The problem was not vague spans; it was that "the reason data is used"
+has no edge, so in a 5,000-word policy two careful people pick different sentences.
+
+The fix is the same as every rule that worked: give a **finite list to find**, not an open idea to judge.
+
+**THE RULE: mark a PURPOSE span only if it names an activity that belongs to one of these 10 categories.**
+Same PURPOSE button as before — this changes the *definition*, not the labels.
+
+| # | Category | Mark phrases like |
+|---|---|---|
+| 1 | **Credit / loan assessment** | `loan eligibility assessment`, `credit underwriting`, `verifying income details`, `processing loan application` |
+| 2 | **Account monitoring & collection** | `monitor accounts`, `loan collection`, `track overdue payments` |
+| 3 | **Financial management & insights** | `wealth management`, `budgeting`, `spending analysis` |
+| 4 | **Fetching, consolidating & sharing financial information** (the AA service itself) | `retrieve and share financial information`, `consolidate accounts`, `aggregated statement`, `Account Aggregation services` |
+| 5 | **Fraud prevention, security & verification** | `fraud prevention`, `verification of identity`, `KYC checks`, `AML checks`, `fraud detection and prevention` |
+| 6 | **Legal & regulatory compliance** | `comply with applicable law`, `respond to authorities`, `prosecution of offences` |
+| 7 | **Customer support & grievance** | `respond to queries`, `resolve problems`, `raise a grievance`, `dispute resolution` |
+| 8 | **Communication** | `send you notices`, `offer alerts`, `send notifications` |
+| 9 | **Analytics & service improvement** | `calculate the percentage of users`, `improve our services`, `exploring additional use cases` |
+| 10 | **Marketing & promotion** | `marketing`, `promotional offers`, `cross-selling products` |
+
+**Four checks, in order, before you press PURPOSE:**
+1. **Is it an ACTIVITY done with your data?** A goal or a state is not an activity.
+   `maintaining your privacy` → **no**. `respond to queries` → yes.
+2. **Does it fit one of the 10 rows above?** If you cannot name the row number, **do not mark it**.
+   `to deregister from any AA` is your right, not a use of your data → no row → **do not mark**.
+3. **Would it read the same in ANY company's policy?** Then it names nothing. **Do not mark it.**
+   `to fulfil the purpose`, `for the purposes stated herein`, `for lawful purposes` → **do not mark**.
+4. **Cut it to at most 5 words** (Rule 9): drop `to`/`for`/`purpose of`, stop at the object.
+   `purpose of verification of identity` → **`verification of identity`** (row 5).
+
+**Worked examples, taken from the real round-2 annotations:**
+
+| What was marked | Verdict |
+|---|---|
+| `Respond to queries` | ✅ row 7 |
+| `send you notices` | ✅ row 8 |
+| `calculate the percentage of users` | ✅ row 9 |
+| `Verifying income details` | ✅ row 1 |
+| `Fraud detection and prevention` | ✅ row 5 — one highlight: the items share "fraud" (Rule 14) |
+| `to raise a grievance with the grievance resolution officer of the FIU` | ✅ row 7 — cut to `raise a grievance` |
+| `Account Aggregation services` | ✅ row 4 — it names the specific AA service (bare `services` is still banned by Rule 8) |
+| `maintaining your privacy` | ❌ a goal, not an activity (check 1) |
+| `to deregister from any AA` | ❌ a user right, no row (check 2) |
+| `to fulfil the purpose` | ❌ fits any policy (check 3) |
+| `contracted third parties` | ❌ not an activity at all — if anything it is a THIRD_PARTY |
+
+> **Why this list and not the five official ReBIT purpose codes?** The ReBIT codes (101-105) describe why
+> an FIU pulls financial data — they have no slot for fraud checks, grievances, notices or marketing,
+> which policies really do describe. The 10 rows cover what AA policies actually say. The comparison with
+> the declared ReBIT code happens later, in analysis: rows 1-4 correspond to the codes; a policy whose text
+> leans on rows 9-10 while declaring a narrow code is exactly the mismatch the project wants to flag.
+> **Annotators never need to think about codes** — only about the row.
+
+---
+
+### Rules 11–22 — the small decisions (from the full 23-document audit, D36)
+
+After Rule 10, every span both annotators made in all 23 documents (P1: 1,761, P4: 933) was checked
+against every small decision an annotator faces. Each rule below exists because the guideline was
+**silent** on a decision the annotators actually had to make — the numbers in *italics* are how often
+it came up. Most take one second to apply.
+
+#### Rule 11 — Clean edges: a highlight starts and ends on a letter or digit
+
+No space, comma, full stop, quote mark or bracket at either end.
+`'banks '` → **`banks`** · `'chat messages,'` → **`chat messages`** · `'"FIPs"'` → (Rule 8b: not marked at all)
+*Round 1: P1 14 spans, P4 41 spans had a space or punctuation at an edge. Every one is an automatic
+exact-match miss even when both people meant the same words.*
+
+#### Rule 12 — Abbreviations: stop at the bracket
+
+When a name is followed by its abbreviation or expansion in brackets or quotes, highlight the name **as
+first written** and stop before the bracket:
+- `Permanent Account Number (PAN)` → **`Permanent Account Number`**
+- `PAN (Permanent Account Number)` → **`PAN`**
+- `transaction authentication number "TAN"` → **`transaction authentication number`**
+
+Every later standalone use of the abbreviation (`PAN`) is highlighted on its own, every time (Rule 7).
+If the bracket sits **inside** the name — `CIS (Collective Investment Schemes) units` — highlight the whole
+name including the bracket. Abbreviations of banned terms stay banned: `PII`, `SPI` (Rule 8), `FIP`,
+`FIU`, `AA`, `RBI` (Rule 8b).
+*Round 1: 30 bracketed spans each, handled three different ways between the two annotators.*
+
+#### Rule 13 — Lists of examples: mark every item, never the umbrella, never "etc."
+
+When the text says *"… such as / including / e.g. / for example …"* followed by a list:
+- **Mark every item in the list** that passes the other rules.
+- **Never mark the umbrella word** that introduces the list, or its abbreviation.
+  *"We collect your PII, including: a. your name, b. your mobile number"* → **`name`**, **`mobile number`**
+  — not `PII`, not `Personally Identifiable Information`.
+- **Never mark** `etc.`, `and more`, `and the like`, `other similar information`, `and so on`.
+
+*Round 1: 834 of P1's spans sat inside example lists against 347 of P4's — the single largest source of
+one-sided marking. P4 was stopping after the first few items.*
+
+#### Rule 14 — Lists that share a word: one highlight
+
+Rule 2 says a list becomes several highlights. That holds only when **each item is complete on its
+own**. When the items share a word that is written only **once**, splitting would leave broken pieces —
+so the whole list is **one** highlight:
+
+| Text | Why | Highlight |
+|---|---|---|
+| `bank statements, mutual funds and insurance` | each item complete alone | **3** highlights (Rule 2) |
+| `credit/debit card details` | "card details" is shared | **1**: `credit/debit card details` |
+| `first and last name` | "name" is shared | **1**: `first and last name` |
+| `identity and contact information` | "information" is shared | **1** |
+| `fraud detection and prevention` | "fraud" is shared | **1** (PURPOSE, row 5) |
+| `retrieve, view, consolidate and share financial information` | one shared object | **1** (PURPOSE, row 4) |
+
+**Counting for Rule 9:** a shared-word list counts as **one word**. So
+`retrieve, view, consolidate and share financial information` counts as 3 (`[list] financial information`)
+and stays within the 5-word limit.
+*Round 1: PURPOSE lists were split by P1 and lumped by P4 — 19 vs 83 coordinated PURPOSE spans.*
+
+#### Rule 15 — Never overlap, never nest, never duplicate
+
+One stretch of text carries **at most one** highlight.
+- If one entity sits **inside** another, mark only the **outer (longer)** one:
+  `verifying income details` → one PURPOSE; do **not** also mark `income details` inside it.
+  *(The training pipeline keeps only the longest of any overlapping spans anyway — anything inside is
+  silently thrown away, so marking it is wasted effort and makes agreement look worse.)*
+- Never highlight the same words twice (a double-click creates an invisible duplicate).
+*Round 1: P4 had 12 overlapping or duplicate highlights, P1 none.*
+
+#### Rule 16 — THIRD_PARTY needs a data flow in the same sentence
+
+Mark an organisation as THIRD_PARTY **only if its sentence says your data goes to it** — it is shared,
+disclosed, transferred, sold, provided, made available, given access, or received by it.
+Organisations named for **any other reason** are **not** marked:
+
+| Sentence is about… | Example | Mark? |
+|---|---|---|
+| sharing data | "we may share your information with **credit bureaus**" | ✅ |
+| indemnity / liability | "you agree to indemnify the Company and its affiliates, agents and suppliers" | ❌ |
+| jurisdiction | "subject to the exclusive jurisdiction of the courts at Bengaluru" | ❌ |
+| assigning the contract | "we may assign our rights to our subsidiaries or parent companies" | ❌ |
+| being regulated | "we are regulated by the Reserve Bank of India" | ❌ (also Rule 8b) |
+
+Government bodies, **law enforcement** and **courts** follow the same test: "we may disclose your
+information to **law enforcement agencies**" ✅; "the courts at Bengaluru shall have jurisdiction" ❌.
+*Round 1: about 112 of P1's and 98 of P4's THIRD_PARTY spans sat in sentences with no data-flow verb
+(automatic estimate — a few genuine flows use unusual verbs).*
+
+#### Rule 17 — The company that wrote the policy is never a THIRD_PARTY
+
+Extends Rule 3. Never highlight the policy's own company **under any of its names** — brand, product or
+legal name: `Setu`, `Agya Technologies Private Limited`, `Digio Internet Private Limited`, `PennyDrop`,
+`Zerodha` (each in its own policy). The same goes for **its own people**: `officers`, `directors`,
+`employees`, `Support Team`, `our staff`. They are the first party.
+Named **outside** companies that receive your data **are** marked, full name as written:
+`PostHog`, `TransUnion CIBIL Limited`, `Experian`.
+*Round 1: P4 marked the policy's own company 19 times; P1 never did.*
+
+#### Rule 18 — Negation and "may" do not matter: mark the mention either way
+
+Highlight the entity whether the sentence says the company **does**, **may**, or **does NOT** do it:
+*"We will **never** sell your data to **advertisers**"* → **`advertisers`** is a THIRD_PARTY.
+*"We do **not** use your data for **marketing**"* → **`marketing`** is a PURPOSE.
+**Why:** the model is trained on OPP-115, where every practice is highlighted regardless of whether it is
+affirmed or denied. Annotating the AA documents any other way would make the transfer experiment
+compare two different tasks. Whether a practice actually happens is a separate question the model does
+not answer. (For Rule 16, a denied flow — "do not share with X" — still counts as a sentence about data
+going to X.)
+*Round 1: 508 of P1's and 276 of P4's spans sat in negated sentences, with no rule to say whether that
+was right.*
+
+#### Rule 19 — A word named after data is not data
+
+Do not mark a data word that is only the **name of something else**:
+`password mining` (an attack), `KYC process` (a process), `cookie preference` (a setting),
+`Financial Information User` (a role — Rule 8b), `data protection officer` (a person).
+Do mark it when the sentence is **about the data itself**: `date of birth information` → **`date of birth`**.
+*Test: is the sentence talking about the information, or about a thing that is named after it?*
+*Round 1: 9 such spans each.*
+
+#### Rule 20 — Headings, titles and definitions
+
+- **Never highlight words in a section heading or document title** — `8. Cookies`,
+  `Personal Information We Collect`, `Account Aggregation Services`. A heading names a section; it does
+  not state a practice. Rule 7 ("every occurrence") means every occurrence **in running text**.
+- **Definitions are ordinary sentences.** In *"'KYC Documents' means …"*, `KYC Documents` is a DATA_TYPE
+  like anywhere else. A THIRD_PARTY in a definition still needs a data flow (Rule 16), so
+  *"'Lender' means any bank or NBFC …"* marks nothing.
+*Round 1: about 70 spans each sat on heading-like lines.*
+
+#### Rule 21 — Line breaks and glued words
+
+- A phrase broken across **two lines** (the documents are wrapped) is still **one** highlight — drag
+  across the line break. Never run a highlight past the **end of a sentence**.
+- If the document shows words **glued together** (`yourlogin ID`, `personalinformation`), select **only
+  the letters of the entity** — in `yourlogin ID` highlight `login ID`. Do not try to fix the text.
+*Round 1: 22 (P1) and 39 (P4) spans crossed a line. Glued text is concentrated in `02_digio_terms` and
+`10_perfios_terms`.*
+
+#### Rule 22 — One phrase, one label — and check the colour before you submit
+
+- The same phrase gets the **same label in every document**. The only exception is when its role
+  truly changes: *"the **communications** you send us"* is a DATA_TYPE; *"to send you **communications**"*
+  is a PURPOSE (row 8).
+- **Mis-click check.** Label Studio keeps the last label button active, so the next highlight silently
+  gets the wrong colour. After each highlight, glance at its colour. Before **Submit**, scan the document
+  once for a colour that looks wrong for its word.
+*Round 1: 9 (P1) and 11 (P4) phrases carried more than one label — `email address`, `mobile number` and
+`username` were each tagged THIRD_PARTY once, which can only be a mis-click.*
+
+#### Decision table — "X data / X information / X details / X documents" (extends Rule 9b)
+
+These came up 160 (P1) and 109 (P4) times. Strip the last word; if what is left names a **kind of
+content**, mark the whole phrase:
+
+| ✅ Mark | ❌ Do not mark |
+|---|---|
+| `contact information`, `contact details` | `personal details`, `personal information`, `personal data` |
+| `KYC documents`, `KYC details`, `KYC data` | `sensitive personal data`, `sensitive personal information` |
+| `account information`, `bank account information` | `technical data`, `usage data`, `related information` |
+| `credit information`, `transaction data`, `transaction history` | `financial information`, `financial data` |
+| `location data`, `device information` | `such information`, `the data`, `client data` |
+| `identity document`, `income details` | `data received from an FIP` |
 
 ### Worked examples (exactly what to do)
 - Sentence: *"We collect your bank statements and mutual fund units to perform a credit assessment."*
@@ -425,6 +721,29 @@ Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
   DATA_TYPE**. Specific credential fields that really do appear in records.
 - *"grievance redressal" / "dispute resolution" / "data sharing" / "authentication"* → **mark as
   PURPOSE**. Round 1 missed these ~100 times between them.
+- *"to fulfil the purpose" / "for the express purpose mentioned in the consent artefact"* -> **do not
+  mark**. Vague; says nothing about what the purpose actually is (Rule 9).
+- *"client data" / "data received from an FIP" / "data in an aggregated and anonymised form"* -> **do not
+  mark**. Umbrella `data` wearing a modifier that describes whose/where it is, not its content (Rule 9b).
+- *"credit information" / "transaction data" / "account information"* -> **mark**. The modifier names a
+  real category of content (Rule 9b).
+- *"maintaining your privacy"* -> **do not mark**. A goal, not an activity (Rule 10, check 1).
+- *"to deregister from any AA"* -> **do not mark**. A user right; fits no row (Rule 10, check 2).
+- *"calculate the percentage of users"* -> **mark** as PURPOSE, row 9 (analytics) (Rule 10).
+- *"Account Aggregation services"* -> **mark** as PURPOSE, row 4 — it names the AA service itself;
+  bare `services` stays banned (Rules 8 and 10).
+- **PURPOSE length:** count the words, max 5. `raise a grievance`, NOT `to raise a grievance with the
+  grievance resolution officer of the FIU` (Rule 9).
+- *The policy's own company* (`Setu`, `Agya Technologies`, `Digio Internet Private Limited`, `PennyDrop`) and
+  its `officers` / `directors` / `employees` / `Support Team` -> **do not mark** (Rule 17).
+- *"courts at Bengaluru"* in a jurisdiction clause -> **do not mark**; *"disclose to law enforcement
+  agencies"* -> **mark** THIRD_PARTY (Rule 16).
+- *affiliates / agents / suppliers* in an **indemnity** or **assignment** clause -> **do not mark** (Rule 16).
+- *"We never sell your data to advertisers"* -> **mark** `advertisers` (Rule 18: negation does not matter).
+- *"Permanent Account Number (PAN)"* -> **`Permanent Account Number`** only; later bare `PAN` -> mark (Rule 12).
+- *"PII, including your name and mobile number"* -> **`name`**, **`mobile number`**; never `PII` (Rule 13).
+- *`password mining`, `KYC process`, `cookie preference`* -> **do not mark** (Rule 19).
+- *Glued text* `yourlogin ID` -> highlight **`login ID`** only (Rule 21).
 - **Repeats:** every occurrence gets marked, always (Rule 7) — skipping repeats poisons the training labels.
 
 Add new cases below as: *"phrase X → label Y (or do not mark), because …"*

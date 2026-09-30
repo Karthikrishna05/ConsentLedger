@@ -140,6 +140,7 @@ def main() -> None:
     ap.add_argument("--strict", action="store_true",
                     help="defensible lexicon: multi-word, endorsed >=2x by each, generic words dropped")
     args = ap.parse_args()
+    args.out = args.out.resolve()   # relative --out would break relative_to(PROJECT_ROOT)
 
     corpus = load_corpus(args.corpus)
     A, B = load_ls_export(args.a), load_ls_export(args.b)

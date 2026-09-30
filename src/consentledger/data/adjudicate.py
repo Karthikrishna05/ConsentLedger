@@ -52,12 +52,22 @@ STOPLIST = {
     "business purposes", "lawful purposes", "other purposes", "related purposes", "as required",
     "reporting", "usage data", "profile", "market", "statistics", "suggestions", "feedback",
     "cookie", "cookies", "pixels", "device identifiers", "operating system", "version", "spi", "pii",
+    # umbrellas that PII/SPI abbreviate (Rule 13; Rule 9b decision table)
+    "personally identifiable information", "sensitive personal information", "sensitive personal data",
+    "personal details", "technical data",
+    # generic people & groups (Rule 8 table, added v7)
+    "stakeholders", "persons", "any person", "entities", "others", "third-party entities",
 }
 # Rule 8b - AA-framework roles and regulators are never THIRD_PARTY (and never anything else).
 AA_ROLES = {
     "account aggregator", "aa", "financial information provider", "fip",
     "financial information user", "fiu", "reserve bank of india", "rbi", "sahamati",
     "consent artefact", "consent manager", "nbfc-aa",
+    # plurals - "Financial Information Providers (FIPs)" is how most documents write them
+    "account aggregators", "aas", "financial information providers", "fips",
+    "financial information users", "fius", "consent artefacts", "consent artifacts", "consent artifact",
+    "consent managers",
+    "information user", "information users", "iu",
 }
 DROP = STOPLIST | AA_ROLES
 
@@ -143,6 +153,7 @@ def main() -> None:
     ap.add_argument("--b", required=True, type=Path)
     ap.add_argument("--out", type=Path, default=PROJECT_ROOT / "results" / "annotation" / "adjudication")
     args = ap.parse_args()
+    args.out = args.out.resolve()   # relative --out would break relative_to(PROJECT_ROOT)
 
     corpus = load_corpus(args.corpus)
     A, B = load_ls_export(args.a), load_ls_export(args.b)

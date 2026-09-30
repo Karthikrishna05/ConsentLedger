@@ -71,6 +71,9 @@ def main() -> None:
     ap.add_argument("--a", required=True, type=Path, help="annotator A export (Label Studio JSON)")
     ap.add_argument("--b", required=True, type=Path, help="annotator B export (Label Studio JSON)")
     ap.add_argument("--threshold", type=float, default=0.6, help="pass gate for kappa (0.6 = substantial)")
+    ap.add_argument("--docs", nargs="+", metavar="DOC_ID",
+                    help="restrict to these doc_ids (substring match). Export ALL of Label Studio, then "
+                         "use this to score just the calibration docs - LS export ignores UI filters.")
     ap.add_argument("--show-diff", action="store_true",
                     help="print the spans where A and B disagree (with text), grouped by label — for calibration")
     args = ap.parse_args()
@@ -80,6 +83,12 @@ def main() -> None:
 
     A, B = load_ls_export(args.a), load_ls_export(args.b)
     common = sorted(set(A) & set(B))
+    if args.docs:
+        common = [k for k in common if any(d.lower() in k.lower() for d in args.docs)]
+        missing = [d for d in args.docs if not any(d.lower() in k.lower() for k in set(A) & set(B))]
+        if missing:
+            raise SystemExit(f"--docs matched nothing for: {missing}")
+        print(f"(restricted to {len(common)} doc(s): {', '.join(common)})")
     only_a, only_b = sorted(set(A) - set(B)), sorted(set(B) - set(A))
     if not common:
         raise SystemExit("No documents in common between the two exports (check doc_id / import).")

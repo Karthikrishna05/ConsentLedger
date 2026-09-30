@@ -102,6 +102,7 @@ def main() -> None:
     ap.add_argument("--out", type=Path, default=PROJECT_ROOT / "results" / "annotation" / "agreement")
     ap.add_argument("--threshold", type=float, default=0.6)
     args = ap.parse_args()
+    args.out = args.out.resolve()   # relative --out would break relative_to(PROJECT_ROOT)
 
     from sklearn.metrics import cohen_kappa_score
     from seqeval.metrics import f1_score, precision_score, recall_score
