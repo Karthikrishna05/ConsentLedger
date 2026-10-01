@@ -788,3 +788,101 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
 - **Status:** ✅ Guideline v7 written (Rules 11-22, decision table, stoplist row, Rule 2 exception, Rule 10
   example fixed, tricky cases). Next: calibration on **`23_upmint_aa_tos`** under v7 (the D35 stop-loss
   table is unchanged — only the document changes).
+
+### D37 — A PURPOSE needs a data-use frame: your rights and procedures are not purposes (guideline v7.1)
+- **Trigger:** P1 pointed out that `raise a grievance` is not a PURPOSE — it does not say why any data is
+  collected or shared. In `26_zerodha_tos` it sits in a list of the client's rights ("to raise a grievance
+  with the grievance resolution officer of the FIU; to … revoke any consent …; and to deregister from any
+  AA"). **P1 was right.**
+- **The error was mine, in five places:** Rule 9's example table offered `raise a grievance` as a correctly
+  shortened purpose; Rule 10 row 7 listed it; Rule 10's worked examples marked it ✅; and two tricky-case
+  lines used it or blanket-approved `grievance redressal` / `dispute resolution`. Root cause: Rule 10
+  check 1 asked "is it an activity?" — never *whose* activity, nor whether it involves *your data*. That
+  also contradicted D35's own ruling that `to deregister from any AA` (a user right) is not a purpose.
+- **Evidence — every grievance / dispute / complaint / consent-right PURPOSE span both annotators made,
+  read in its sentence (Export2A/B):**
+  - **P1: 8 distinct contexts, all with a data-use frame** — e.g. 08_pennydrop's list of purposes
+    ("Addressing grievances and disputes"), 19_saafe "consent records and logs are retained… including for
+    … dispute resolution", 24_credbuddha "may maintain records… for purposes including… dispute
+    resolution" and "retain, process, use or disclose information where required for…".
+  - **P4: 14 distinct contexts, 13 of them rights or procedures** — "the customer may revoke consent",
+    "a Grievance Redressal Policy that sets processes and timelines for handling complaints", "dispute
+    resolution provisions will survive termination", the heading `Grievance Redressal`, zerodha's rights
+    list. One genuine (25_the_financiali "Legal Basis for Processing… audit and grievance redressal").
+  - So this is another systematic P1/P4 split, and **P1 was already applying the right test implicitly.**
+- **Why not ban the words:** a blanket rule would delete P1's 8 correct spans. The words never decide; the
+  sentence does — `dispute resolution` is a PURPOSE in "maintain records… for purposes including dispute
+  resolution" and is not one in "dispute resolution provisions shall survive termination".
+- **Decision — Rule 10 check 1 rewritten (the PURPOSE twin of Rule 16):** *does the text say the company
+  uses, keeps or shares your data FOR it?* — in its own sentence or in the lead-in of the list it sits in
+  ("we use your information for…", "retained for…", "processed on the following grounds…"). Fails: a goal
+  or state (`maintaining your privacy`); something **you** do — your rights (`raise a grievance`,
+  `file a complaint`, `revoke consent`, `deregister`, `access a record of your consents`); a procedure,
+  commitment, contract clause or heading. Row 7 narrowed to "customer support, complaints & disputes —
+  only where the text says your data is used or kept for it". Examples replaced with real ones of both
+  kinds; tricky cases qualified; Part G2's warning no longer cites `grievance redressal` as always-correct.
+- **Tooling (`adjudicate.py`, `fixlist.py`):** a `CONTEXT_PURPOSE` pattern (grievance, complaint, dispute,
+  revoke/revocation, deregister, withdraw consent). The tools never assert these automatically: no
+  consensus auto-accept, no Rule 7 propagation, no ADD_REPEAT / ADD_MISSED suggestions. Instead each
+  annotator's existing ones go to a new judgement bucket **PURPOSE_CHECK**, quoted with their sentence.
+  On the round-2 exports this removed **73 (P1) and 67 (P4) automatic "add this PURPOSE" suggestions**,
+  many in procedure sentences, and routed 10 (P1) / 15 (P4) existing spans to PURPOSE_CHECK.
+- **Note for P4:** the v5 fix-pack README called `grievance redressal` always correct — superseded; P4 needs
+  guideline **v7.1** before the `23_upmint_aa_tos` round.
+- **Status:** ✅ Guideline v7.1, tools updated (self-checks pass), bible updated.
+
+### D38 — E1 sweep complete: no backbone winner; seed spread is not significance
+- **Result (OPP-115 dev, 3 backbones x 3 seeds, all 9 runs present — every group `x3`, so the
+  missing-seed guard stayed silent):**
+  | backbone | entity macro-F1 (mean +/- std) | token-F1 |
+  |---|---|---|
+  | nlpaueb/legal-bert-base-uncased | 0.3996 +/- 0.0059 | 0.5220 +/- 0.0083 |
+  | law-ai/InLegalBERT | 0.3862 +/- 0.0028 | 0.5133 +/- 0.0080 |
+  | bert-base-uncased | 0.3816 +/- 0.0025 | 0.5262 +/- 0.0014 |
+  Consistent with the single-seed 0.38 that validated span-trimming (D25).
+- **How it must be reported:** (1) the ranking **flips** between metrics (Legal-BERT leads on entities,
+  BERT-base on tokens) — the textbook sign of no clear winner, so per the pre-registered honesty rule
+  (plan B3) no backbone is crowned; (2) the +/- is over **seeds**, measuring training randomness only — it
+  is **not** a significance test. Significance comes from bootstrap confidence intervals over
+  **documents**, computed on the AA test set; with a 12-document dev set those intervals will be much
+  wider than the seed spread.
+- **Status:** ✅ E1-on-dev done. These are diagnostic; the headline is E1/E2 on the AA gold test set.
+
+### D39 — Correct the corpus by editing; measure agreement on an untouched document
+- **Trigger:** after round-2 calibration P1 asked whether P4 alone had to change, and whether P4 could just
+  edit existing annotations to the new rules instead of re-annotating.
+- **Evidence:** on the two calibration documents P4 had **27** violations of Rules 8/9/9b (13 PURPOSE spans
+  over 5 words, 9 umbrella `data`/`information`, 5 stoplist) against P1's **2**. Corpus-wide, though, P1 had
+  work too — **81** Rule 9/9b violations and ~230 stoplist deletions in the 21 documents still carrying
+  round-1 annotations.
+- **Decision (P1's):** split the two jobs. **Fixing** the corpus is done by **editing** (the per-annotator
+  fix pass) — far faster than re-annotating. **Measuring** agreement for the paper is done on a document
+  **neither annotator has touched**, annotated fresh and independently. Reason: Rule 9 was derived by
+  comparing the annotators and effectively follows P1's style, so if P4 edits towards it, agreement rises
+  partly because P4 converged on P1 — that would inflate kappa and be circular as an agreement statistic.
+  Applying a written rule is legitimate; imitating the other annotator is not.
+- **Document choice:** `10_perfios_terms` was picked first (most balanced round-1 counts), then replaced by
+  `23_upmint_aa_tos` when the glued-text defect was found (D36).
+- **Status:** ✅ Agreed; the independent round is the next step.
+
+### D40 — Repo hygiene record: what is committed, what is shared privately
+- **Principle:** anything that quotes scraped document text is never committed (no-redistribution, as
+  for `data/aa/raw/`); numbers-only summaries are. The bible's section 9 lists every output with its status.
+- **Correction of earlier advice:** the annotation exports were first suggested for committing as kappa
+  provenance. They embed the full document text (e.g. 13.5 KB of the ICICI policy in a single pilot
+  export), so they are git-ignored (`[Ee]xport*.json`, `[Gg]old.json`); the provenance is
+  `results/annotation/kappa.json`, which holds only doc ids, counts and kappa.
+- **`proposed_gold/` excluded from commits:** it is a machine merge built from the *failed* round-1
+  annotation, and its name sits one word from "gold" — a teammate could mistake it for the answer key. It
+  is committed only after it is regenerated from the round-2 exports.
+- **A near-leak, closed:** the round-2 diagnosis written with `--out results/annotation/round2_calib`
+  produced a `docs/` folder quoting document text that the ignore rule (written for the default folder
+  only) did not cover. Caught before commit; the rule is now `results/annotation/*/docs/` so any report
+  folder is covered.
+- **Summarizer hand-off mechanics (P2's track, D34 addendum):** `src/consentledger/summ/build_dataset.py`
+  is kept out of P1's commits by a **local-only** entry in `.git/info/exclude` (not shared, so P2 can
+  commit their own version); the rewritten `P2.md` went to P2 by Drive and the repo copy was restored to
+  its last committed version. `data/summ/*.jsonl` is ignored (quotes text) except `gold_refs.jsonl`.
+- **Every commit was preceded by a staged-file check** for exports, gold, import file, `docs/`,
+  `per_doc/`, `worklist/`, `fixlist/P*/`, `proposed_gold/` and `data/summ/` — all clean.
+- **Status:** ✅ In force.

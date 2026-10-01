@@ -1,5 +1,8 @@
-# ConsentLedger — AA Annotation Guide (v7, beginner-proof)
+# ConsentLedger — AA Annotation Guide (v7.1, beginner-proof)
 
+> **v7.1 (2026-10-01):** Rule 10 check 1 corrected (D37) — a PURPOSE needs a *data-use frame*: the text
+> must say the company uses or keeps **your data** for it. Your rights (raise a grievance, revoke consent,
+> deregister) and complaint procedures are **not** purposes.
 > **v7 (2026-09-30):** adds **Rules 11-22** — every small decision found in a full audit of all 23
 > documents (D36): clean edges, abbreviations, example lists, shared-word lists, overlaps, when a
 > THIRD_PARTY counts, the policy's own company, negation, headings, glued text, label consistency.
@@ -167,7 +170,7 @@ Three steps, in order:
 
 | What was marked (too long) | What to mark |
 |---|---|
-| `to raise a grievance with the grievance resolution officer of the FIU` | **`raise a grievance`** |
+| `to raise a grievance with the grievance resolution officer of the FIU` | **do not mark at all** — a right *you* have, not a use of your data (Rule 10, check 1). Shortening does not make it a purpose. |
 | `For exploring additional use cases within the Account Aggregator framework` | **`exploring additional use cases`** |
 | `calculate the percentage of users accessing a specific feature of the Services` | **`calculate the percentage of users`** |
 | `Verifying income details during account opening or segment activation processes` | **`Verifying income details`** |
@@ -178,8 +181,8 @@ Three steps, in order:
 
 > **Sanity check before you highlight a PURPOSE:** read your span aloud on its own. If it still sounds
 > like a *sentence fragment from a contract* rather than a *name for an activity*, it is too long.
-> "raise a grievance" names an activity. "to raise a grievance with the grievance resolution officer of
-> the FIU" is a contract clause.
+> "verifying income details" names an activity. "verifying income details during account opening or
+> segment activation processes" is a contract clause.
 
 #### Rule 9b — `data` and `information` with a modifier are still umbrella terms
 
@@ -221,16 +224,28 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
 | 4 | **Fetching, consolidating & sharing financial information** (the AA service itself) | `retrieve and share financial information`, `consolidate accounts`, `aggregated statement`, `Account Aggregation services` |
 | 5 | **Fraud prevention, security & verification** | `fraud prevention`, `verification of identity`, `KYC checks`, `AML checks`, `fraud detection and prevention` |
 | 6 | **Legal & regulatory compliance** | `comply with applicable law`, `respond to authorities`, `prosecution of offences` |
-| 7 | **Customer support & grievance** | `respond to queries`, `resolve problems`, `raise a grievance`, `dispute resolution` |
+| 7 | **Customer support, complaints & disputes** — *only where the text says your data is used or kept for it* | `respond to queries`, `resolve problems`, `addressing grievances`, `dispute resolution` |
 | 8 | **Communication** | `send you notices`, `offer alerts`, `send notifications` |
 | 9 | **Analytics & service improvement** | `calculate the percentage of users`, `improve our services`, `exploring additional use cases` |
 | 10 | **Marketing & promotion** | `marketing`, `promotional offers`, `cross-selling products` |
 
 **Four checks, in order, before you press PURPOSE:**
-1. **Is it an ACTIVITY done with your data?** A goal or a state is not an activity.
-   `maintaining your privacy` → **no**. `respond to queries` → yes.
+1. **Does the text say the company uses, keeps or shares YOUR DATA for it?** *(corrected in v7.1, D37)*
+   A PURPOSE is a **reason for processing your data**, so it needs a *data-use frame* — in its own sentence,
+   or in the lead-in of the list it sits in:
+   *"we use your information **for**…"*, *"may be used **for**…"*, *"retained **for**…"*, *"processed on the
+   following grounds…"*, *"for purposes including…"*, a list headed *"How we use your information"*.
+   Three things fail this check even though they sound like purposes:
+   - **a goal or state:** `maintaining your privacy`
+   - **something YOU do — your rights:** `raise a grievance`, `file a complaint`, `revoke consent`,
+     `deregister from any AA`, `access a record of your consents`
+   - **a procedure, commitment, contract clause or heading:** *"a Grievance Redressal Policy… for handling
+     complaints"*, *"dispute resolution provisions shall survive termination"*, the heading `Grievance Redressal`
+   **The words never decide — the sentence does.** `dispute resolution` is a PURPOSE in *"we may maintain
+   records… for purposes including fraud prevention, dispute resolution"*, and is **not** one in *"dispute
+   resolution provisions shall survive termination"*. This is the PURPOSE twin of Rule 16 (THIRD_PARTY needs
+   a data flow).
 2. **Does it fit one of the 10 rows above?** If you cannot name the row number, **do not mark it**.
-   `to deregister from any AA` is your right, not a use of your data → no row → **do not mark**.
 3. **Would it read the same in ANY company's policy?** Then it names nothing. **Do not mark it.**
    `to fulfil the purpose`, `for the purposes stated herein`, `for lawful purposes` → **do not mark**.
 4. **Cut it to at most 5 words** (Rule 9): drop `to`/`for`/`purpose of`, stop at the object.
@@ -245,10 +260,14 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
 | `calculate the percentage of users` | ✅ row 9 |
 | `Verifying income details` | ✅ row 1 |
 | `Fraud detection and prevention` | ✅ row 5 — one highlight: the items share "fraud" (Rule 14) |
-| `to raise a grievance with the grievance resolution officer of the FIU` | ✅ row 7 — cut to `raise a grievance` |
+| `Addressing grievances and disputes` (in a list of purposes for using your information) | ✅ row 7 — the list says your data is used for it |
+| `dispute resolution` in *"maintain records… for purposes including… dispute resolution"* | ✅ row 7 |
+| `to raise a grievance with the grievance resolution officer of the FIU` | ❌ a right you have, not a use of your data (check 1) |
+| `handling complaints and grievances` in *"a Grievance Redressal Policy that sets processes… for handling complaints"* | ❌ a procedure; no data use (check 1) |
+| `revoke consent` in *"the customer may revoke consent"* | ❌ a right (check 1) |
 | `Account Aggregation services` | ✅ row 4 — it names the specific AA service (bare `services` is still banned by Rule 8) |
 | `maintaining your privacy` | ❌ a goal, not an activity (check 1) |
-| `to deregister from any AA` | ❌ a user right, no row (check 2) |
+| `to deregister from any AA` | ❌ a user right (check 1) |
 | `to fulfil the purpose` | ❌ fits any policy (check 3) |
 | `contracted third parties` | ❌ not an activity at all — if anything it is a THIRD_PARTY |
 
@@ -675,7 +694,7 @@ Do the buckets **in order** — the first three need no thinking at all:
 
 > ⚠ **The one place this can go wrong.** The self-check list is long, and it is tempting to mass-delete
 > everything in it. **Do not.** You would swing the corpus from over-marking to under-marking, which is
-> just as damaging. Real entities live in that list — `login id`, `private keys`, `grievance redressal`
+> just as damaging. Real entities live in that list — `login id`, `private keys`, `fraud prevention`
 > are all things only one annotator caught, and they are all **correct**. Judge each phrase on the test,
 > not on how long the list is.
 
@@ -720,7 +739,9 @@ Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
 - *"login id" / "pins" / "private keys" / "user authentication credentials" / "signature"* → **mark as
   DATA_TYPE**. Specific credential fields that really do appear in records.
 - *"grievance redressal" / "dispute resolution" / "data sharing" / "authentication"* → **mark as
-  PURPOSE**. Round 1 missed these ~100 times between them.
+  PURPOSE only where the text says your data is used or kept for it** (e.g. a "we use your information
+  for…" or "retained for…" list). As a right, procedure, policy description or heading → **do not mark**
+  (Rule 10, check 1 — corrected in v7.1, D37).
 - *"to fulfil the purpose" / "for the express purpose mentioned in the consent artefact"* -> **do not
   mark**. Vague; says nothing about what the purpose actually is (Rule 9).
 - *"client data" / "data received from an FIP" / "data in an aggregated and anonymised form"* -> **do not
@@ -728,12 +749,13 @@ Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
 - *"credit information" / "transaction data" / "account information"* -> **mark**. The modifier names a
   real category of content (Rule 9b).
 - *"maintaining your privacy"* -> **do not mark**. A goal, not an activity (Rule 10, check 1).
-- *"to deregister from any AA"* -> **do not mark**. A user right; fits no row (Rule 10, check 2).
+- *"to deregister from any AA"* / *"raise a grievance"* / *"revoke consent"* -> **do not mark**. Your
+  rights, not uses of your data (Rule 10, check 1).
 - *"calculate the percentage of users"* -> **mark** as PURPOSE, row 9 (analytics) (Rule 10).
 - *"Account Aggregation services"* -> **mark** as PURPOSE, row 4 — it names the AA service itself;
   bare `services` stays banned (Rules 8 and 10).
-- **PURPOSE length:** count the words, max 5. `raise a grievance`, NOT `to raise a grievance with the
-  grievance resolution officer of the FIU` (Rule 9).
+- **PURPOSE length:** count the words, max 5. `verifying income details`, NOT `verifying income details
+  during account opening or segment activation processes` (Rule 9).
 - *The policy's own company* (`Setu`, `Agya Technologies`, `Digio Internet Private Limited`, `PennyDrop`) and
   its `officers` / `directors` / `employees` / `Support Team` -> **do not mark** (Rule 17).
 - *"courts at Bengaluru"* in a jurisdiction clause -> **do not mark**; *"disclose to law enforcement

@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -70,6 +71,10 @@ AA_ROLES = {
     "information user", "information users", "iu",
 }
 DROP = STOPLIST | AA_ROLES
+# Rule 10 check 1 (D37): these are PURPOSEs only when the sentence says your data is used/kept for
+# them; as rights, procedures or headings they are not. The words cannot decide, so the tools never
+# assert them automatically - a human reads the sentence.
+CONTEXT_PURPOSE = re.compile(r"grievance|complaint|dispute|revok|revocation|deregist|withdraw\w* consent", re.I)
 
 
 def _overlaps(a, b) -> bool:
@@ -119,7 +124,7 @@ def adjudicate_doc(text, spans_a, spans_b, lexicon):
     for sp, who in [(s, "A") for s in rest_a if s not in paired_a] + \
                    [(s, "B") for s in rest_b if s not in matched_b]:
         phrase = norm(text[sp[0]:sp[1]])
-        if lexicon.get(phrase) == sp[2]:
+        if lexicon.get(phrase) == sp[2] and not (sp[2] == "PURPOSE" and CONTEXT_PURPOSE.search(phrase)):
             gold.add(sp)
             actions.append(("ACCEPT_CONSENSUS", (sp, who, phrase)))
         else:
@@ -129,7 +134,8 @@ def adjudicate_doc(text, spans_a, spans_b, lexicon):
     accepted = {}
     for s, e, lab in gold:
         accepted.setdefault(norm(text[s:e]), lab)
-    accepted = {p: l for p, l in accepted.items() if len(p) >= 4 and p not in DROP}
+    accepted = {p: l for p, l in accepted.items() if len(p) >= 4 and p not in DROP
+                and not (l == "PURPOSE" and CONTEXT_PURPOSE.search(p))}   # D37: context decides
     if accepted:
         occ = find_occurrences(text, sorted(accepted, key=len, reverse=True))
         occ.sort(key=lambda x: (x[0], -(x[1] - x[0])))

@@ -89,17 +89,21 @@ practice help?*
                         data/aa/raw/ (1 blocked, ~5 JS-shells; ~23 solid — surplus for deadline). D20.
 [done] 10b. AA clean    clean.py DONE → 23 usable docs in data/aa/raw/text/ (median ~3,100 words);
                         5 JS-shells (0 chars) dropped; 0 errors. 23 ≈ 15 test + 8 adapt (D21). ✓
-[ready]10c. Annotate    Tooling ready: ls_import_export.py (import w/ doc_id) + kappa.py (entity-F1 +
-                        Cohen's κ) + ANNOTATION_GUIDELINE.md (v2, step-by-step). Protocol (D24):
-                        pilot 1 doc → κ≥0.6? → both annotate all 23 → adjudicate → gold →
-                        ~15 test + ~8 adaptation. THIS is the team's manual critical-path step.
-[now]  11. Train/eval   Trimmed spans VALIDATED: BERT-base seed42 OPP-115 dev entity-F1 0.38 /
-                        token-F1 0.53 (was 0.12) — D25. Full 3 backbones x 3 seeds sweep running;
-                        then collect.py -> results/ner/ablation.{csv,md} (mean +/- std).
-                        Pre-training code staged/committed. E1 (eval AA test) + E2 after annotation.
-                        AA test = headline number.
-[par]  A1. Annotation   Kit (guide v3 + ls_import_tasks.json) sent to P4 (D26). Team runs the
-                        calibration pilot -> full double-annotation -> adjudicate -> gold (D24).
+[now]  10c. Annotate    Round 1 (all 23 docs, double-annotated): kappa 0.279 — FAILED (D29); failure is
+                        mechanical, not conceptual (D30). Round-2 calibration (2 docs): kappa 0.374 —
+                        FAILED, PURPOSE F1 0.000 (D32). Guideline now v7.1: Rules 7-22 (D29-D37).
+                        Tools: kappa.py --docs, agreement_report, annotation_audit --strict, adjudicate,
+                        fixlist (Rules 7/8/8b/9/9b/11/15/17 + PURPOSE check), relaxed_agreement.
+                        NEXT: final calibration on 23_upmint_aa_tos (fresh, independent, v7.1 sent to P4)
+                        -> fix pass on all 23 (regenerated fix lists) -> full-corpus kappa -> adjudicate
+                        -> gold. No round 4 (D35). Glued-text docs 02_digio / 10_perfios last (D36).
+[done] 11. E1 on dev    3 backbones x 3 seeds on OPP-115 dev (D38): Legal-BERT 0.400, InLegalBERT 0.386,
+                        BERT-base 0.382 entity macro-F1; ranking flips on token-F1 -> no winner.
+                        E1/E2 on the AA test set (the headline) waits on gold; needs a gold ->
+                        aa_test.conll converter (not built yet).
+[par]  P2 summarizer   P2's track; dataset builder + plan handed over by Drive (D33, D34): text ->
+                        summary, reference-free test against gold facts. Needs P1's gold export.
+[par]  P3 contract     P3's track; see P3.md. Reference implementation (not a novelty claim, D28).
 [later] 11. Rest        summarizer + faithfulness (P2 — see P2.md), smart contract (P3 — see P3.md),
                         end-to-end pipeline, user study, paper.
 ```

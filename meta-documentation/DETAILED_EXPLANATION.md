@@ -27,6 +27,7 @@ updated whenever anything new is built** (it is part of the audit trail).
    - 5.8 `trim_spans.py`
    - 5.9 Annotation: round 1 (kappa 0.28), the rescue tools, round-2 calibration, Rules 9-22
    - 5.10 The summarizer dataset — P2's track (D33, D34)
+   - 5.11 The smart contract — P3's track
 6. NER model pipeline — file by file
    - 6.1 `seed.py`
    - 6.2 `ner/dataset.py`
@@ -63,6 +64,23 @@ a little AA-specific training help?* We test this as two conditions on the **sam
 **Why this shape of project?** We have very few AA documents (~23 usable). Training a model from scratch
 on 23 docs is hopeless, so we *transfer* knowledge from a big labelled privacy-policy corpus (OPP-115)
 and measure how well it carries over. Small AA data becomes the *experiment's variable*, not a weakness.
+
+**What is new and what is not (D28).** A literature search (arXiv, PubMed/PMC and the web; full record in
+`RELATED_WORK.md`) was run after P1 noticed that the RBI rules already require consent artefacts to be
+"logged, audited and verified". It settled what the project may honestly claim:
+- **Blockchain consent registries are not new.** *Soteria* (arXiv:2003.10128) already stores hashes of
+  data-sharing agreements on a ledger for revocation and compliance; the create-grant-revoke lifecycle is a
+  published pattern (*Grant, Verify, Revoke*, arXiv:2603.15721); a systematic review covers 55 studies.
+- **Entity-based summary faithfulness is not new.** arXiv:2102.09130 is the standard entity-level metric,
+  and **EROS** (arXiv:2403.00141) already does entity-controlled summarisation *of privacy policies*.
+- **Indian AA consent-document NLP is genuinely empty** — a dedicated search found no research at all.
+So the paper is a **resource + application study**: the first annotated AA consent corpus and transfer
+benchmark, plus a reference pipeline (extraction -> disclosure-fidelity check -> tamper-evident record)
+motivated by a real gap — the rules require the user to be *informed*, but nothing verifies that the
+informing was *accurate*. The blockchain part is a reference implementation, not a contribution.
+*Analogy: you didn't invent the lock or the camera; you are the first to survey this particular building
+and show how the two can be fitted to it.* Before submission, repeat the searches in ACL Anthology,
+Scopus, IEEE Xplore and ACM DL — only then is "to the best of a systematic search" fully earned.
 
 ---
 
@@ -122,6 +140,17 @@ and measure how well it carries over. Small AA data becomes the *experiment's va
   examples + **synthetic** ones from `gen_consent_artefacts.py`; the parser is described as a
   *deterministic schema reader*, not an evaluated ML model. Fixtures + field-map live in
   `data/aa/consent_artefacts/` (with a README). NER E1/E2 stays the headline; this is a support component.
+
+- **The formal schema, and the official purpose codes.** `consent_artefact_schema.json` (JSON Schema,
+  draft-07) is the *blank form* of a consent artefact: every box, its type and allowed values (e.g.
+  `fetchType` is ONETIME or PERIODIC). `python -m consentledger.data.gen_consent_artefacts --validate`
+  confirms the real one-time example and 50 synthetic artefacts all fit it. (The periodic example on the
+  source page shows some boxes outside `ConsentDetail` — a page-rendering quirk, so readers look boxes up
+  by name rather than by fixed position.) The **ReBIT purpose codes** are: **101** wealth management,
+  **102** spending patterns / budgeting, **103** aggregated statement, **104** explicit consent for account
+  monitoring, **105** explicit one-time consent. Only the **code** is standardised — `Purpose.text` is
+  free text (a published example pairs code 103 with "To process borrower's loan application"). That is
+  exactly why checking what the policy *text* says against the *declared* code is a meaningful test (D35).
 
 ---
 
@@ -345,6 +374,16 @@ disagreed 40% of the time" but the exact replays they called differently.* This 
 "BELOW GATE" verdict into a concrete list to calibrate on (guide Part F5). Added because the pilot on
 `29_icici_home_fin_terms` came in at κ 0.587 with PURPOSE (entity-F1 0.35) the sole culprit.
 
+**Exporting from Label Studio — four practical rules learned the hard way.** (1) Always export the
+**whole project**: Label Studio ignores the filters you set on screen, so "export just these two
+documents" is unreliable — export everything and use `kappa.py --docs <doc_ids>` to score a subset.
+(2) **Only submitted work is exported**: a re-annotated document that was not clicked *Submit* (or
+*Update*) stays a draft and silently keeps its old version. (3) Use **JSON**, not JSON-MIN — the full
+format keeps the `doc_id` everything matches on. (4) Name each round's files distinctly:
+`ExportA/B.json` (round 1), `Export2A/B.json` (round-2 calibration), `Export3A/B.json` (round 3). They
+all embed the full document text, so they are **never committed** — the committed record is the numbers
+in `results/annotation/`.
+
 ---
 
 ### 5.9 Round 1 of annotation, and the three tools built to rescue it
@@ -459,7 +498,8 @@ Outputs: `results/annotation/audit/corpus_audit.md`, `missed_terms.csv` (committ
   supervising is not receiving), `Sahamati`, `consent artefact`. Test: *"does my data actually end up in
   their hands as a result of this consent?"*
 - **Tricky Cases** seeded with every ruling, including the positive ones (`login id`, `pins`,
-  `private keys` → DO mark; `grievance redressal`, `dispute resolution` → DO mark) so it does not read as
+  `private keys` → DO mark; `grievance redressal`, `dispute resolution` → DO mark — later qualified by D37: only where the text
+  says your data is used for it) so it does not read as
   "stop marking things".
 
 #### 5.9.4 `adjudicate.py` — let the computer do the decided part
@@ -553,6 +593,16 @@ object, count — and **Rule 9b** closed a loophole where banned umbrellas came 
 (`client data`, `data received from an FIP`). A small tooling bug surfaced too: a relative `--out` path
 crashed three reports; they now resolve the path first.
 
+**Fixing the corpus is not the same as measuring agreement.** On the two calibration documents P4 had
+27 violations of the new rules against P1's 2, so P1 suggested — reasonably — that P4 simply *edit*
+the existing annotations rather than re-annotate. That is the right way to **fix the corpus** (it is what
+the fix pass does). But Rule 9 was written by comparing the two annotators and effectively siding with
+P1's style, so if P4 edits towards it, agreement rises partly because P4 copied P1 — not because the
+guideline is clear. A number produced that way is not an honest agreement measure. So the two jobs were
+separated: **edit to fix, and measure on a document neither has touched**, annotated independently
+(first `10_perfios_terms`, switched to `23_upmint_aa_tos` in D36). Corpus-wide, P1 has fixes to make too —
+81 Rule 9/9b violations and ~230 stoplist deletions in the documents still carrying round-1 work.
+
 #### 5.9.9 Why PURPOSE kept failing: relaxed matching and Rule 10 (D35) — `relaxed_agreement.py`
 
 P1's next suggestion was reasonable: PURPOSE spans carry function words (a, the, to, within), so score them
@@ -579,8 +629,8 @@ framework never performs — the paper's disclosure-fidelity application (D28).
 So **Rule 10** gives PURPOSE a **finite list**: a span counts only if it names an activity in one of **10
 categories** — credit/loan assessment, account monitoring, financial management, fetching/sharing
 financial information (the AA service itself), fraud & verification, legal compliance, support &
-grievance, communication, analytics, marketing. Four checks in order: an activity, not a goal -> fits a
-row -> not a phrase that fits any company's policy -> at most 5 words. The official five ReBIT codes were
+grievance, communication, analytics, marketing. Four checks in order: a reason the company uses your data (not a goal, not your right, not a
+procedure — corrected in D37, see 5.9.11) -> fits a row -> not a phrase that fits any company's policy -> at most 5 words. The official five ReBIT codes were
 too narrow to use directly (no row for fraud checks, grievances or marketing); the comparison with the
 declared code happens later, in analysis. *Analogy: "find anything valuable in this house" produces two
 different bags; "find these ten kinds of thing" produces the same bag.* **There will be no round 4**: the
@@ -628,6 +678,26 @@ calibrating on it would have measured the extraction bug instead of the guidelin
 document is now `23_upmint_aa_tos`.** The two affected documents must not be re-cleaned mid-annotation:
 re-cleaning shifts every character offset and would invalidate the spans already made on them.
 
+#### 5.9.11 The actor test: your rights are not the company's purposes (D37)
+
+P1 caught an error in Rule 10: `raise a grievance` had been listed as a valid PURPOSE. It isn't — in
+`26_zerodha_tos` it sits in a list of the **client's rights** ("to raise a grievance…; to revoke any
+consent…; to deregister from any AA"). A PURPOSE answers *why the company collects, uses or shares your
+data*; raising a grievance is something **you** do.
+
+Reading every grievance/dispute/consent-right PURPOSE span in its sentence showed the words can't decide
+on their own. In P1's eight cases the text really did say data was used or kept for them ("records are
+retained… for dispute resolution"); in 13 of P4's 14 it described a right ("the customer may revoke
+consent"), a procedure ("a Grievance Redressal Policy for handling complaints") or a contract clause
+("dispute resolution provisions survive termination"). So the corrected first check is an **actor test**:
+*does the text say the company uses, keeps or shares your data for this?* — the PURPOSE twin of Rule 16
+for third parties. *Analogy: "the hospital keeps your records for billing" is a purpose; "you have the
+right to complain about your bill" is not, even though both mention billing.*
+
+The tools follow suit: they no longer add or auto-accept these phrases (which would have produced about
+140 wrong suggestions), and instead list each annotator's existing ones with the sentence quoted, for a
+quick human decision.
+
 ### 5.10 The summarizer dataset — P2's track (D33, D34)
 
 This belongs to P2; the builder and its guide were handed to P2 via Drive and are **not committed by P1**.
@@ -651,6 +721,30 @@ the NER model finds that are not in the source), compression. No handwritten sum
 test set grows from a 30-chunk sample to every test chunk with a gold fact (122 of 194). ROUGE/BERTScore
 become optional, scored against GPT references and reported as silver. Switching the checklists from
 silver to gold needs no new code: pass the gold export as both inputs.
+
+### 5.11 The smart contract — P3's track (`P3.md`)
+
+P3 owns this; the full step-by-step guide is `meta-documentation/P3.md`. The essentials:
+
+- **What it does:** records a tamper-evident *fingerprint* of each consent on the Ethereum test network
+  (Sepolia), so anyone can later check that a consent existed and was not altered. **Only a hash goes
+  on-chain — never any personal data.** *Analogy: a wax seal in a public glass case proves the letter is
+  genuine and unopened without showing what it says.*
+- **The fingerprint:** the consent artefact is turned into one exact, repeatable string (keys sorted, no
+  spaces) and hashed with keccak256. Same consent -> same hash; change one character -> a completely
+  different hash. The consent's id is `keccak(hash + nonce)`, so two consents never collide.
+- **The contract (`ConsentRegistry.sol`):** a status per consent (NONE -> CREATED -> GRANTED -> REVOKED);
+  `createConsent`, `grantConsent`, `revokeConsent` (owner only); `recordAccess` — the *state-changing*
+  check that records an access attempt as an event and is what the security tests attack; and `isValid`,
+  a free read-only version. Expiry is checked only when someone asks ("lazy expiry"), because a contract
+  cannot run a timer.
+- **Practicalities:** a throwaway wallet with free test-ETH only (never real funds); the private key lives
+  in the git-ignored `.env`; deployment through Remix (nothing to install); `web3.py` v6 fills the
+  `chain/` stubs.
+- **What proves it works:** three tests — the genuine consent verifies **valid**, a tampered one
+  **invalid**, a revoked one **invalid**.
+- **Honest limits for the paper:** it proves a record was not *changed*, not that whoever created it was
+  *honest*; and per D28 it is a reference implementation of a known pattern, not a novel mechanism.
 
 ---
 
@@ -745,6 +839,16 @@ and by how much. *Analogy: the class register expects everyone present; if one s
 name rather than silently averaging the rest.* So after a sweep, eyeball the output — every backbone
 should say `x3`; a warning means re-run the missing seed.
 
+**The first full sweep, and how to read it (D38).** All 9 runs completed (3 backbones x 3 seeds, every
+group `x3`). OPP-115 dev entity macro-F1: Legal-BERT **0.400 +/- 0.006**, InLegalBERT **0.386 +/- 0.003**,
+BERT-base **0.382 +/- 0.003**; token-F1 0.522 / 0.513 / 0.526. Two cautions decide how this is reported:
+the **ranking flips** between the two metrics (Legal-BERT leads on entities, BERT-base on tokens), which
+is the classic sign of *no clear winner*; and the **+/- is over seeds**, so it only measures training
+randomness — it is **not** a significance test. Significance comes from bootstrap confidence intervals
+over **documents**, on the AA test set. *Analogy: re-rolling the same dice three times tells you how
+steady your hand is, not whether the dice are loaded.* These dev numbers are a health check; the
+headline is E1/E2 on the AA test set.
+
 ### 6.6 The config files (`configs/*.yaml`)
 
 Each experiment is one YAML: `model_name` (the HF id), `labels`, `seed`, `learning_rate`,
@@ -787,7 +891,8 @@ source (D27); contribution claims revised after a systematic search (D28, `RELAT
 **Annotation — where it stands:** round 1 kappa **0.279** (D29); corpus audit found the failure mechanical
 (D30); personal fix lists replace the corpus cut (D31); round-2 calibration kappa **0.374** with PURPOSE
 F1 0.000 (D32); relaxed matching showed PURPOSE failing on *where* to look, not on edges, leading to the
-10-category **Rule 10** (D35); a full granular audit added **Rules 11-22** (D36). **Guideline is v7.**
+10-category **Rule 10** (D35); a full granular audit added **Rules 11-22** (D36); Rule 10's first check
+became an actor test — your rights and procedures are not purposes (D37). **Guideline is v7.1.**
 Tools: `kappa.py` (`--docs`), `agreement_report.py`, `annotation_audit.py` (`--strict`), `adjudicate.py`,
 `fixlist.py` (Rule 9/9b buckets), `relaxed_agreement.py`.
 
@@ -797,7 +902,7 @@ commits.
 **Pending — in priority order:**
 1. **Calibration round 3 (final) on `23_upmint_aa_tos`** under guideline v7 — fresh, independent, no fix
    lists open. Score with `kappa.py --docs` and `relaxed_agreement.py --docs`. Whatever the result, the
-   next step is the fix pass (no round 4, D35). P4 needs the v7 guideline first.
+   next step is the fix pass (no round 4, D35). P4 needs the **v7.1** guideline first.
 2. Fix pass on all 23 documents in parallel (regenerate fix lists first), then round-2 kappa on the full
    corpus, then adjudicate the residue -> gold.
 3. Glued-text documents (`02_digio_terms`, `10_perfios_terms`): fix `clean.py`, then re-annotate or remap
@@ -807,7 +912,7 @@ commits.
 6. Paper: Related Work and the annotation-methodology story (0.28 -> 0.37 -> round 3, with the diagnosis
    at each step) can be written now.
 
-See `FLOW.md` for live status and `DECISIONS.md` (D1-D36) for the reasoning behind every choice.
+See `FLOW.md` for live status and `DECISIONS.md` (D1-D40) for the reasoning behind every choice.
 
 ---
 
@@ -821,6 +926,31 @@ See `FLOW.md` for live status and `DECISIONS.md` (D1-D36) for the reasoning behi
 - `data/aa/raw/text/*.txt` — the 23 cleaned, normalized, annotation-ready docs. Git-ignored.
 - `data/aa/raw/scrape_log.csv` — provenance of the scrape (status, bytes, hash, date).
 - `artifacts_out/ner/<config>/` — a trained model + `dev_metrics.json` + `run_meta.json`. Git-ignored.
+- `results/ner/ablation.{csv,md}`, `ablation_runs.csv`, `<run>/{dev_metrics,run_meta}.json` — the
+  citable NER numbers, mean +/- std over seeds. **Committed** (weights go to the Hugging Face Hub).
+- `data/aa/consent_artefacts/` — two real artefacts, the JSON Schema and a README. **Committed**;
+  `synthetic/` is git-ignored (regenerable with a fixed seed).
+- `data/aa/annotated/ls_import_tasks.json`, `Export*A.json` / `Export*B.json`, `gold.json` — the Label
+  Studio import file and every annotation export. **Git-ignored**: each embeds the full document text.
+  Shared between annotators privately.
+- `results/annotation/kappa.json`, `kappa_per_doc.csv`, `relaxed.json` — agreement numbers.
+  **Committed** (numbers only, no text).
+- `results/annotation/agreement/` and `round2_calib/` — `summary.csv` + `report.md` **committed**;
+  `docs/` (the actual disagreeing phrases) **git-ignored** — any report folder's `docs/` is, after one
+  such folder nearly slipped into a commit.
+- `results/annotation/audit/` — `corpus_audit.md` + `missed_terms.csv` **committed**; `per_doc/` ignored.
+- `results/annotation/adjudication/` — `worklist.md` (counts) **committed**; `worklist/` and
+  `proposed_gold/` **git-ignored**. `proposed_gold/` is a machine merge of the *failed* round-1
+  annotation; it must never be mistaken for the answer key, so it is committed only once regenerated from
+  the round-2 exports.
+- `results/annotation/fixlist/README.md` (counts) **committed**; `P1/`, `P4/` (quote the text) ignored.
+- `data/summ/*.jsonl` — P2's summarizer data. **Git-ignored** (quotes text), except `gold_refs.jsonl`.
+- `src/consentledger/summ/build_dataset.py` — P2's code, kept out of P1's commits by a **local-only**
+  rule in `.git/info/exclude` (it does not affect anyone else's repo, so P2 can commit their own version).
+- `meta-documentation/RELATED_WORK.md` — the literature-search record behind every novelty claim.
+
+**The rule of thumb behind all of this:** anything that quotes scraped document text is never committed;
+numbers-only summaries are.
 
 ---
 

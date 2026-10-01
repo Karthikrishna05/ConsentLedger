@@ -33,7 +33,7 @@ import re
 from collections import Counter, defaultdict
 from pathlib import Path
 
-from consentledger.data.adjudicate import DROP
+from consentledger.data.adjudicate import CONTEXT_PURPOSE, DROP
 from consentledger.data.annotation_audit import (
     build_consensus_lexicon, find_occurrences, load_corpus, norm,
 )
@@ -157,7 +157,7 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None)
     my_phrases = {}
     for s, e, lab in keep:
         p = norm(text[s:e])
-        if len(p) >= 4 and p not in DROP:
+        if len(p) >= 4 and p not in DROP and not (lab == "PURPOSE" and CONTEXT_PURPOSE.search(p)):
             my_phrases.setdefault(p, lab)
     if my_phrases:
         for i, j, term in find_occurrences(text, sorted(my_phrases, key=len, reverse=True)):
@@ -166,7 +166,8 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None)
 
     # 3. ADD_MISSED - consensus-lexicon phrases present here that I never marked
     already = {norm(text[s:e]) for s, e, _ in keep}
-    cand = [p for p in lexicon if p not in already and p not in DROP and len(p) >= 4]
+    cand = [p for p in lexicon if p not in already and p not in DROP and len(p) >= 4
+            and not (lexicon[p] == "PURPOSE" and CONTEXT_PURPOSE.search(p))]
     seen = {(i, j) for (i, j, _), _ in out["ADD_REPEAT"]}
     for i, j, term in find_occurrences(text, sorted(cand, key=len, reverse=True)):
         if not _covered(keep, i, j) and (i, j) not in seen:
@@ -194,6 +195,15 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None)
         words = p_norm.split()
         if words and words[-1] in ("data", "information") and p_norm not in R9B_KEEP:
             out["RULE9B_DELETE"].append((sp, p_norm))
+
+    # 4d. PURPOSE_CHECK - grievance/dispute/consent-right phrases: a PURPOSE only if the sentence says your
+    # data is used or kept for it (Rule 10 check 1, D37). Shown with the sentence so it is a quick read.
+    for sp in keep:
+        if sp[2] == "PURPOSE" and CONTEXT_PURPOSE.search(text[sp[0]:sp[1]]):
+            a = max(text.rfind(".", 0, sp[0]), text.rfind(";", 0, sp[0])) + 1
+            b = text.find(".", sp[1])
+            sentence = " ".join(text[a:len(text) if b < 0 else b + 1].split())
+            out["PURPOSE_CHECK"].append((sp, sentence))
 
     # 5. SELF_CHECK - vocabulary only I ever use corpus-wide
     for sp in keep:
@@ -274,6 +284,14 @@ def _render(name, doc, text, buckets) -> str:
                "with a non-content modifier (Rule 9b)", ""]
         c = Counter(ph for _, ph in buckets["RULE9B_DELETE"])
         md += [f"- `{ph}` x{n}" for ph, n in c.most_common(60)]
+    if buckets["PURPOSE_CHECK"]:
+        md += ["", f"## 4d. CHECK these {len(buckets['PURPOSE_CHECK'])} PURPOSE spans — keep only if the sentence "
+               "says your data is used or kept for it (Rule 10, check 1)", "",
+               "*Keep: \"we use your information for… addressing grievances\". Delete: your rights (\"you may "
+               "raise a grievance\", \"revoke consent\"), procedures (\"Grievance Redressal Policy\"), "
+               "contract clauses, headings.*", ""]
+        for sp, sentence in buckets["PURPOSE_CHECK"][:60]:
+            md.append(f"- `{_q(text, sp)}` `[{sp[0]}:{sp[1]}]` — …{sentence[:220]}")
     if buckets["SELF_CHECK"]:
         md += ["", f"## 5. RE-READ these {len(buckets['SELF_CHECK'])} — only you ever mark this phrase "
                "anywhere in the corpus", "",
@@ -320,7 +338,7 @@ def main() -> None:
             totals[name].update(counts)
 
     cols = ("DELETE", "TRIM", "OVERLAP", "OWN_COMPANY", "ADD_REPEAT", "ADD_MISSED",
-            "RULE9_SHORTEN", "RULE9B_DELETE", "SELF_CHECK")
+            "RULE9_SHORTEN", "RULE9B_DELETE", "PURPOSE_CHECK", "SELF_CHECK")
     md = ["# Per-annotator fix lists", "",
           "Each annotator works **alone, in parallel**, on their own file. Buckets 1-4c are mechanical "
           "(exact offsets, no judgement); 4 and 5 are quick reads.", ""]
@@ -335,7 +353,8 @@ def main() -> None:
                f"- ADD_REPEAT (Rule 7): **{t['ADD_REPEAT']}**",
                f"- ADD_MISSED (consensus phrase left blank): **{t['ADD_MISSED']}**",
                f"- RULE9 shorten / RULE9b delete: **{t['RULE9_SHORTEN']}** / **{t['RULE9B_DELETE']}**",
-               f"- SHORTEN: {t['SHORTEN']}", f"- SELF_CHECK: {t['SELF_CHECK']}", "",
+               f"- SHORTEN: {t['SHORTEN']}", f"- PURPOSE_CHECK (Rule 10 check 1): {t['PURPOSE_CHECK']}",
+               f"- SELF_CHECK: {t['SELF_CHECK']}", "",
                "| doc | " + " | ".join(c.lower() for c in cols) + " |",
                "|---|" + "---|" * len(cols)]
         for key in docs:
@@ -350,7 +369,7 @@ def main() -> None:
         print(f"{name}: {mech} mechanical (delete {t['DELETE']}, trim {t['TRIM']}, overlap {t['OVERLAP']}, "
               f"own-company {t['OWN_COMPANY']}, +repeat {t['ADD_REPEAT']}, +missed {t['ADD_MISSED']}, "
               f"R9-shorten {t['RULE9_SHORTEN']}, R9b-delete {t['RULE9B_DELETE']}), "
-              f"self-check {t['SELF_CHECK']}")
+              f"purpose-check {t['PURPOSE_CHECK']}, self-check {t['SELF_CHECK']}")
     print(f"wrote {(args.out / 'README.md').relative_to(PROJECT_ROOT)} + {args.name_a}/*.md + {args.name_b}/*.md")
 
 
@@ -404,6 +423,13 @@ def _selfcheck() -> None:
                    owner_re=owner_regex("29_icici_home_fin_terms"))
     flagged = sorted(p for _, p in o6["OWN_COMPANY"])
     assert flagged == ["icici hfc limited", "its officers"], flagged
+
+    # D37: a grievance PURPOSE is checked, never auto-propagated
+    t7 = "We use your data for grievance redressal. You may raise a grievance under grievance redressal."
+    g0 = t7.index("grievance redressal")
+    o7 = fixes_for(t7, [(g0, g0 + 19, "PURPOSE")], [], {"grievance redressal": "PURPOSE"}, set(), set())
+    assert not o7["ADD_REPEAT"] and not o7["ADD_MISSED"], o7
+    assert len(o7["PURPOSE_CHECK"]) == 1, o7
     print("selfcheck OK")
 
 
