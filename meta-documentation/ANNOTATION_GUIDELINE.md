@@ -1,4 +1,22 @@
-# ConsentLedger — AA Annotation Guide (v7.1, beginner-proof)
+# ConsentLedger — AA Annotation Guide (v7.4, beginner-proof)
+
+> **v7.4 (2026-10-03):** the last three open questions, settled (D46). **Regulators:** authorities named
+> in an explicit disclosure are THIRD_PARTY — *except* the regulators of the AA pipeline itself (`RBI`,
+> `SEBI`, `IRDAI`, `PFRDA`), never marked (Rule 8b, Rule 16). **Bracketed abbreviations** are their own
+> highlight — `Permanent Account Number (PAN)` is **two** highlights (Rule 12). **Status words** are dropped —
+> `registered email address` -> `email address` (Rule 1).
+
+> **v7.3 (2026-10-02):** **headings and table row labels are ordinary text** (Rule 20 and Rule 23d rewritten,
+> D45). A phrase in a heading or a row label is marked when it passes every other rule — `PostHog` and
+> `Service providers` as row labels of a sharing table are THIRD_PARTY; `KYC Documents` in a heading is a
+> DATA_TYPE. Most headings still fail another rule (`8. Cookies` — Rule 23a; `Data Retention` — no data-use
+> frame, Rule 10). **This reverses v7.2's row-label ruling: add the labels you skipped.**
+
+> **v7.2 (2026-10-02):** rulings from round 4 (D43), for the fix pass — **Rule 23**: device/usage telemetry
+> is never a DATA_TYPE; what *you* send (emails, chat messages, call recordings) is; `KYC` is a PURPOSE only
+> where the text uses your data for it; a table's row label is a heading *(reversed in v7.3)*. Rule 10 gains **row 11 —
+> corporate transactions** (merger, acquisition…). Decision table: `device information`, `location data`
+> moved to *do not mark*.
 
 > **v7.1 (2026-10-01):** Rule 10 check 1 corrected (D37) — a PURPOSE needs a *data-use frame*: the text
 > must say the company uses or keeps **your data** for it. Your rights (raise a grievance, revoke consent,
@@ -26,8 +44,8 @@ things the same way.
 
 | Label | Highlight… | Real examples (highlight the **bold** words) |
 |---|---|---|
-| **DATA_TYPE** | a kind of financial/personal information | "we collect your **bank account statements**", "**mutual fund holdings**", "**PAN**", "**salary details**" |
-| **PURPOSE** | an activity your data is used for — **only from the 10-category list in Rule 10** | "to carry out **loan eligibility assessment**", "for **credit underwriting**" |
+| **DATA_TYPE** | a kind of financial/personal information **you provide** (not what your device emits — Rule 23) | "we collect your **bank account statements**", "**mutual fund holdings**", "**PAN**", "**salary details**" |
+| **PURPOSE** | an activity your data is used for — **only from the 11-category list in Rule 10** | "to carry out **loan eligibility assessment**", "for **credit underwriting**" |
 | **THIRD_PARTY** | someone the data is shared with **beyond** the main company/FIU | "shared with **credit bureaus**", "**affiliates**", "**service providers**" |
 
 ### Do NOT highlight these (leave them alone)
@@ -39,6 +57,9 @@ things the same way.
 ### The 6 rules that keep P1 and P4 in agreement (read carefully — this is the whole game)
 1. **Highlight the shortest phrase that still makes sense.** In "your mutual fund holdings", highlight
    **mutual fund holdings** — leave out "your". Drop leading words like *your, the, a, any, all, such*.
+   **Drop status words too (v7.4):** *registered, verified, valid, updated, latest* — `registered email
+   address` -> **`email address`**, `valid bank account details` -> **`bank account details`**. Keep words that
+   are part of a field's real name: `Permanent Account Number`, `current address`.
 2. **A list = several separate highlights.** For "bank deposits, mutual funds and insurance", make
    **three** DATA_TYPE highlights: "bank deposits", "mutual funds", "insurance" — not one big highlight.
    *Exception: if the items share a word written only once ("credit/debit card details"), it is ONE
@@ -85,7 +106,8 @@ marked 50 — and in a *different* document the ratio flipped. You were reading 
 different thresholds. This rule sets one threshold.
 
 **The test — before highlighting anything, ask: "could I point to this in an actual bank record, or name
-a real organisation?"**
+a real organisation?"** *(It is a test against vague umbrella words, not a financial-only filter:
+`email address` and `call recordings` pass. Where data comes from is settled by Rule 23.)*
 - "bank statements", "mutual fund holdings", "PAN", "salary details" → **yes** → mark as DATA_TYPE.
 - "credit bureaus", "affiliates", "ICICI HFC group companies" → **yes, a real kind of organisation** → THIRD_PARTY.
 - "loan eligibility assessment", "credit underwriting" → **yes, a nameable activity** → PURPOSE.
@@ -119,6 +141,7 @@ pure disagreement, and it is wrong.
 | `Financial Information Provider`, `FIP` | the bank **holding** your data — the source, not a recipient |
 | `Financial Information User`, `FIU` | the **main company** the consent is for (Rule 3 already says don't mark it) |
 | `Reserve Bank of India`, `RBI` | the **regulator**. Supervising is not receiving your data |
+| `SEBI`, `IRDAI`, `PFRDA` *(v7.4)* | the other financial-sector regulators of the AA framework — part of the pipeline, like RBI. Never marked, **even in a disclosure list** |
 | `Sahamati` | the **industry body**, not a data recipient |
 | `consent artefact`, `consent manager` | names of **mechanisms**, not data types |
 
@@ -202,7 +225,7 @@ financial item.**
 *Quick test: strip the modifier. If what is left is just "data" or "information" and the modifier told you
 nothing about the CONTENT, do not mark it.*
 
-#### Rule 10 — PURPOSE comes from a FIXED LIST of 10 categories. Anything else is not a PURPOSE.
+#### Rule 10 — PURPOSE comes from a FIXED LIST of 11 categories. Anything else is not a PURPOSE.
 
 Round-2 calibration scored **PURPOSE F1 = 0.000**, and Rule 9 (word count) was not the whole story. The
 two annotators found purposes **in different parts of the same document** — in `17_pb_fintech_aa_privacy`
@@ -213,7 +236,7 @@ has no edge, so in a 5,000-word policy two careful people pick different sentenc
 
 The fix is the same as every rule that worked: give a **finite list to find**, not an open idea to judge.
 
-**THE RULE: mark a PURPOSE span only if it names an activity that belongs to one of these 10 categories.**
+**THE RULE: mark a PURPOSE span only if it names an activity that belongs to one of these 11 categories.**
 Same PURPOSE button as before — this changes the *definition*, not the labels.
 
 | # | Category | Mark phrases like |
@@ -228,6 +251,7 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
 | 8 | **Communication** | `send you notices`, `offer alerts`, `send notifications` |
 | 9 | **Analytics & service improvement** | `calculate the percentage of users`, `improve our services`, `exploring additional use cases` |
 | 10 | **Marketing & promotion** | `marketing`, `promotional offers`, `cross-selling products` |
+| 11 | **Corporate transactions** *(v7.2, D43)* — *only where your data is transferred or shared because of it* | `merger`, `acquisition`, `reorganization`, `sale of assets`, `sale of business` |
 
 **Four checks, in order, before you press PURPOSE:**
 1. **Does the text say the company uses, keeps or shares YOUR DATA for it?** *(corrected in v7.1, D37)*
@@ -245,7 +269,7 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
    records… for purposes including fraud prevention, dispute resolution"*, and is **not** one in *"dispute
    resolution provisions shall survive termination"*. This is the PURPOSE twin of Rule 16 (THIRD_PARTY needs
    a data flow).
-2. **Does it fit one of the 10 rows above?** If you cannot name the row number, **do not mark it**.
+2. **Does it fit one of the 11 rows above?** If you cannot name the row number, **do not mark it**.
 3. **Would it read the same in ANY company's policy?** Then it names nothing. **Do not mark it.**
    `to fulfil the purpose`, `for the purposes stated herein`, `for lawful purposes` → **do not mark**.
 4. **Cut it to at most 5 words** (Rule 9): drop `to`/`for`/`purpose of`, stop at the object.
@@ -273,9 +297,9 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
 
 > **Why this list and not the five official ReBIT purpose codes?** The ReBIT codes (101-105) describe why
 > an FIU pulls financial data — they have no slot for fraud checks, grievances, notices or marketing,
-> which policies really do describe. The 10 rows cover what AA policies actually say. The comparison with
+> which policies really do describe. The 11 rows cover what AA policies actually say. The comparison with
 > the declared ReBIT code happens later, in analysis: rows 1-4 correspond to the codes; a policy whose text
-> leans on rows 9-10 while declaring a narrow code is exactly the mismatch the project wants to flag.
+> leans on rows 9-11 while declaring a narrow code is exactly the mismatch the project wants to flag.
 > **Annotators never need to think about codes** — only about the row.
 
 ---
@@ -294,18 +318,23 @@ No space, comma, full stop, quote mark or bracket at either end.
 *Round 1: P1 14 spans, P4 41 spans had a space or punctuation at an edge. Every one is an automatic
 exact-match miss even when both people meant the same words.*
 
-#### Rule 12 — Abbreviations: stop at the bracket
+#### Rule 12 — Abbreviations: the name and the bracket are TWO highlights
 
-When a name is followed by its abbreviation or expansion in brackets or quotes, highlight the name **as
-first written** and stop before the bracket:
-- `Permanent Account Number (PAN)` → **`Permanent Account Number`**
-- `PAN (Permanent Account Number)` → **`PAN`**
-- `transaction authentication number "TAN"` → **`transaction authentication number`**
+When a name is followed by its abbreviation or expansion in brackets or quotes, make **two separate
+highlights with the same label** — the name as first written, and the abbreviation **inside** the bracket.
+Never one highlight that swallows the brackets or quote marks (Rule 11).
+- `Permanent Account Number (PAN)` → **`Permanent Account Number`** + **`PAN`**
+- `PAN (Permanent Account Number)` → **`PAN`** + **`Permanent Account Number`**
+- `transaction authentication number "TAN"` → **`transaction authentication number`** + **`TAN`**
+- `know-your-customer documents ("KYC Documents")` → **`know-your-customer documents`** + **`KYC Documents`**
+- `Financial Intelligence Unit (FIU-IND)` → **`Financial Intelligence Unit`** + **`FIU-IND`**
 
-Every later standalone use of the abbreviation (`PAN`) is highlighted on its own, every time (Rule 7).
+*Why two (changed in v7.4, D46): every later standalone `PAN` is marked (Rule 7). Leaving out the one in the
+bracket would teach the model that the same token is an entity everywhere except in brackets. The bracket is
+just another occurrence.*
 If the bracket sits **inside** the name — `CIS (Collective Investment Schemes) units` — highlight the whole
-name including the bracket. Abbreviations of banned terms stay banned: `PII`, `SPI` (Rule 8), `FIP`,
-`FIU`, `AA`, `RBI` (Rule 8b).
+name including the bracket, as one. Abbreviations of banned terms stay banned: `PII`, `SPI` (Rule 8), `FIP`,
+`FIU`, `AA`, `RBI`, `SEBI` (Rule 8b); so does a bracketed umbrella (`("Registration Information")`, Rule 9b).
 *Round 1: 30 bracketed spans each, handled three different ways between the two annotators.*
 
 #### Rule 13 — Lists of examples: mark every item, never the umbrella, never "etc."
@@ -366,6 +395,12 @@ Organisations named for **any other reason** are **not** marked:
 
 Government bodies, **law enforcement** and **courts** follow the same test: "we may disclose your
 information to **law enforcement agencies**" ✅; "the courts at Bengaluru shall have jurisdiction" ❌.
+**Regulators and authorities (v7.4, D46).** In an explicit disclosure — *"we may disclose information to law
+enforcement, government authorities, or regulators"*, *"SEBI, RBI, the Income-tax Department, the Financial
+Intelligence Unit (FIU-IND), exchanges, courts"* — mark every authority **except the AA pipeline's own
+regulators** (`RBI`, `SEBI`, `IRDAI`, `PFRDA`, Rule 8b): `law enforcement`, `government authorities`,
+`regulators` (the generic word), `Income-tax Department`, `Financial Intelligence Unit`, `exchanges`,
+`courts` ✅; `SEBI`, `RBI` ❌.
 *Round 1: about 112 of P1's and 98 of P4's THIRD_PARTY spans sat in sentences with no data-flow verb
 (automatic estimate — a few genuine flows use unusual verbs).*
 
@@ -403,13 +438,22 @@ Do mark it when the sentence is **about the data itself**: `date of birth inform
 
 #### Rule 20 — Headings, titles and definitions
 
-- **Never highlight words in a section heading or document title** — `8. Cookies`,
-  `Personal Information We Collect`, `Account Aggregation Services`. A heading names a section; it does
-  not state a practice. Rule 7 ("every occurrence") means every occurrence **in running text**.
+- **Headings are ordinary text (v7.3, D45).** A phrase in a section heading, document title or table row
+  label is marked exactly like the same phrase in a sentence — **if it passes every other rule**. Rule 7
+  ("every occurrence") includes headings. *Why: NER marks mentions, not claims — the same reason a negated
+  mention is marked (Rule 18) — and "is this a heading?" was a judgement two annotators made differently.*
+  The other rules still filter most headings:
+  | Heading | Mark? | Because |
+  |---|---|---|
+  | `3.2 KYC Documents` | ✅ DATA_TYPE | specific data |
+  | `8. Cookies`, `4.5 Location Data` | ❌ | observed telemetry (Rule 23a) |
+  | `11. Data Retention`, `Grievance Redressal` | ❌ | a bare heading has no data-use frame (Rule 10 check 1) |
+  | `Disclosures to Third Parties`, `Personal Information We Collect` | ❌ | umbrella words (Rule 8) |
+  | `3.5 Third-Party Service Providers` | only if a data flow governs it (Rule 16) — a heading over a sharing section, yes |
 - **Definitions are ordinary sentences.** In *"'KYC Documents' means …"*, `KYC Documents` is a DATA_TYPE
   like anywhere else. A THIRD_PARTY in a definition still needs a data flow (Rule 16), so
   *"'Lender' means any bank or NBFC …"* marks nothing.
-*Round 1: about 70 spans each sat on heading-like lines.*
+*Round 1: about 70 spans each sat on heading-like lines — treated three different ways; v7.3 ends that.*
 
 #### Rule 21 — Line breaks and glued words
 
@@ -442,8 +486,66 @@ content**, mark the whole phrase:
 | `KYC documents`, `KYC details`, `KYC data` | `sensitive personal data`, `sensitive personal information` |
 | `account information`, `bank account information` | `technical data`, `usage data`, `related information` |
 | `credit information`, `transaction data`, `transaction history` | `financial information`, `financial data` |
-| `location data`, `device information` | `such information`, `the data`, `client data` |
+| `bank account details` | `such information`, `the data`, `client data`, `location data`, `device information` *(v7.2)* |
 | `identity document`, `income details` | `data received from an FIP` |
+
+#### Rule 23 — Round-4 rulings (v7.2, D43)
+
+From the disagreements on `25_the_financiali_privacy`. Apply them in the fix pass, in all 23 documents.
+
+**The line: data you PROVIDE is a DATA_TYPE; data your device EMITS is not.** *(Not "is it financial?" —
+`email address` and `mobile number` are not financial either, and they are marked. The Rule 8 test is a
+check for vague umbrella words, not a financial-only filter.)*
+
+**a. Observed telemetry is never a DATA_TYPE.** Your device or browser emits it; you never hand it over.
+It is also boilerplate — the same list appears in nearly every web privacy policy, so it says nothing
+about *this* company (the reasoning of Rule 10 check 3, and of the cookies ruling in Rule 8b). Do not mark:
+`IP address`, `device identifiers`, `browser type`, `operating system`, `referring URLs`, `pages viewed`,
+`in-app actions`, `session duration`, `cookies`, `device information`, `location data`,
+`device and usage data`, `telemetry`.
+
+**b. Provided content IS a DATA_TYPE**, even when it is not financial. Communication content you hand
+over to the company is marked, every item of the list (Rule 13): `emails`, `WhatsApp messages`,
+`call recordings`, `video meeting recordings`, `chat messages`, `form inputs`, `survey responses`.
+It is exactly what a user needs to know before consenting ("they keep your call recordings").
+*Test that separates a from b: did **you** make it, or did **your phone**?*
+
+**c. `KYC` depends on its sentence** (the Rule 10 check-1 actor test):
+| Text | Mark |
+|---|---|
+| *"Aadhaar (last four digits, where required for **KYC**)"* — data collected for it | **`KYC`** → PURPOSE (row 5) |
+| *"to complete **KYC** checks"* | **`KYC checks`** → PURPOSE |
+| *"**KYC records** are retained…"* | DATA_TYPE |
+| *"**KYC/AML verification providers**"* (receive data) | THIRD_PARTY |
+| *"the **KYC process** takes two days"* | nothing (Rule 19 — a process named after data) |
+| heading *"3.1 KYC"* | nothing (a bare heading has no data-use frame — Rule 10 check 1) |
+
+**d. A table row label is ordinary text** *(rewritten in v7.3, D45)*. Scraped tables lose their
+formatting, so a label lands on its own line above its description:
+```
+Your personal data may be shared with the following categories of recipients:
+Service providers
+— cloud infrastructure (AWS), email and messaging providers, …
+Successor entities
+— in connection with any merger, acquisition, restructuring or sale of business
+PostHog
+— for product analytics, session-level usage measurement…
+```
+Mark the label when it passes the other rules — here the lead-in ("shared with") is the data flow, so
+`Service providers`, `Successor entities` and `PostHog` are all **THIRD_PARTY**, and so are the items under
+them (`AWS`, `email and messaging providers`). A label that is an umbrella (`Partners`, Rule 8) is not
+marked; `Regulators and authorities` **is** (v7.4) — and under it `Income-tax Department`, `exchanges`,
+`courts`, but not `SEBI` or `RBI`.
+
+**e. Row 11 — corporate transactions need a data-use frame**, like every PURPOSE:
+- ✅ *"may transfer … your Information in connection with a **merger**, **acquisition**, **reorganization**
+  or **sale of assets**"* → four highlights (Rule 2: each item complete).
+- ✅ *"Successor entities — in connection with any **merger**, **acquisition**, **restructuring** or
+  **sale of business**"* — the table says your data is shared with them.
+- ❌ *"We may assign or transfer our **rights and obligations** … in connection with a merger"* — a
+  contract, not your data (same as Rule 16's assignment row).
+- ❌ loan `restructuring` requests, `insolvency` declarations, `customer acquisition` — not corporate
+  transactions at all.
 
 ### Worked examples (exactly what to do)
 - Sentence: *"We collect your bank statements and mutual fund units to perform a credit assessment."*
@@ -677,20 +779,46 @@ python -m consentledger.data.kappa --a exportA.json --b exportB.json
 
 ### Step G2.3 — Work through your fix list, document by document
 
-Open your file for a document. It starts with a line like
-*"26 mechanical fixes (no judgement needed) + 5 to shorten + 11 to re-read."*
-Do the buckets **in order** — the first three need no thinking at all:
+Generate the lists from the **latest** exports (v7.2: `Export4A/B.json`). Open your file for a document. It
+starts with a line like *"33 mechanical fixes (no judgement needed) + 5 to shorten + 24 to check in context
++ 37 to re-read."* Do the buckets **in this order**:
 
-1. **DELETE** — these spans break Rule 8 (stoplist) or Rule 8b (AA roles). Delete them.
-   *The file groups them, e.g. "`third parties` x21" — decide once, delete all of them.*
-2. **ADD (Rule 7 repeats)** — you already marked this phrase **in this same document** and skipped these
-   occurrences. Add them. This is your own inconsistency, so there is nothing to debate.
-3. **ADD (missed)** — phrases **both** of you endorse elsewhere, which appear here and you left blank.
-   Add them.
-4. **SHORTEN** — the other annotator used a shorter version of your span. Rule 1 prefers the shorter one.
-5. **RE-READ (self-check)** — phrases that **only you** ever mark anywhere in the corpus. Apply the
-   Rule 8 test to each: *"could I point to this in a real bank record, or name a real organisation?"*
-   If no, delete it.
+**Mechanical — just do them (exact positions given):**
+1. **1 DELETE** — stoplist, AA roles **including named AAs** (`Onemoney`, `Finvu`, `CAMS Finserv`…),
+   umbrellas (`financial details`) and **observed telemetry** (`IP address`, `type of browser`, `IMEI`,
+   `web beacons`) — Rules 8, 8b, 9b, 23a. *Grouped, e.g. "`third parties` x21" — decide once, delete all.*
+2. **1b TRIM** — re-draw over the corrected words shown: edge space/punctuation (Rule 11), a bracketed
+   abbreviation swallowed into the highlight (Rule 12 — it becomes its own highlight under bucket 2), a leading `your/the/any` (Rule 1), a leading `to/for` on a
+   PURPOSE (Rule 9).
+3. **1c OVERLAP** — keep the outer highlight (Rule 15). **1d OWN_COMPANY** — delete (Rule 17).
+4. **1f RELABEL** — you give this phrase another colour everywhere else: fix the mis-click (Rule 22).
+5. **2 ADD (repeats)** — you marked this phrase elsewhere in this document; add the skipped occurrences
+   (Rule 7). Only copied from your spans that no rule doubts.
+6. **4b / 4c** — shorten PURPOSE to 5 words (Rule 9); delete umbrella `X data/information` (Rule 9b).
+
+**Check in context — read the quoted sentence, then decide:**
+7. **1e THIRD_PARTY** — keep only if your data goes **to** them: delete when the sentence is indemnity,
+   jurisdiction or assignment, when your data comes **from** them (`from registrars (CAMS, KFintech)`), or
+   when the name is part of a law's title (`SEBI (Investment Advisers) Regulations`) — Rules 16, 19.
+8. **Headings and table row labels** need no bucket (v7.3): they are ordinary text, so the repeat and
+   missed-phrase buckets now propose them too. *If you skipped row labels under v7.2, add them.*
+9. **3 ADD (missed)** — phrases both of you endorse elsewhere. **Not automatic**: add only if used in the
+   same sense (`title` in "rights, title and interest" is not data).
+10. **3b ADD (Rule 23)** — communication content you send, or `KYC` as a purpose: add where the sentence
+    fits (not "we send you emails"; not "arbitration correspondence").
+11. **4d PURPOSE** — grievance/dispute/KYC/merger words: keep only with a data-use frame (Rule 10 check 1).
+12. **4e LIST** — you and the other annotator cut a list differently: complete items → separate (Rule 2);
+    items sharing a word written once → one highlight (Rule 14).
+
+**Quick reads:**
+13. **4 SHORTEN** — the other annotator used a shorter version of your span; Rule 1 prefers the shorter.
+14. **5 RE-READ** — phrases only you ever mark. Test: a *specific* kind of data **you provide**, a Rule-10
+    activity, or a real organisation your data goes **to**? If no, delete it.
+
+**What no list can catch:** an entity neither rule nor lexicon points to — e.g. a recipient you simply
+did not see (`Amazon Web Services` in "hosted on providers (primarily Amazon Web Services)"). Those surface
+at adjudication, where the other annotator's highlights are compared. So read each document once more,
+end to end, after the lists are done.
 
 > ⚠ **The one place this can go wrong.** The self-check list is long, and it is tempting to mass-delete
 > everything in it. **Do not.** You would swing the corpus from over-marking to under-marking, which is
@@ -762,10 +890,37 @@ Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
   agencies"* -> **mark** THIRD_PARTY (Rule 16).
 - *affiliates / agents / suppliers* in an **indemnity** or **assignment** clause -> **do not mark** (Rule 16).
 - *"We never sell your data to advertisers"* -> **mark** `advertisers` (Rule 18: negation does not matter).
-- *"Permanent Account Number (PAN)"* -> **`Permanent Account Number`** only; later bare `PAN` -> mark (Rule 12).
+- *"Permanent Account Number (PAN)"* -> **two** highlights: `Permanent Account Number` and `PAN`; every later bare `PAN` too (Rule 12, v7.4).
 - *"PII, including your name and mobile number"* -> **`name`**, **`mobile number`**; never `PII` (Rule 13).
 - *`password mining`, `KYC process`, `cookie preference`* -> **do not mark** (Rule 19).
 - *Glued text* `yourlogin ID` -> highlight **`login ID`** only (Rule 21).
 - **Repeats:** every occurrence gets marked, always (Rule 7) — skipping repeats poisons the training labels.
+
+Settled in round 4 (v7.2, D43-D44):
+- *`IP address`, `browser type`, `pages viewed`, `session duration`, `IMEI`, `web beacons`, `device
+  information`, `location data`* -> **do not mark**. Observed telemetry, not data you provide (Rule 23a).
+- *`emails`, `WhatsApp messages`, `call recordings`, `chat messages`, `survey responses`* you send ->
+  **mark DATA_TYPE** (Rule 23b). *"We send you emails"* -> not data (a channel).
+- *"Aadhaar (… where required for **KYC**)"* -> **`KYC`** PURPOSE; *`KYC records`* DATA_TYPE; *`KYC process`*
+  nothing (Rule 23c).
+- *`Service providers` / `Successor entities` / `PostHog` as row labels of a sharing table* -> **mark**
+  THIRD_PARTY, and the items under them too (Rule 23d, v7.3 — reverses v7.2).
+- *A heading* (`3.2 KYC Documents`) -> marked like running text when it passes the other rules; `8. Cookies`,
+  `Data Retention` still not (Rule 20, v7.3).
+- *"transfer … your Information in connection with a **merger**, **acquisition**"* -> **mark** PURPOSE row 11;
+  *"assign our rights … in a merger"* -> **do not mark** (Rule 23e).
+- *Named Account Aggregators* (`Onemoney`, `Finvu`, `NESL Asset Data`, `CAMS Finserv`, `Perfios AA`) ->
+  **do not mark** (Rule 8b — an AA by name is still the pipe).
+- *"obtained **from** … registrars (`CAMS`, `KFintech`)"* -> **do not mark**; your data comes from them, it does
+  not go to them (Rule 16).
+- *`SEBI`, `IRDAI`, `PFRDA`* -> **never mark**, like `RBI` (Rule 8b, v7.4). Other authorities in a disclosure list (`Income-tax Department`, `courts`, `regulators`) -> **mark** (Rule 16).
+- *An organisation inside a law's name* (`UIDAI (Authentication) Regulations`) -> **do not mark** (Rule 19).
+- *`Financial Intelligence Unit (FIU-IND)`* -> **`Financial Intelligence Unit`** + **`FIU-IND`**, two highlights (Rule 12, v7.4).
+- *`registered email address`, `valid bank account details`* -> **`email address`**, **`bank account details`** (Rule 1, v7.4).
+- *The company's own contact block* — "Registered **Address**: 1201 …", "Email: hello@…", "**Contact
+  Details**: Principal Officer" -> **do not mark**. That is the company's data, not yours; a word followed by
+  a colon there is a field label.
+- *`mutual fund and demat holdings`* -> **one** highlight ("holdings" is shared, Rule 14); *`audit and
+  grievance redressal`* -> **two** (each complete, Rule 2).
 
 Add new cases below as: *"phrase X → label Y (or do not mark), because …"*

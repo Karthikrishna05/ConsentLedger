@@ -1,81 +1,89 @@
 # Per-annotator fix lists
 
-Each annotator works **alone, in parallel**, on their own file. Buckets 1-4c are mechanical (exact offsets, no judgement); 4 and 5 are quick reads.
+Each annotator works **alone, in parallel**, on their own file. Mechanical buckets (exact offsets, no judgement): 1, 1b, 1c, 1d, 1f, 2, 4b, 4c. Check-in-context buckets (sentence shown): 1e, 3, 3b, 4d, 4e. 4 and 5 are quick reads.
 
-## P1 — 1442 mechanical fixes, 15 shorten, 812 re-read
+## P1 — 929 mechanical fixes, 14 shorten, 755 re-read
 
-- DELETE (Rules 8/8b): **243**
-- TRIM (Rules 11/12): **33**
+- DELETE (Rules 8/8b/9b/23a): **274**
+- TRIM (Rules 1/9/11/12): **37**
 - OVERLAP (Rule 15): **0**
 - OWN_COMPANY (Rule 17): **0**
-- ADD_REPEAT (Rule 7): **715**
-- ADD_MISSED (consensus phrase left blank): **379**
-- RULE9 shorten / RULE9b delete: **15** / **57**
-- SHORTEN: 15
-- PURPOSE_CHECK (Rule 10 check 1): 10
-- SELF_CHECK: 812
+- RELABEL (Rule 22): **3**
+- ADD_REPEAT (Rule 7): **546**
+- THIRD_PARTY_CHECK (Rules 16/19, check in context): 137
+- ADD_MISSED (consensus phrase left blank, check in context): 272
+- RULE23_ADD (communications / KYC left blank, check in context): 10
+- RULE9 shorten / RULE9b delete: **15** / **54**
+- SHORTEN: 14
+- PURPOSE_CHECK (Rule 10 check 1): 23
+- LIST_CHECK (Rules 2/14, check in context): 29
+- SELF_CHECK: 755
 
-| doc | delete | trim | overlap | own_company | add_repeat | add_missed | rule9_shorten | rule9b_delete | purpose_check | self_check |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 01_setu_aa_terms | 8 | 0 | 0 | 0 | 13 | 22 | 1 | 1 | 0 | 12 |
-| 02_digio_terms | 6 | 1 | 0 | 0 | 3 | 9 | 0 | 1 | 0 | 13 |
-| 03_oms_aa_terms | 9 | 0 | 0 | 0 | 9 | 21 | 0 | 1 | 0 | 9 |
-| 04_pb_fintech_aa_terms | 11 | 0 | 0 | 0 | 16 | 26 | 0 | 2 | 0 | 11 |
-| 05_onemoney_terms | 7 | 0 | 0 | 0 | 12 | 19 | 0 | 3 | 0 | 11 |
-| 06_setu_aa_privacy | 55 | 2 | 0 | 0 | 13 | 5 | 6 | 6 | 0 | 42 |
-| 08_pennydrop_terms | 4 | 2 | 0 | 0 | 77 | 29 | 0 | 14 | 2 | 74 |
-| 09_saafe_terms | 6 | 0 | 0 | 0 | 9 | 28 | 0 | 1 | 0 | 9 |
-| 10_perfios_terms | 0 | 1 | 0 | 0 | 1 | 10 | 0 | 0 | 0 | 14 |
-| 12_scoremeaa_terms | 1 | 0 | 0 | 0 | 4 | 13 | 0 | 1 | 0 | 1 |
-| 14_nadl_charter | 0 | 4 | 0 | 0 | 0 | 8 | 0 | 0 | 0 | 1 |
-| 16_oms_aa_privacy | 4 | 0 | 0 | 0 | 6 | 21 | 0 | 2 | 0 | 7 |
-| 17_pb_fintech_aa_privacy | 0 | 0 | 0 | 0 | 5 | 22 | 1 | 1 | 0 | 21 |
-| 19_saafe_privacy | 33 | 2 | 0 | 0 | 6 | 24 | 2 | 7 | 4 | 67 |
-| 20_scoremeaa_charter | 0 | 0 | 0 | 0 | 19 | 9 | 0 | 0 | 0 | 0 |
-| 21_nadl_terms | 1 | 0 | 0 | 0 | 2 | 9 | 0 | 0 | 0 | 3 |
-| 22_setu_aa_charter | 2 | 0 | 0 | 0 | 1 | 11 | 0 | 0 | 0 | 5 |
-| 23_upmint_aa_tos | 2 | 0 | 0 | 0 | 3 | 6 | 0 | 0 | 0 | 10 |
-| 24_credbuddha_terms | 16 | 3 | 0 | 0 | 161 | 21 | 0 | 1 | 4 | 109 |
-| 25_the_financiali_privacy | 10 | 5 | 0 | 0 | 44 | 23 | 1 | 2 | 0 | 66 |
-| 26_zerodha_tos | 0 | 6 | 0 | 0 | 0 | 5 | 0 | 0 | 0 | 3 |
-| 28_indifi_capital_privacy | 62 | 7 | 0 | 0 | 280 | 20 | 4 | 13 | 0 | 290 |
-| 29_icici_home_fin_terms | 6 | 0 | 0 | 0 | 31 | 18 | 0 | 1 | 0 | 34 |
+| doc | delete | trim | overlap | own_company | relabel | third_party_check | add_repeat | add_missed | rule23_add | rule9_shorten | rule9b_delete | purpose_check | list_check | self_check |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 01_setu_aa_terms | 9 | 0 | 0 | 0 | 0 | 10 | 7 | 14 | 0 | 1 | 1 | 0 | 1 | 11 |
+| 02_digio_terms | 6 | 1 | 0 | 0 | 0 | 14 | 0 | 7 | 0 | 0 | 1 | 0 | 0 | 14 |
+| 03_oms_aa_terms | 9 | 1 | 0 | 0 | 0 | 4 | 5 | 14 | 0 | 0 | 1 | 0 | 0 | 8 |
+| 04_pb_fintech_aa_terms | 11 | 0 | 0 | 0 | 0 | 13 | 10 | 17 | 0 | 0 | 2 | 0 | 0 | 11 |
+| 05_onemoney_terms | 7 | 1 | 0 | 0 | 0 | 4 | 12 | 8 | 0 | 0 | 3 | 0 | 0 | 10 |
+| 06_setu_aa_privacy | 64 | 5 | 0 | 0 | 0 | 2 | 8 | 6 | 1 | 5 | 3 | 0 | 1 | 38 |
+| 08_pennydrop_terms | 8 | 7 | 0 | 0 | 0 | 39 | 60 | 28 | 0 | 0 | 12 | 2 | 4 | 69 |
+| 09_saafe_terms | 6 | 0 | 0 | 0 | 0 | 6 | 8 | 20 | 0 | 0 | 1 | 0 | 4 | 9 |
+| 10_perfios_terms | 0 | 1 | 0 | 0 | 0 | 0 | 2 | 4 | 0 | 0 | 0 | 0 | 0 | 14 |
+| 12_scoremeaa_terms | 1 | 0 | 0 | 0 | 0 | 0 | 4 | 10 | 0 | 0 | 1 | 0 | 1 | 1 |
+| 14_nadl_charter | 0 | 4 | 0 | 0 | 0 | 0 | 4 | 6 | 0 | 0 | 0 | 0 | 0 | 1 |
+| 16_oms_aa_privacy | 4 | 0 | 0 | 0 | 0 | 6 | 5 | 13 | 0 | 0 | 2 | 0 | 2 | 7 |
+| 17_pb_fintech_aa_privacy | 0 | 0 | 0 | 0 | 0 | 1 | 4 | 13 | 0 | 1 | 1 | 0 | 2 | 21 |
+| 19_saafe_privacy | 40 | 0 | 0 | 0 | 0 | 0 | 6 | 21 | 2 | 2 | 5 | 8 | 0 | 67 |
+| 20_scoremeaa_charter | 0 | 0 | 0 | 0 | 0 | 0 | 14 | 10 | 0 | 0 | 0 | 0 | 0 | 0 |
+| 21_nadl_terms | 1 | 0 | 0 | 0 | 0 | 4 | 1 | 10 | 0 | 0 | 0 | 0 | 0 | 3 |
+| 22_setu_aa_charter | 2 | 0 | 0 | 0 | 0 | 0 | 1 | 7 | 0 | 0 | 0 | 0 | 0 | 5 |
+| 23_upmint_aa_tos | 0 | 0 | 0 | 0 | 0 | 2 | 0 | 5 | 0 | 0 | 0 | 0 | 1 | 11 |
+| 24_credbuddha_terms | 18 | 3 | 0 | 0 | 2 | 11 | 107 | 21 | 0 | 0 | 1 | 6 | 0 | 110 |
+| 25_the_financiali_privacy | 0 | 0 | 0 | 0 | 0 | 0 | 14 | 15 | 5 | 2 | 7 | 4 | 4 | 37 |
+| 26_zerodha_tos | 3 | 3 | 0 | 0 | 0 | 2 | 1 | 3 | 0 | 0 | 0 | 0 | 0 | 3 |
+| 28_indifi_capital_privacy | 79 | 9 | 0 | 0 | 1 | 19 | 242 | 11 | 1 | 4 | 12 | 2 | 6 | 274 |
+| 29_icici_home_fin_terms | 6 | 2 | 0 | 0 | 0 | 0 | 31 | 9 | 1 | 0 | 1 | 1 | 3 | 31 |
 
-## P4 — 1571 mechanical fixes, 59 shorten, 425 re-read
+## P4 — 693 mechanical fixes, 58 shorten, 405 re-read
 
-- DELETE (Rules 8/8b): **104**
-- TRIM (Rules 11/12): **59**
-- OVERLAP (Rule 15): **8**
-- OWN_COMPANY (Rule 17): **38**
-- ADD_REPEAT (Rule 7): **581**
-- ADD_MISSED (consensus phrase left blank): **634**
-- RULE9 shorten / RULE9b delete: **72** / **75**
-- SHORTEN: 59
-- PURPOSE_CHECK (Rule 10 check 1): 15
-- SELF_CHECK: 425
+- DELETE (Rules 8/8b/9b/23a): **147**
+- TRIM (Rules 1/9/11/12): **78**
+- OVERLAP (Rule 15): **7**
+- OWN_COMPANY (Rule 17): **30**
+- RELABEL (Rule 22): **5**
+- ADD_REPEAT (Rule 7): **278**
+- THIRD_PARTY_CHECK (Rules 16/19, check in context): 93
+- ADD_MISSED (consensus phrase left blank, check in context): 414
+- RULE23_ADD (communications / KYC left blank, check in context): 8
+- RULE9 shorten / RULE9b delete: **77** / **71**
+- SHORTEN: 58
+- PURPOSE_CHECK (Rule 10 check 1): 20
+- LIST_CHECK (Rules 2/14, check in context): 30
+- SELF_CHECK: 405
 
-| doc | delete | trim | overlap | own_company | add_repeat | add_missed | rule9_shorten | rule9b_delete | purpose_check | self_check |
-|---|---|---|---|---|---|---|---|---|---|---|
-| 01_setu_aa_terms | 8 | 1 | 0 | 1 | 17 | 30 | 3 | 4 | 0 | 11 |
-| 02_digio_terms | 4 | 3 | 0 | 4 | 43 | 16 | 2 | 2 | 0 | 25 |
-| 03_oms_aa_terms | 5 | 5 | 2 | 5 | 30 | 22 | 2 | 5 | 0 | 31 |
-| 04_pb_fintech_aa_terms | 7 | 4 | 0 | 1 | 13 | 19 | 2 | 4 | 0 | 14 |
-| 05_onemoney_terms | 3 | 2 | 0 | 1 | 16 | 16 | 3 | 7 | 0 | 21 |
-| 06_setu_aa_privacy | 7 | 4 | 1 | 2 | 15 | 21 | 7 | 4 | 0 | 17 |
-| 08_pennydrop_terms | 1 | 2 | 0 | 2 | 123 | 74 | 6 | 3 | 1 | 24 |
-| 09_saafe_terms | 8 | 0 | 0 | 1 | 11 | 27 | 4 | 5 | 0 | 16 |
-| 10_perfios_terms | 2 | 2 | 0 | 2 | 38 | 7 | 1 | 2 | 0 | 16 |
-| 12_scoremeaa_terms | 4 | 1 | 0 | 1 | 8 | 6 | 5 | 2 | 0 | 17 |
-| 14_nadl_charter | 4 | 7 | 1 | 2 | 19 | 3 | 0 | 3 | 3 | 24 |
-| 16_oms_aa_privacy | 8 | 2 | 0 | 3 | 15 | 21 | 6 | 6 | 0 | 25 |
-| 17_pb_fintech_aa_privacy | 4 | 2 | 0 | 0 | 25 | 19 | 3 | 5 | 0 | 17 |
-| 19_saafe_privacy | 3 | 1 | 0 | 0 | 7 | 54 | 0 | 0 | 0 | 1 |
-| 20_scoremeaa_charter | 4 | 1 | 0 | 1 | 24 | 5 | 2 | 2 | 2 | 23 |
-| 21_nadl_terms | 6 | 0 | 1 | 4 | 31 | 4 | 3 | 3 | 1 | 27 |
-| 22_setu_aa_charter | 8 | 3 | 1 | 4 | 2 | 7 | 2 | 8 | 3 | 26 |
-| 23_upmint_aa_tos | 10 | 0 | 0 | 1 | 5 | 8 | 3 | 4 | 2 | 19 |
-| 24_credbuddha_terms | 1 | 2 | 0 | 0 | 15 | 139 | 0 | 1 | 0 | 1 |
-| 25_the_financiali_privacy | 1 | 4 | 1 | 1 | 55 | 31 | 3 | 2 | 1 | 25 |
-| 26_zerodha_tos | 1 | 5 | 1 | 0 | 2 | 6 | 10 | 2 | 2 | 18 |
-| 28_indifi_capital_privacy | 2 | 5 | 0 | 1 | 62 | 78 | 2 | 0 | 0 | 19 |
-| 29_icici_home_fin_terms | 3 | 3 | 0 | 1 | 5 | 21 | 3 | 1 | 0 | 8 |
+| doc | delete | trim | overlap | own_company | relabel | third_party_check | add_repeat | add_missed | rule23_add | rule9_shorten | rule9b_delete | purpose_check | list_check | self_check |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| 01_setu_aa_terms | 9 | 1 | 0 | 1 | 0 | 2 | 12 | 11 | 0 | 3 | 4 | 0 | 1 | 11 |
+| 02_digio_terms | 4 | 3 | 0 | 4 | 0 | 11 | 8 | 7 | 0 | 2 | 2 | 1 | 0 | 25 |
+| 03_oms_aa_terms | 6 | 5 | 2 | 5 | 0 | 7 | 15 | 14 | 0 | 2 | 5 | 0 | 0 | 30 |
+| 04_pb_fintech_aa_terms | 8 | 4 | 0 | 1 | 0 | 7 | 6 | 10 | 0 | 2 | 4 | 0 | 0 | 14 |
+| 05_onemoney_terms | 4 | 2 | 0 | 1 | 0 | 7 | 15 | 6 | 0 | 3 | 7 | 0 | 0 | 21 |
+| 06_setu_aa_privacy | 13 | 3 | 1 | 1 | 0 | 2 | 10 | 17 | 1 | 7 | 1 | 0 | 1 | 15 |
+| 08_pennydrop_terms | 3 | 2 | 0 | 2 | 0 | 8 | 20 | 56 | 0 | 6 | 3 | 2 | 4 | 23 |
+| 09_saafe_terms | 8 | 0 | 0 | 1 | 0 | 2 | 9 | 14 | 0 | 4 | 5 | 0 | 4 | 16 |
+| 10_perfios_terms | 3 | 2 | 0 | 1 | 0 | 4 | 5 | 1 | 0 | 1 | 2 | 0 | 0 | 15 |
+| 12_scoremeaa_terms | 5 | 1 | 0 | 1 | 0 | 3 | 8 | 3 | 0 | 5 | 2 | 0 | 1 | 17 |
+| 14_nadl_charter | 5 | 7 | 1 | 1 | 0 | 3 | 5 | 1 | 0 | 0 | 3 | 3 | 0 | 23 |
+| 16_oms_aa_privacy | 8 | 2 | 0 | 3 | 0 | 8 | 12 | 9 | 0 | 6 | 6 | 0 | 3 | 25 |
+| 17_pb_fintech_aa_privacy | 13 | 3 | 0 | 0 | 0 | 1 | 23 | 15 | 0 | 3 | 4 | 0 | 2 | 14 |
+| 19_saafe_privacy | 3 | 1 | 0 | 0 | 5 | 2 | 0 | 46 | 2 | 0 | 0 | 0 | 0 | 1 |
+| 20_scoremeaa_charter | 5 | 1 | 0 | 1 | 0 | 3 | 17 | 7 | 0 | 2 | 2 | 2 | 0 | 22 |
+| 21_nadl_terms | 7 | 0 | 1 | 3 | 0 | 4 | 23 | 2 | 0 | 3 | 3 | 1 | 0 | 27 |
+| 22_setu_aa_charter | 9 | 3 | 1 | 2 | 0 | 6 | 0 | 3 | 0 | 2 | 8 | 3 | 0 | 24 |
+| 23_upmint_aa_tos | 3 | 9 | 0 | 0 | 0 | 0 | 2 | 7 | 0 | 6 | 3 | 2 | 1 | 10 |
+| 24_credbuddha_terms | 1 | 3 | 0 | 0 | 0 | 0 | 17 | 107 | 1 | 0 | 1 | 0 | 0 | 0 |
+| 25_the_financiali_privacy | 21 | 6 | 0 | 0 | 0 | 1 | 16 | 14 | 1 | 5 | 3 | 2 | 4 | 36 |
+| 26_zerodha_tos | 4 | 12 | 1 | 0 | 0 | 2 | 2 | 4 | 0 | 10 | 2 | 2 | 0 | 8 |
+| 28_indifi_capital_privacy | 2 | 5 | 0 | 1 | 0 | 4 | 49 | 44 | 3 | 2 | 0 | 0 | 6 | 20 |
+| 29_icici_home_fin_terms | 3 | 3 | 0 | 1 | 0 | 6 | 4 | 16 | 0 | 3 | 1 | 2 | 3 | 8 |

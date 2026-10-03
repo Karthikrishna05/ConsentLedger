@@ -91,12 +91,14 @@ practice help?*
                         5 JS-shells (0 chars) dropped; 0 errors. 23 ≈ 15 test + 8 adapt (D21). ✓
 [now]  10c. Annotate    Round 1 (all 23 docs, double-annotated): kappa 0.279 — FAILED (D29); failure is
                         mechanical, not conceptual (D30). Round-2 calibration (2 docs): kappa 0.374 —
-                        FAILED, PURPOSE F1 0.000 (D32). Guideline now v7.1: Rules 7-22 (D29-D37).
+                        FAILED, PURPOSE F1 0.000 (D32). Guideline now v7.4: Rules 7-23, no open questions (D29-D46); fix lists audited (D44).
                         Tools: kappa.py --docs, agreement_report, annotation_audit --strict, adjudicate,
                         fixlist (Rules 7/8/8b/9/9b/11/15/17 + PURPOSE check), relaxed_agreement.
-                        NEXT: final calibration on 23_upmint_aa_tos (fresh, independent, v7.1 sent to P4)
-                        -> fix pass on all 23 (regenerated fix lists) -> full-corpus kappa -> adjudicate
-                        -> gold. No round 4 (D35). Glued-text docs 02_digio / 10_perfios last (D36).
+                        Round 3 (23_upmint): kappa 0.283 — P4 never had v7.1 (D41). Round 4
+                        (25_the_financiali_privacy, independent, final): kappa 0.522, PURPOSE relaxed 0.658
+                        (D42, D43). Guideline now v7.4 (D45, D46). NOW: fix pass on all 23
+                        (Export4 fix lists) -> Export5 -> full-corpus kappa -> adjudicate -> gold.
+                        Glued-text docs 02_digio / 10_perfios last (D36).
 [done] 11. E1 on dev    3 backbones x 3 seeds on OPP-115 dev (D38): Legal-BERT 0.400, InLegalBERT 0.386,
                         BERT-base 0.382 entity macro-F1; ranking flips on token-F1 -> no winner.
                         E1/E2 on the AA test set (the headline) waits on gold; needs a gold ->

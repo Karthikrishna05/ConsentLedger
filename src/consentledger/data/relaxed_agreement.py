@@ -167,6 +167,7 @@ def main() -> None:
         print()
     print(f"{'TOKEN':10}{'micro':14}{'':>8}{'':>8}{token_f1:>8.3f}   (boundary-free)")
 
+    args.out = args.out.resolve()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(json.dumps({
         "n_docs": len(docs), "docs": docs, "content_threshold": args.threshold,

@@ -1,24 +1,17 @@
 {
-  "n_docs": 2,
-  "cohen_kappa_token": 0.3737272412176076,
+  "n_docs": 1,
+  "cohen_kappa_token": 0.5216989720094328,
   "threshold": 0.6,
-  "entity_precision": 0.3125,
-  "entity_recall": 0.423728813559322,
-  "entity_f1": 0.35971223021582727,
+  "entity_precision": 0.40336134453781514,
+  "entity_recall": 0.5274725274725275,
+  "entity_f1": 0.4571428571428572,
   "per_doc": [
     {
-      "doc_id": "17_pb_fintech_aa_privacy",
-      "tokens": 2733,
-      "kappa": 0.3559,
-      "spans_A": 48,
-      "spans_B": 56
-    },
-    {
-      "doc_id": "26_zerodha_tos",
-      "tokens": 979,
-      "kappa": 0.3809,
-      "spans_A": 11,
-      "spans_B": 25
+      "doc_id": "25_the_financiali_privacy",
+      "tokens": 3638,
+      "kappa": 0.5217,
+      "spans_A": 91,
+      "spans_B": 119
     }
   ],
   "only_in_A": [],

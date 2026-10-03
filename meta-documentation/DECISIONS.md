@@ -886,3 +886,255 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
 - **Every commit was preceded by a staged-file check** for exports, gold, import file, `docs/`,
   `per_doc/`, `worklist/`, `fixlist/P*/`, `proposed_gold/` and `data/summ/` — all clean.
 - **Status:** ✅ In force.
+
+### D41 — Round-3 calibration (kappa 0.283) -> fix pass, guideline frozen; fix lists stop guessing
+- **Result (`23_upmint_aa_tos`, Export3A/B, v7.1):** token kappa **0.283**; entity F1 0.267 (DATA_TYPE 0.414,
+  PURPOSE 0.167, THIRD_PARTY **0.000** — P4 marked none); relaxed CONTENT micro-F1 0.367, PURPOSE 0.333.
+  History: 0.279 (round 1, 23 docs) -> 0.374 (round 2, 2 docs) -> 0.283 (round 3, 1 doc).
+- **Decision:** per the stop-loss agreed in advance (D35), kappa < 0.6 -> **proceed to the fix pass with the
+  guideline FROZEN; no round 4**. Report the round-by-round kappa honestly; PURPOSE is the hard label.
+- **Diagnosis — compliance, not clarity.** Applying only already-written rules to each annotator's spans
+  (no judgement calls changed): P1 fixed 0.298, P4 fixed **0.547**, both 0.584, both + P4 marking the 5
+  Rule-16 third parties **0.717**. P4: leading `to`/`for` kept on every PURPOSE (Rule 9), umbrellas
+  (Rules 8/9b), contract clauses as PURPOSE (Rule 10 checks 1/3, incl. the D37 case), skipped repeats
+  (Rule 7), no THIRD_PARTY despite explicit disclosures (Rule 16). P1: indemnity `affiliates`/`agents`
+  (Rule 16), `pursuant to valid legal process` as PURPOSE. Action: confirm P4 is working from v7.1.
+- **Caveat:** not a blank document — 22/28 (P1) and 16/32 (P4) spans identical to round 1, and the Export2
+  fix lists covered it. Reported as calibration round 3, not as D39's untouched-document measurement.
+- **Open ambiguities, ruled on at adjudication (guideline frozen):** the bracketed abbreviation itself
+  (`("KYC Documents")`; Rule 12 vs Rule 20); status adjectives (`registered email address`); communication
+  items as PURPOSE (`OTPs`, `alerts`); `regulators` in an explicit disclosure sentence (Rule 16 vs 8b).
+- **Tool correction (`fixlist.py`):** ADD_MISSED, labelled "mechanical", was wrong 6/7 (P1) and 7/10 (P4)
+  on this document — word matching without meaning (`title`, `assets`, nested `service providers`,
+  indemnity `affiliates`). Now: no suggestion inside/overlapping another (Rule 15); THIRD_PARTY suggested
+  only with a data-flow verb in the sentence, span blanked (Rule 16); new bucket **1e THIRD_PARTY_CHECK**
+  (sample: ~22/24 genuine); ADD_MISSED is a check-in-context bucket with the sentence, not mechanical;
+  `provide the services` added to the stoplist. Selfchecks cover all three.
+  Export3 fix lists: mechanical P1 953 / P4 758; check-in-context P1 307 + 132 / P4 459 + 90.
+- **Also:** `relaxed_agreement.py` crashed on a relative `--out` (the D40-era resolve fix had missed it) —
+  fixed. `results/annotation/kappa.json` now holds the round-3 single-document result;
+  `relaxed_round3.json` holds its relaxed scores.
+- **Status:** ✅ Fix lists regenerated from Export3. Next: P1/P4 fix pass on all 23 -> Export4A/B ->
+  full-corpus kappa -> adjudicate -> gold.
+
+### D42 — Round-3 was a process failure, not a guideline test: one fresh document (deviation from D35/D41)
+- **Fact established:** P4 confirmed they did **not** have guideline v7.1 when annotating `23_upmint_aa_tos`.
+  So round 3 measured an annotator *without* the guideline, not the guideline. That matches the D41
+  diagnosis (P4's errors were all against already-written rules).
+- **Decision (P1's):** one fresh, independent document under v7.1 — **`25_the_financiali_privacy`**.
+  This **deviates** from D35/D41 ("no round 4"); the deviation is justified only by the process failure
+  above and is logged *before* any annotation, so it cannot be rationalised afterwards. Had P4 had v7.1, the
+  answer would have been no.
+- **Why it is worth it:** the post-fix-pass full-corpus kappa is not fully independent — ADD_MISSED
+  suggestions come from the consensus lexicon, built from *both* annotators' spans. A blank document
+  annotated separately under the final guideline is the cleanest agreement number the paper can report.
+- **Document choice:** 2,888 words, all three labels in quantity, a privacy policy (rich in data-flow
+  sentences that test Rule 16); not diagnosed span-by-span (unlike upmint, `17_pb_fintech`, `26_zerodha`,
+  `29_icici`); no glued text (unlike `02_digio`, `10_perfios`).
+- **Protocol (fixed now):** (1) both read v7.1; any sync discusses rules only, never upmint's spans or the
+  diff output; (2) start from **blank** — delete all existing spans on doc 25 first, do not edit round-1
+  work (on upmint P1 kept 22/28 old spans); (3) annotate before the fix pass; do not open doc 25 in either
+  fix list; no discussion of doc 25 until both have submitted; (4) export the whole project as
+  Export4A/B (JSON), score with `kappa.py --docs 25_the_financiali` and `relaxed_agreement.py --docs`;
+  (5) **the result is final** — reported with every round (0.279 -> 0.374 -> 0.283 -> round 4); **no round
+  5**; below 0.6 still goes to the fix pass with PURPOSE named as the hard label.
+- **Repo note found while logging — fixed:** D41's `fixlist.py` / `adjudicate.py` changes (THIRD_PARTY_CHECK
+  bucket, Rule 15/16 suppression in ADD_MISSED, `provide the services` stoplist entry) and the bible's
+  section 5.9.12 had been lost from the working tree — the files were back at commit `eebaea7` one minute
+  after the Export3 fix lists were generated. All were **restored by replaying the original edits from the
+  session transcript**; selfchecks pass, and regenerating from Export3 reproduces the on-disk fix lists
+  item for item (same counts: P1 953/307/132/10, P4 758/459/90/14). Two small fixes on top: suggestion
+  order was hash-seed dependent (equal-length phrases) — now sorted, so two runs are byte-identical; and
+  `--out` outside the repo no longer crashes the final print.
+- **Status:** ⏳ P4 annotating doc 25 under v7.1; P1 to annotate doc 25 from blank.
+
+### D43 — Round 4: kappa 0.522 (final); rulings for the fix pass -> guideline v7.2
+- **Result (`25_the_financiali_privacy`, Export4A/B, both on v7.1, independent):** token kappa **0.522**;
+  entity F1 0.457 (DATA_TYPE 0.532, PURPOSE 0.384, THIRD_PARTY 0.419); relaxed CONTENT micro-F1 **0.590**
+  (DATA_TYPE 0.596, **PURPOSE 0.658**, THIRD_PARTY 0.465). Spans: P1 91, P4 119.
+  History: 0.279 (round 1, 23 docs) -> 0.374 (round 2, 2 docs) -> 0.283 (round 3, P4 without v7.1)
+  -> **0.522 (round 4)**. Per D42 this number is **final** — no round 5; it goes to the fix pass.
+- **What the number says:** with the guideline in both hands, agreement nearly doubled. PURPOSE, the
+  failing label of rounds 2-3, is now the *strongest* under relaxed matching; **THIRD_PARTY is the hardest
+  label**, driven by regulators in disclosure lists and AA/registrar names (Rules 8b/16).
+- **Who diverged:** both, as a genuine measurement should show. P1: missed recipients (Amazon Web
+  Services, Google APIs, GA4/GTM at first mention); `Gmail OAuth` (a mechanism) and `Gmail data` x3
+  (Rule 9b); `required for KYC` too long; `audit and grievance redressal` should be two spans (Rule 2);
+  `connection with any merger`. P4: `To` kept on 5 PURPOSE spans (Rule 9); `provide, …` edge (Rule 11);
+  named AAs, `RBI`, `SEBI` inside a regulation's name, registrars CAMS/KFintech (a data *source*, Rule 16)
+  as THIRD_PARTY; umbrellas (`Financial information`, `data categories`, `device and usage data`,
+  `financial details`); Rule 14 splits (`mutual fund` + `demat holdings`, `detect` + `investigate and
+  prevent fraud`); bracket included in `FIU-IND` (Rule 12); missed the service-provider list.
+- **Corrections of my own analysis:** I first called P1's skipped telemetry list (IP address, browser
+  type…) an under-marking. **P1 was right** — telemetry is observed, not provided (ruling (a)); P4's
+  10 telemetry spans were the violation (removing them alone: kappa 0.522 -> 0.549). I first told P1 to
+  delete `required for KYC`; it is a genuine PURPOSE, only too long. I told both to mark `Successor
+  entities`; it is a table row label, which Rule 20 excludes — both annotators had treated all five labels
+  alike. And the inference that "spans identical to round 1" proves editing rather than blank annotation
+  was weak: blank annotation reselects `name` at the same offsets (doc 25: P1 57/91, P4 37/119 identical).
+- **Rulings (P1's) -> guideline v7.2 (Rule 23, Rule 10 row 11, decision table):**
+  - **The principle (P1 resolved the dilemma, D43 addendum): PROVIDED data is a DATA_TYPE, OBSERVED data
+    is not** — not "is it financial?". `email address` and `mobile number` are not financial and are
+    marked; the Rule 8 bank-record test is a specificity check against umbrella words, not a financial-only
+    filter. My first justification for (a), "fails the bank-record test", was therefore wrong (it would also
+    exclude `email address`) and was replaced; the rulings themselves are unchanged.
+  - **(a) Observed device/usage telemetry is never DATA_TYPE** — emitted by the device, never handed over;
+    and boilerplate common to nearly every web policy, so it says nothing about the company (Rule 10
+    check 3's reasoning; Rule 8b cookies). Paper: OPP-115 labels it, so E1 predictions of it count as
+    false positives on AA gold — a deliberate scope choice that surfaces as measurable domain shift.
+    Added to the stoplist, so the fix lists delete it mechanically.
+  - **(b) Communication content you send IS DATA_TYPE** — emails, WhatsApp messages, call recordings, chat
+    messages, form inputs, survey responses. Test: did *you* produce it, or did your device emit it?
+  - **(c) `KYC` is a PURPOSE only by context** — data collected/used for it (`where required for KYC` ->
+    `KYC`, row 5); `KYC records` DATA_TYPE; `KYC/AML verification providers` THIRD_PARTY; `KYC process`
+    nothing (Rule 19); heading nothing (Rule 20).
+  - **(d) A table row label on its own line is a heading** (Rule 20): mark the items under it.
+    *Superseded by D45 — row labels and headings are ordinary text.*
+  - **(e) Row 11 — corporate transactions** (`merger`, `acquisition`, `reorganization`, `sale of
+    assets/business`), only with a data-use frame. Evidence: 8/23 documents use such words, but only **3**
+    describe your data moving because of one (`19_saafe_privacy`, `25_the_financiali_privacy`,
+    `28_indifi_capital_privacy`); the rest are contract assignment (`23_upmint`), loan restructuring,
+    insolvency declarations, "customer acquisition". It earns a row despite the small count because
+    OPP-115 has a *Merger/Acquisition* purpose (an E1 model will predict it, so gold must be able to hold
+    it), and transferring your data in a merger is a use *beyond* any declared ReBIT code — the mismatch
+    the project exists to flag (rows 9-11).
+  - **Decision-table conflict fixed:** `device information` and `location data` had been listed as *mark*,
+    contradicting Rule 8b; both moved to *do not mark*.
+- **Measurement integrity:** these rulings came *after* the round-4 measurement and apply to the fix pass.
+  Round-4 kappa is reported as measured under v7.1; v7.2 touches about one span on doc 25 (`merger`), so
+  the number is not materially affected. Stated in the paper.
+- **Still open, for adjudication:** regulators in an explicit disclosure list (`SEBI, RBI, the Income-tax
+  Department…`; upmint's `regulators`) — Rule 16 says mark, Rule 8b names RBI; plus D41's bracketed
+  abbreviation and `registered email address`.
+- **Tools:** stoplist + telemetry; `CONTEXT_PURPOSE` now includes `kyc` and the row-11 words, so they are
+  never auto-added or propagated (`customer acquisition` stays safe) and are listed for a sentence check
+  instead. Fix lists regenerated from **Export4** (doc 25 changed): mechanical P1 943 / P4 769;
+  check-in-context P1 299 + 132 + 23 / P4 444 + 89 + 20. Selfchecks pass. `kappa.json` holds round 4;
+  relaxed scores in `relaxed_round4.json`.
+- **Status:** ✅ Guideline v7.2 — send to P4. Next: fix pass on all 23 from the Export4 fix lists ->
+  Export5A/B -> full-corpus kappa -> adjudicate (open items above) -> gold.
+
+### D44 — Audit of the fix lists against every rule; seven detectors added, four bugs fixed
+- **Trigger:** P1 asked for every update to be rechecked and for the fix lists to cover every case, edge
+  cases included, so the corrected corpus generalises.
+- **Method:** (1) a rule-by-rule coverage matrix (Rules 1-23 vs buckets); (2) each candidate detector
+  probed on Export4 *before* being added, keeping only those with high precision; (3) **recall** measured
+  against the problems found by hand on round-4 doc 25 (D43); (4) **precision** by sampling each new
+  bucket across all 23 documents.
+- **Bugs found and fixed:**
+  1. **Errors were being multiplied.** ADD_REPEAT copied *any* of an annotator's phrases to every other
+     occurrence — P4's `SEBI`, marked once inside a regulation's name, was proposed **16** more times.
+     Now copies come only from spans no rule doubts, and each copy is re-checked at its own position
+     (Rules 16/19/20). Effect on Export4: P1 604 -> 518, P4 389 -> 253 repeat suggestions.
+  2. **The same flaw in the gold builder.** `adjudicate.py` auto-accepted and propagated THIRD_PARTY spans
+     with no Rule 16 check, so an indemnity `affiliates` could enter gold. Now: agreed-but-doubted spans go
+     to a new human bucket (REVIEW_RULE); consensus accept and Rule 7 propagation skip doubted positions.
+     The Rule 16/19/20 helpers moved into `adjudicate.py` so both tools apply one definition.
+  3. **`financial data` was on the Rule 9b keep-list**, contradicting the decision table — removed;
+     `financial data`, `financial details`, `data categories` added to the stoplist.
+  4. **Suggestions on field labels and inside deleted spans:** `address` x8 proposed in the company's
+     footer ("Registered Address: …"), `CAMS` inside a deleted `CAMS Finserv`. A word followed by a colon
+     is never suggested; nothing is suggested over a deleted span. Duplicate highlights are reported once.
+- **Detectors added** (each with a selfcheck built from the real failure):
+  | bucket | rule | what it catches |
+  |---|---|---|
+  | 1 DELETE (extended) | 8b, 9b, 23a | named AAs; telemetry *variants* by pattern (`type of browser`, `IMEI`, `web beacons`, `flash cookies`) |
+  | 1b TRIM (extended) | 1, 9, 12 | leading `your/the/any`; leading `to/for` on PURPOSE (39 in Export4); bracket with hyphen `(FIU-IND)` |
+  | 1e THIRD_PARTY_CHECK (extended) | 16, 19 | data comes FROM them (`from registrars (CAMS)`); part of a law's name (`SEBI (…) Regulations`) |
+  | 1f RELABEL | 22 | a phrase you label differently everywhere else (`passwords`, `mobile number` as THIRD_PARTY) — needs >= 2 uses |
+  | 1g HEADING_CHECK | 20, 23d | section headings (`8. Cookies`) and table row labels; lettered list items excluded |
+  | 3b RULE23_ADD | 23b, 23c | communication content and `for KYC` left blank (check in context) |
+  | 4e LIST_CHECK | 2, 14 | a list you split and they joined, or vice versa |
+- **Measured recall on doc 25:** P1 **7/10**, P4 **19/22** of the hand-found problems are now in the fix
+  lists. Every miss is the same kind: a recipient the annotator did not mark at all and no rule points to
+  (`Amazon Web Services`, `payment processors`, `CRM platforms`). Only the other annotator's highlight
+  reveals those; they surface at adjudication (REVIEW_ONESIDED). The guideline now tells annotators to read
+  each document once more end to end after the list.
+- **Measured precision (samples across 23 docs):** TRIM, DELETE, RELABEL ~100%; THIRD_PARTY_CHECK ~7/9 (misses
+  list items whose data-flow lead-in is several lines up); RULE23_ADD mixed (`correspondence` in an
+  arbitration clause) — which is why it is a check bucket, not mechanical.
+- **Deliberately not automated:** Rule 13 completeness beyond the lexicon, Rule 18 (nothing to check),
+  Rule 21 glued words, and showing an annotator the *other's* spans (would converge the two exports and
+  hollow out the post-fix kappa — that comparison belongs to adjudication).
+- **Guideline (still v7.2, no rule changed):** label table says 11 PURPOSE categories and "data you
+  provide"; Rule 8 test clarified as a specificity test; PART G2.3 rewritten for all 15 buckets (it listed 5
+  and still said ADD_MISSED was automatic); 11 round-4 tricky cases added, including one new micro-ruling:
+  the company's own contact block (`Registered Address:`, `Contact Details:`) is not your data.
+- **Open (P1 to decide) — decided in D45:** a table row label that is itself a **named organisation** — `PostHog` above
+  "— for product analytics…" in doc 25. Rule 23d says labels are not marked, but here the label *is* the
+  recipient and appears nowhere else. Proposed: 23d applies to *category* labels (`Service providers`,
+  `Successor entities`); a *named* organisation as a row label is marked.
+- **Export4 totals:** mechanical P1 901 / P4 665; check-in-context P1 498 / P4 559; selfchecks pass.
+- **Status:** ✅ Fix lists regenerated. Next: send P4 v7.2 + their fix list; fix pass.
+
+### D45 — Headings and table row labels are ordinary text (guideline v7.3)
+- **Trigger:** D44 left open whether a *named organisation* used as a table row label (`PostHog` above
+  "— for product analytics…", doc 25) is marked. P1 decided: **yes** — and went further: **phrases in headings
+  can be marked too.**
+- **Decision (P1's):** Rule 20's "never highlight headings" and Rule 23d (D43 d) are replaced by one rule: a
+  phrase in a heading, title or table row label is marked **exactly like the same phrase in a sentence — if
+  it passes every other rule**. Rule 7 ("every occurrence") now includes headings.
+- **Why it is sound:** (1) NER marks *mentions*, not claims — the reason negated mentions are already marked
+  (Rule 18); a heading is a mention. (2) It removes a judgement two annotators made differently ("is this a
+  heading?" — round 1 found ~70 heading-line spans each, treated three ways). (3) The other rules still filter
+  most headings: `8. Cookies` (23a), `Data Retention` / `Grievance Redressal` (no data-use frame, Rule 10),
+  `Personal Information We Collect` (Rule 8). What changes is mostly specific data headings (`KYC Documents`)
+  and recipient row labels.
+- **Reverses D43 (d):** `Successor entities` — which P1 had rightly left unmarked under v7.2 — is now
+  **THIRD_PARTY**. The table's lead-in ("Your personal data may be shared with the following categories of
+  recipients") supplies the Rule 16 flow for every row. Rulings for all 9 row labels in the corpus (all in
+  `25_the_financiali_privacy`; no other document has such a table):
+  | row label | v7.3 |
+  |---|---|
+  | `Google Analytics 4 and Google Tag Manager` | `Google Analytics 4`, `Google Tag Manager` — THIRD_PARTY (two, Rule 2) |
+  | `PostHog` | THIRD_PARTY |
+  | `Service providers`, `Professional advisors`, `Successor entities` | THIRD_PARTY |
+  | `Authorised personnel` (within Finfam…) | not marked — the company's own staff (Rule 17) |
+  | `Regulated intermediaries` (— "RBI-licensed Account Aggregators…") | not marked — it names the AAs (Rule 8b) |
+  | `Partners` | not marked — stoplist (Rule 8) |
+  | `Regulators and authorities` | open — the regulator question still pending (D43) — *marked, per D46* |
+- **Measurement integrity:** round 4 (kappa 0.522) was measured under v7.1, where both annotators left all
+  labels unmarked alike; v7.3 applies to the fix pass. Reported as a post-measurement guideline change.
+- **Tools:** the heading detector (HEADING_CHECK bucket; heading guards in suggestion, propagation and
+  adjudication) is **deleted** — with headings ordinary text, nothing needs detecting. Suggestions now reach
+  headings and row labels like any text (doc 25: `Service providers` and `PostHog` row labels proposed; the
+  other labels above are not in either annotator's vocabulary yet, so they are listed here instead of
+  building a detector for one document). Selfcheck: a row label under a sharing lead-in passes Rule 16 and
+  its repeats are proposed. Fix lists regenerated: mechanical P1 913 / P4 669.
+- **Guideline v7.3:** header, Rule 20 (with a table of how the other rules still filter headings), Rule 23c
+  (`3.1 KYC` heading — not marked because it has no data-use frame), Rule 23d, PART G2.3 item 8, tricky cases.
+- **Status:** ✅ Send P4 **v7.3** + regenerated fix list. Both: add the row labels above on doc 25.
+
+### D46 — The last three open questions settled (guideline v7.4)
+- **Context:** D41/D43 left three ambiguities for adjudication. Settling them *before* the fix pass means both
+  annotators apply them across all 23 documents instead of meeting them again as disagreements.
+- **1. Regulators (P1's ruling):** an authority named in an explicit disclosure is THIRD_PARTY (Rule 16) —
+  **except organisations that are part of the AA pipeline itself**: `RBI`, and now `SEBI`. I extended the same
+  class to the framework's other two financial-sector regulators, `IRDAI` and `PFRDA`, so the rule is "the four
+  AA-framework regulators", not a list of two. Marked: `law enforcement`, `government authorities`, the generic
+  word `regulators`, `Income-tax Department`, `Financial Intelligence Unit`, `exchanges`, `courts`, and the row
+  label `Regulators and authorities` (resolves the row left open in D45). Tool: the four regulators (and full
+  names) added to the Rule 8b set — deleted mechanically.
+- **2. Bracketed abbreviation (P1's proposal, adopted over my suggestion):** I had proposed *not* marking the
+  abbreviation inside the bracket. P1 proposed marking it as a separate highlight — another repetition. **P1's
+  version is the consistent one:** Rule 12 already marks every later standalone `PAN` (Rule 7), so skipping only
+  the bracketed one would label the same token an entity everywhere except in brackets — the contradictory
+  training signal Rule 7 exists to prevent. It is also what both annotators did unprompted on upmint
+  (`("KYC Documents")`). Rule 12 rewritten: **two highlights, same label** — the name, and the abbreviation or
+  expansion inside the bracket/quotes; never one highlight that includes the brackets. Banned abbreviations
+  stay banned (`FIP`, `PII`…), as does a bracketed umbrella (`("Registration Information")`).
+- **3. Status words (P1's ruling):** dropped — `registered email address` -> `email address` (Rule 1). List:
+  *registered, verified, valid, updated, latest*. Deliberately **not** *permanent, current, primary*: those are
+  part of real field names (`Permanent Account Number`, `current address`, `Primary Account Number`).
+- **Tools (`fixlist.py`, `adjudicate.py`):** status words trimmed on DATA_TYPE (2 in Export4); a highlight that
+  swallowed its bracket is still trimmed, and the bracket's content is now proposed as its own highlight —
+  also when the name was marked without it; three-letter abbreviations (`PAN`, `OTP`, `UPI`) are now proposed
+  as repeats, which the 4-character floor had silently blocked, but only where written in capitals. 48 such
+  additions in Export4; a sample was nearly all correct. Two noise cases found and guarded: `KYC` is never
+  copied automatically (Rule 23c — context decides), and an umbrella in a bracket is never proposed. Tests
+  that used `SEBI` for the law-name check now use `UIDAI`, since `SEBI` is deleted outright. Selfchecks pass.
+  Fix lists regenerated: mechanical P1 929 / P4 693.
+- **Known limit:** a repeat can land on the *company's own* identifier ("bearing CIN … and PAN AABCS7056E");
+  the annotator skips it under the D44 contact-block ruling.
+- **No open annotation questions remain.** Guideline **v7.4** is the version for the fix pass.
+- **Status:** ✅ Send P4 v7.4 + regenerated fix list; begin the fix pass.
