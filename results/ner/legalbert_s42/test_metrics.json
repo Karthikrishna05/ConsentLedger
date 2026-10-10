@@ -1,0 +1,457 @@
+{
+  "conll_file": "C:\\Users\\pc\\Project-Programming\\Python\\ConsentLedger\\data\\ner_bio\\aa_test.conll",
+  "model_dir": "artifacts_out\\ner\\legalbert_s42",
+  "condition": "E1",
+  "seed": 42,
+  "truncated_segments": 0,
+  "bootstrap_unit": "document group",
+  "segments": 559,
+  "entities_gold": 826,
+  "entities_predicted": 952,
+  "micro_f1": 0.12823397075365578,
+  "macro_f1": 0.12968509597046804,
+  "token_f1": 0.24184914841849148,
+  "precision": 0.11974789915966387,
+  "recall": 0.13801452784503632,
+  "per_label": {
+    "DATA_TYPE": {
+      "precision": 0.128,
+      "recall": 0.1563517915309446,
+      "f1-score": 0.14076246334310852,
+      "support": 307.0
+    },
+    "PURPOSE": {
+      "precision": 0.0835509138381201,
+      "recall": 0.12698412698412698,
+      "f1-score": 0.10078740157480315,
+      "support": 252.0
+    },
+    "THIRD_PARTY": {
+      "precision": 0.17525773195876287,
+      "recall": 0.12734082397003746,
+      "f1-score": 0.1475054229934924,
+      "support": 267.0
+    }
+  },
+  "relaxed": {
+    "micro_f1": 0.2953855651010855,
+    "macro_f1": 0.2926182456924538,
+    "per_label": {
+      "DATA_TYPE": {
+        "precision": 0.24533333333333332,
+        "recall": 0.2996742671009772,
+        "f1": 0.26979472140762467
+      },
+      "PURPOSE": {
+        "precision": 0.2950391644908616,
+        "recall": 0.4365079365079365,
+        "f1": 0.35209472282808824
+      },
+      "THIRD_PARTY": {
+        "precision": 0.30412371134020616,
+        "recall": 0.2209737827715356,
+        "f1": 0.2559652928416486
+      }
+    }
+  },
+  "group_mean_micro_f1": 0.11055741045338383,
+  "per_group": {
+    "08_pennydrop_terms": {
+      "micro_f1": 0.17120622568093385,
+      "relaxed_micro_f1": 0.3501945525291829,
+      "entities_gold": 128
+    },
+    "14_nadl_charter+21_nadl_terms": {
+      "micro_f1": 0.02127659574468085,
+      "relaxed_micro_f1": 0.1276595744680851,
+      "entities_gold": 43
+    },
+    "23_upmint_aa_tos": {
+      "micro_f1": 0.17582417582417584,
+      "relaxed_micro_f1": 0.4098262432594368,
+      "entities_gold": 31
+    },
+    "24_credbuddha_terms": {
+      "micro_f1": 0.1646341463414634,
+      "relaxed_micro_f1": 0.2958304509150368,
+      "entities_gold": 157
+    },
+    "25_the_financiali_privacy": {
+      "micro_f1": 0.15833333333333333,
+      "relaxed_micro_f1": 0.30833333333333335,
+      "entities_gold": 130
+    },
+    "26_zerodha_tos": {
+      "micro_f1": 0.0,
+      "relaxed_micro_f1": 0.1,
+      "entities_gold": 4
+    },
+    "28_indifi_capital_privacy": {
+      "micro_f1": 0.10016155088852989,
+      "relaxed_micro_f1": 0.284329563812601,
+      "entities_gold": 268
+    },
+    "29_icici_home_fin_terms": {
+      "micro_f1": 0.09302325581395349,
+      "relaxed_micro_f1": 0.28655215751989943,
+      "entities_gold": 65
+    }
+  },
+  "errors": {
+    "pred_exact": 114,
+    "pred_boundary": 150,
+    "pred_wrong_label": 27,
+    "pred_spurious": 661,
+    "spurious_telemetry": 32,
+    "spurious_aa_role": 8,
+    "spurious_umbrella_term": 124,
+    "spurious_corporate_transaction": 1,
+    "spurious_other": 496,
+    "gold_exact": 114,
+    "gold_boundary": 147,
+    "gold_wrong_label": 20,
+    "gold_missed": 545,
+    "definition_mismatch": 164,
+    "micro_f1_without_definition_mismatch": 0.14126394052044608
+  },
+  "counts": {
+    "groups": [
+      "08_pennydrop_terms",
+      "14_nadl_charter+21_nadl_terms",
+      "23_upmint_aa_tos",
+      "24_credbuddha_terms",
+      "25_the_financiali_privacy",
+      "26_zerodha_tos",
+      "28_indifi_capital_privacy",
+      "29_icici_home_fin_terms"
+    ],
+    "labels": [
+      "DATA_TYPE",
+      "PURPOSE",
+      "THIRD_PARTY"
+    ],
+    "exact": [
+      [
+        [
+          9,
+          58,
+          49
+        ],
+        [
+          3,
+          45,
+          30
+        ],
+        [
+          10,
+          26,
+          49
+        ]
+      ],
+      [
+        [
+          0,
+          13,
+          33
+        ],
+        [
+          0,
+          23,
+          8
+        ],
+        [
+          1,
+          15,
+          2
+        ]
+      ],
+      [
+        [
+          3,
+          20,
+          14
+        ],
+        [
+          3,
+          31,
+          12
+        ],
+        [
+          2,
+          9,
+          5
+        ]
+      ],
+      [
+        [
+          6,
+          51,
+          28
+        ],
+        [
+          13,
+          84,
+          86
+        ],
+        [
+          8,
+          36,
+          43
+        ]
+      ],
+      [
+        [
+          8,
+          48,
+          54
+        ],
+        [
+          8,
+          45,
+          38
+        ],
+        [
+          3,
+          17,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          9,
+          0
+        ],
+        [
+          0,
+          4,
+          4
+        ],
+        [
+          0,
+          3,
+          0
+        ]
+      ],
+      [
+        [
+          19,
+          156,
+          111
+        ],
+        [
+          4,
+          117,
+          50
+        ],
+        [
+          8,
+          78,
+          107
+        ]
+      ],
+      [
+        [
+          3,
+          20,
+          18
+        ],
+        [
+          1,
+          34,
+          24
+        ],
+        [
+          2,
+          10,
+          23
+        ]
+      ]
+    ],
+    "relaxed": [
+      [
+        [
+          20,
+          58,
+          20,
+          49
+        ],
+        [
+          12,
+          45,
+          12,
+          30
+        ],
+        [
+          13,
+          26,
+          13,
+          49
+        ]
+      ],
+      [
+        [
+          1,
+          13,
+          1,
+          33
+        ],
+        [
+          4,
+          23,
+          4,
+          8
+        ],
+        [
+          1,
+          15,
+          1,
+          2
+        ]
+      ],
+      [
+        [
+          7,
+          20,
+          7,
+          14
+        ],
+        [
+          9,
+          31,
+          8,
+          12
+        ],
+        [
+          3,
+          9,
+          3,
+          5
+        ]
+      ],
+      [
+        [
+          11,
+          51,
+          11,
+          28
+        ],
+        [
+          23,
+          84,
+          22,
+          86
+        ],
+        [
+          15,
+          36,
+          15,
+          43
+        ]
+      ],
+      [
+        [
+          11,
+          48,
+          11,
+          54
+        ],
+        [
+          19,
+          45,
+          19,
+          38
+        ],
+        [
+          7,
+          17,
+          7,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          9,
+          0,
+          0
+        ],
+        [
+          1,
+          4,
+          1,
+          4
+        ],
+        [
+          0,
+          3,
+          0,
+          0
+        ]
+      ],
+      [
+        [
+          38,
+          156,
+          38,
+          111
+        ],
+        [
+          34,
+          117,
+          34,
+          50
+        ],
+        [
+          16,
+          78,
+          16,
+          107
+        ]
+      ],
+      [
+        [
+          4,
+          20,
+          4,
+          18
+        ],
+        [
+          11,
+          34,
+          10,
+          24
+        ],
+        [
+          4,
+          10,
+          4,
+          23
+        ]
+      ]
+    ]
+  },
+  "ci95": {
+    "micro_f1": [
+      0.09823265212477196,
+      0.15995813204508852
+    ],
+    "macro_f1": [
+      0.09708297524826742,
+      0.16577383868650247
+    ],
+    "relaxed_micro_f1": [
+      0.26229113650762187,
+      0.32794299291220674
+    ],
+    "relaxed_macro_f1": [
+      0.2616163003063809,
+      0.3289083343513546
+    ]
+  },
+  "bootstrap": {
+    "n_groups": 8,
+    "resamples": 5000,
+    "seed": 0
+  }
+}

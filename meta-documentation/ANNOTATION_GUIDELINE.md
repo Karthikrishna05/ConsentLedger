@@ -1,4 +1,16 @@
-# ConsentLedger — AA Annotation Guide (v7.4, beginner-proof)
+# ConsentLedger — AA Annotation Guide (v7.5, beginner-proof)
+
+> **v7.5 (2026-10-07) — rules ratified by P1 and P4 together (D55).** The two annotators met and went through
+> the ten rulings the adjudication had applied. Seven were kept as they were. Three were changed, and the gold
+> file was rebuilt with them: **(1) a data *source* is a THIRD_PARTY too** — an organisation your data is
+> fetched *from* (a credit bureau, UIDAI, the Central KYC Registry, a registrar) also handles your data, so it
+> is marked, except the AA pipeline's own bodies (Rule 16, PART I-3). **(2) Rule 10 gains row 12 — Account
+> opening & onboarding.** **(3) Rule 14 is narrowed** — a list is one highlight only where a piece means
+> nothing on its own; pieces that are complete stay separate highlights.
+
+> **After the fix pass (2026-10-06):** rulings made while resolving disagreements are collected in
+> **PART I — Adjudication rulings**. They do not change how the fix pass was done (that was v7.4); they
+> decide the gold file. First entry: **the Lender** (D49).
 
 > **v7.4 (2026-10-03):** the last three open questions, settled (D46). **Regulators:** authorities named
 > in an explicit disclosure are THIRD_PARTY — *except* the regulators of the AA pipeline itself (`RBI`,
@@ -225,7 +237,7 @@ financial item.**
 *Quick test: strip the modifier. If what is left is just "data" or "information" and the modifier told you
 nothing about the CONTENT, do not mark it.*
 
-#### Rule 10 — PURPOSE comes from a FIXED LIST of 11 categories. Anything else is not a PURPOSE.
+#### Rule 10 — PURPOSE comes from a FIXED LIST of 12 categories. Anything else is not a PURPOSE.
 
 Round-2 calibration scored **PURPOSE F1 = 0.000**, and Rule 9 (word count) was not the whole story. The
 two annotators found purposes **in different parts of the same document** — in `17_pb_fintech_aa_privacy`
@@ -236,7 +248,7 @@ has no edge, so in a 5,000-word policy two careful people pick different sentenc
 
 The fix is the same as every rule that worked: give a **finite list to find**, not an open idea to judge.
 
-**THE RULE: mark a PURPOSE span only if it names an activity that belongs to one of these 11 categories.**
+**THE RULE: mark a PURPOSE span only if it names an activity that belongs to one of these 12 categories.**
 Same PURPOSE button as before — this changes the *definition*, not the labels.
 
 | # | Category | Mark phrases like |
@@ -252,6 +264,12 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
 | 9 | **Analytics & service improvement** | `calculate the percentage of users`, `improve our services`, `exploring additional use cases` |
 | 10 | **Marketing & promotion** | `marketing`, `promotional offers`, `cross-selling products` |
 | 11 | **Corporate transactions** *(v7.2, D43)* — *only where your data is transferred or shared because of it* | `merger`, `acquisition`, `reorganization`, `sale of assets`, `sale of business` |
+| 12 | **Account opening & onboarding** *(v7.5, D55)* — *only where the text says your data is used for it* | `register you as a user`, `registration as a user`, `customer onboarding`, `onboarding` |
+
+*Row 12 was added after annotation, at the P1+P4 meeting: both annotators had marked onboarding purposes that
+no row covered. It follows check 1 like every row — "we use your information **to register you as a user**"
+✅; "information you gave **at the time of registration**" ❌ (that is a moment, not a reason); "you must
+register to use the Website" ❌ (your duty, no data-use frame). A **job application** is not row 12.*
 
 **Four checks, in order, before you press PURPOSE:**
 1. **Does the text say the company uses, keeps or shares YOUR DATA for it?** *(corrected in v7.1, D37)*
@@ -269,7 +287,7 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
    records… for purposes including fraud prevention, dispute resolution"*, and is **not** one in *"dispute
    resolution provisions shall survive termination"*. This is the PURPOSE twin of Rule 16 (THIRD_PARTY needs
    a data flow).
-2. **Does it fit one of the 11 rows above?** If you cannot name the row number, **do not mark it**.
+2. **Does it fit one of the 12 rows above?** If you cannot name the row number, **do not mark it**.
 3. **Would it read the same in ANY company's policy?** Then it names nothing. **Do not mark it.**
    `to fulfil the purpose`, `for the purposes stated herein`, `for lawful purposes` → **do not mark**.
 4. **Cut it to at most 5 words** (Rule 9): drop `to`/`for`/`purpose of`, stop at the object.
@@ -297,7 +315,7 @@ Same PURPOSE button as before — this changes the *definition*, not the labels.
 
 > **Why this list and not the five official ReBIT purpose codes?** The ReBIT codes (101-105) describe why
 > an FIU pulls financial data — they have no slot for fraud checks, grievances, notices or marketing,
-> which policies really do describe. The 11 rows cover what AA policies actually say. The comparison with
+> which policies really do describe. The 12 rows cover what AA policies actually say. The comparison with
 > the declared ReBIT code happens later, in analysis: rows 1-4 correspond to the codes; a policy whose text
 > leans on rows 9-11 while declaring a narrow code is exactly the mismatch the project wants to flag.
 > **Annotators never need to think about codes** — only about the row.
@@ -360,7 +378,7 @@ so the whole list is **one** highlight:
 | `bank statements, mutual funds and insurance` | each item complete alone | **3** highlights (Rule 2) |
 | `credit/debit card details` | "card details" is shared | **1**: `credit/debit card details` |
 | `first and last name` | "name" is shared | **1**: `first and last name` |
-| `identity and contact information` | "information" is shared | **1** |
+| `identity and contact information` | two separate fields of the consent artefact *(P1's ruling, D59)* | **2**: `identity` · `contact information` |
 | `fraud detection and prevention` | "fraud" is shared | **1** (PURPOSE, row 5) |
 | `retrieve, view, consolidate and share financial information` | one shared object | **1** (PURPOSE, row 4) |
 
@@ -368,6 +386,25 @@ so the whole list is **one** highlight:
 `retrieve, view, consolidate and share financial information` counts as 3 (`[list] financial information`)
 and stays within the 5-word limit.
 *Round 1: PURPOSE lists were split by P1 and lumped by P4 — 19 vs 83 coordinated PURPOSE spans.*
+
+**Narrowed in v7.5 (D55) — merge only what cannot stand alone.** Ask of each piece: *highlighted by itself,
+would it still tell a reader what data, purpose or party it is?* If **every** piece passes, make separate
+highlights even though a word is shared. Merge only as far as needed to rescue a piece that fails.
+
+| Text | Piece by piece | Highlights |
+|---|---|---|
+| `ACH, NEFT, IMPS and UPI ID details` | each names a payment record by itself | **4**: `ACH` · `NEFT` · `IMPS` · `UPI ID details` |
+| `mutual fund and demat holdings` | both stand alone | **2**: `mutual fund` · `demat holdings` |
+| `salary and income details` | both stand alone | **2**: `salary` · `income details` |
+| `marketing and promotional activities` | both stand alone | **2**: `marketing` · `promotional activities` |
+| `first and last name` | "first" alone says nothing | **1** |
+| `Verifying your identity and eligibility` | "eligibility" alone — of what? | **1** |
+| `Retrieving, viewing, consolidating, organizing, and sharing Financial Information` | bare verbs need the object | **1** |
+| `loan evaluation and servicing` | "servicing" alone says nothing | **1** |
+| `credit, debit card and/or internet banking account information` | "credit" alone is not "credit card" | **2**: `credit, debit card` · `internet banking account information` |
+
+*Analogy: "tea and coffee cups" must stay whole — "tea" alone is a drink, not a cup. "Cups, plates and
+bowls" is three things, even though one shelf holds them all.*
 
 #### Rule 15 — Never overlap, never nest, never duplicate
 
@@ -401,6 +438,14 @@ Intelligence Unit (FIU-IND), exchanges, courts"* — mark every authority **exce
 regulators** (`RBI`, `SEBI`, `IRDAI`, `PFRDA`, Rule 8b): `law enforcement`, `government authorities`,
 `regulators` (the generic word), `Income-tax Department`, `Financial Intelligence Unit`, `exchanges`,
 `courts` ✅; `SEBI`, `RBI` ❌.
+**Sources (v7.5, D55).** A data flow counts in **either direction**. An organisation the company gets your
+data *from* is marked as well: *"accessing your credit information **from** Credit Information Companies
+(`TransUnion CIBIL`, `Experian`, `Equifax`, `CRIF HighMark`)"* ✅ all five; *"details obtained from `UIDAI`"* ✅;
+*"information about you we get from our `business partners`"* ✅. To pull your record the company has to hand
+over your name and PAN, so the "source" receives your data too. **Not marked:** the AA pipeline's own bodies
+(Rule 8b) — and that includes *"the banks or other financial institutions where your account is maintained"*,
+which is just the FIP described in words. A sentence with **no** exchange of your data (indemnity, definitions,
+"the Lender disburses the loan") still marks nothing.
 *Round 1: about 112 of P1's and 98 of P4's THIRD_PARTY spans sat in sentences with no data-flow verb
 (automatic estimate — a few genuine flows use unusual verbs).*
 
@@ -798,7 +843,8 @@ starts with a line like *"33 mechanical fixes (no judgement needed) + 5 to short
 
 **Check in context — read the quoted sentence, then decide:**
 7. **1e THIRD_PARTY** — keep only if your data goes **to** them: delete when the sentence is indemnity,
-   jurisdiction or assignment, when your data comes **from** them (`from registrars (CAMS, KFintech)`), or
+   jurisdiction or assignment, when your data comes **from** them (`from registrars (CAMS, KFintech)`) *(the fix pass was done this way;
+   reversed in v7.5 — sources are marked now, and the gold file was corrected for it)*, or
    when the name is part of a law's title (`SEBI (Investment Advisers) Regulations`) — Rules 16, 19.
 8. **Headings and table row labels** need no bucket (v7.3): they are ordinary text, so the repeat and
    missed-phrase buckets now propose them too. *If you skipped row labels under v7.2, add them.*
@@ -849,6 +895,84 @@ could never give.*
 
 ---
 
+## PART I — Adjudication rulings (made after the fix pass; they decide the gold file)
+
+The fix pass was done under v7.4 and that is not reopened. These rulings were made afterwards, when the two
+exports were compared, and are applied to every disputed span during adjudication.
+
+### I-1. The Lender is a THIRD_PARTY — where your data goes to it (D49)
+
+In a lending platform's documents (`24_credbuddha_terms`, `08_pennydrop_terms`) the **Lender** is a separate
+company from the one that wrote the policy, and it receives your data to decide on the loan. So `Lender`,
+`Lenders`, `lending partner(s)`, `partner institution(s)` and `Regulated Entity` in that sense are
+**THIRD_PARTY** — not the policy's own company (Rule 17), not an AA-framework role word (Rule 8b), and
+Rule 8 already names "lending partners" as a real recipient.
+
+**But Rule 16 still decides each occurrence:** mark it only where the sentence says **your data** goes to
+the lender — shared, submitted, accessed, used to assess you — affirmed or denied (Rule 18).
+
+| Sentence | Your data to the lender? | Mark? |
+|---|---|---|
+| "authorises CREDBUDDHA to … submit … information to **partner institutions** for evaluation of eligibility" | yes | ✅ |
+| "The Company and the **Lender** are prohibited from accessing the Customer's phone contacts" | a denied practice | ✅ |
+| "transfer of the sanctioned Loan amount by the **Lender**" | no — that is money | ❌ |
+| "the **Lender** shall provide the Key Fact Statement to the User" | no — a document coming to you | ❌ |
+| "The **Lender** may initiate legal proceedings for recovery" | no | ❌ |
+| "a NACH mandate in favour of the **Lender**" | no | ❌ |
+| "'**Lender**' means any bank or NBFC…" (definition) | no | ❌ |
+
+*Why the limit: it is the rule that already removes `affiliates` from an indemnity clause. Mark the lender
+at every mention and THIRD_PARTY stops meaning "who receives your data" and starts meaning "any organisation
+named". Careful with the verbs: in loan documents "transfer" and "provide" usually move **money** or
+**paperwork**, not your data.*
+
+### I-2. A DATA_TYPE needs a data practice in its sentence (D47, applied in D50)
+
+Mark a data word only where its sentence says the company **collects, receives, asks for, uses, stores,
+accesses or shares** it — affirmed or denied (Rule 18). This is the DATA_TYPE twin of Rule 16 and Rule 10
+check 1.
+
+| Sentence | Mark? |
+|---|---|
+| "setting up a **username** and **password** to create the Profile" | ✅ you provide it |
+| "It shall not request, access or store your **login credentials**" | ✅ a denied practice |
+| "You are solely responsible for the confidentiality of your username and password" | ❌ your duty |
+| "password mining", "hacking" | ❌ an attack (Rule 19) |
+| "You possess a valid bank account… You are not insolvent" | ❌ an eligibility condition |
+| "shall not discriminate on the basis of age, religion, caste" | ❌ no data is collected |
+
+### I-3. Conventions used when the gold file was built (D50)
+
+- **Sources are THIRD_PARTY too** *(changed at the P1+P4 meeting, D55 — the first build did the opposite)*.
+  "accessing your credit information *from* Credit Information Companies (TransUnion CIBIL, Experian…)" marks
+  the bureaus, exactly as "the Default shall be reported *to* Credit Information Companies" does. Same for
+  UIDAI, the Central KYC Registry, registrars named as a direct source (`CDSL`, `NSDL`, `MF Central`, `CAMS`,
+  `KFintech`), `business partners`, `verification agencies`. Not marked: AA-pipeline bodies (Rule 8b), and a
+  company that never exchanges data with the policy's company ("CAS emails *sent by* registrars" that the app
+  reads from your own mailbox). Where one member of such a list was marked, **every** member is — the gold
+  file adds the ones nobody drew (listed in `decisions.tsv` as `new`).
+- **Registration and onboarding are PURPOSE row 12** *(added at the meeting, D55)* where the sentence uses
+  your data for it. Job applications are still not on the list.
+- **`Account Aggregation Services` is a PURPOSE** only where the sentence describes handling your financial
+  information — not in a company's name, a licence statement or "you may avail of the Services".
+- **Consent-artefact field lists:** the *user's* `identity` and `contact information` are marked, as **two**
+  highlights (D59); the identity of the recipients or of the Account Aggregator is not, and neither is the
+  signature / digital signature (the act of consenting, D59).
+- **Communication topics:** only notification-type items are PURPOSE row 8 (`repayment reminders`,
+  `service-related updates`, `alerts`); a subject such as `loan application status` is not an activity.
+- **Shared-word lists are one highlight only where a piece means nothing alone** *(narrowed at the meeting,
+  D55 — see Rule 14)*. `Retrieving, viewing, consolidating, organizing, and sharing Financial Information`
+  stays whole; `ACH, NEFT, IMPS and UPI ID details` is four highlights. Applied to lists the adjudication had
+  merged; a list **both** annotators drew as one highlight is left as they drew it.
+- **Rule 9 length:** five gold PURPOSE spans are six words because no shorter contiguous phrase names the
+  activity (`generation of a one time password`, `analyse how the Application is used`, `analyse the
+  effectiveness of the advertising`, `improve the quality of the Platform`).
+- **Spans both annotators marked are kept** — except where a mechanical rule says otherwise: three telemetry
+  spans dropped (`app usage patterns`, `number of clicks`, `device-level`) and one boundary made consistent
+  with the same sentence in four other documents (`criminal proceedings`).
+
+---
+
 ## Tricky cases we've resolved (add every hard case here so future annotation stays consistent)
 Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
 - *"third parties"* (bare phrase) → **do not mark**. It is the category name, not a recipient; mark the
@@ -864,8 +988,9 @@ Settled in round 1 (kappa 0.28 post-mortem, see Rules 7 & 8):
 - *"consent artefact" / "consent manager"* → **do not mark**. Mechanism names, not data types.
 - *"spi" / "pii" / "cookie" / "operating system" / "version"* → **do not mark**. Web-technical or
   abbreviation noise, not AA data types.
-- *"login id" / "pins" / "private keys" / "user authentication credentials" / "signature"* → **mark as
-  DATA_TYPE**. Specific credential fields that really do appear in records.
+- *"login id" / "pins" / "private keys" / "user authentication credentials"* → **mark as
+  DATA_TYPE**. Specific credential fields that really do appear in records. *(`signature` was on this list
+  until D59 — see the audit cases below.)*
 - *"grievance redressal" / "dispute resolution" / "data sharing" / "authentication"* → **mark as
   PURPOSE only where the text says your data is used or kept for it** (e.g. a "we use your information
   for…" or "retained for…" list). As a right, procedure, policy description or heading → **do not mark**
@@ -911,8 +1036,10 @@ Settled in round 4 (v7.2, D43-D44):
   *"assign our rights … in a merger"* -> **do not mark** (Rule 23e).
 - *Named Account Aggregators* (`Onemoney`, `Finvu`, `NESL Asset Data`, `CAMS Finserv`, `Perfios AA`) ->
   **do not mark** (Rule 8b — an AA by name is still the pipe).
-- *"obtained **from** … registrars (`CAMS`, `KFintech`)"* -> **do not mark**; your data comes from them, it does
-  not go to them (Rule 16).
+- *"obtained **from** `CDSL`/`NSDL`, `MF Central`, registrars (`CAMS`, `KFintech`)"* -> **mark each** (v7.5, D55:
+  a source handles your data too). *Earlier versions said do not mark.* But *"CAS emails **sent by** registrars
+  (such as CAMS and KFintech)"*, read from your own Gmail -> **do not mark**: the company exchanges nothing
+  with them.
 - *`SEBI`, `IRDAI`, `PFRDA`* -> **never mark**, like `RBI` (Rule 8b, v7.4). Other authorities in a disclosure list (`Income-tax Department`, `courts`, `regulators`) -> **mark** (Rule 16).
 - *An organisation inside a law's name* (`UIDAI (Authentication) Regulations`) -> **do not mark** (Rule 19).
 - *`Financial Intelligence Unit (FIU-IND)`* -> **`Financial Intelligence Unit`** + **`FIU-IND`**, two highlights (Rule 12, v7.4).
@@ -920,7 +1047,38 @@ Settled in round 4 (v7.2, D43-D44):
 - *The company's own contact block* — "Registered **Address**: 1201 …", "Email: hello@…", "**Contact
   Details**: Principal Officer" -> **do not mark**. That is the company's data, not yours; a word followed by
   a colon there is a field label.
-- *`mutual fund and demat holdings`* -> **one** highlight ("holdings" is shared, Rule 14); *`audit and
-  grievance redressal`* -> **two** (each complete, Rule 2).
+- *`mutual fund and demat holdings`* -> **two** highlights (v7.5, D55: each piece stands alone; earlier
+  versions said one); *`audit and grievance redressal`* -> **two** (each complete, Rule 2).
+
+- **From the sample check (D57), both annotators' sheets in:**
+  - *"the service of **retrieving or collecting such financial information**"* -> one PURPOSE **with its
+    object** (row 4). `retrieving or collecting` alone does not say what.
+  - *"withdrawal of consent may affect the ability of … the Lender … to process applications, verify
+    information or assess eligibility"* -> **mark nothing**. The sentence is about the effect of withdrawing
+    consent; it describes no use or sharing of your data.
+  - *`recommendations`, `ongoing advice`* -> **do not mark** (fit none of the 12 rows); *`portfolio
+    reviews`*, *`prepare your financial plan`* -> PURPOSE row 3.
+  - *`Gmail`* in "read-only access to your **Gmail** mailbox", "human reading of your **Gmail** data" ->
+    **DATA_TYPE**: it means your emails. *`Gmail OAuth`* -> do not mark (a sign-in method, Rule 19).
+  - *"We use **third-party advertising companies** to serve advertisements"* -> **do not mark**: the sentence
+    states no flow of your data to them (Rule 16).
+
+- **From the audit of the finished gold (D58, D59):**
+  - *"…and **your signature/digital signature**"* in the consent-artefact field list -> **do not mark**. It is
+    the act of accepting the consent, not data you provide.
+  - *"your **identity** and (optional) **contact information**"* in the same list -> **two** highlights. But
+    *"the identity of the recipients"*, *"identity and signature of the account aggregator"* -> do not mark.
+  - *"indemnify … and hold us, our parent company, subsidiaries, affiliates, … agents"* -> **mark nothing**,
+    even if you both would: an indemnity moves no data (Rule 16).
+  - *"all right, **title** and interest"* -> do not mark (a legal term). *"gender, **title**, passwords"* -> mark.
+  - *"shall not discriminate … on the basis of **gender**, age, religion"* -> do not mark; nothing is collected.
+  - *"X Limited, its **affiliates** and **group companies** (hereinafter 'X', 'us')"* -> do not mark: that
+    sentence defines the policy's own company (Rule 17).
+  - *"entitled to **opt out** from receiving marketing communication"* -> do not mark (your right). *"marketing
+    communication You receive from third parties with whom We share Your information"* -> mark.
+  - *`biometric data`* -> DATA_TYPE wherever a practice is stated or denied ("We do not store any biometric
+    data"). *"phone **contacts**, gallery, or social media"* -> mark `contacts` and `gallery`.
+  - **The same sentence in two companies' documents gets the same highlights.** Thirteen of our documents share
+    a template; check the twin before deciding.
 
 Add new cases below as: *"phrase X → label Y (or do not mark), because …"*

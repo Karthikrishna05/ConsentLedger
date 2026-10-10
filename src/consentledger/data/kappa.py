@@ -24,6 +24,7 @@ from pathlib import Path
 from consentledger.data.bio_tagging import bio_for_segment
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
+LABELS = ("DATA_TYPE", "PURPOSE", "THIRD_PARTY")
 OUT = PROJECT_ROOT / "results" / "annotation"
 
 
@@ -55,8 +56,11 @@ def load_ls_export(path: Path) -> dict[str, dict]:
         for r in results:
             v = r.get("value", {})
             labels = v.get("labels") or v.get("hypertextlabels")
-            if labels and "start" in v and "end" in v:
+            if labels and labels[0] in LABELS and "start" in v and "end" in v:
                 spans.append((int(v["start"]), int(v["end"]), labels[0]))
+            elif labels and "start" in v:      # no label selected, or a label outside the scheme - unscorable
+                print(f"  WARN {key}: highlight with invalid label {labels[0]!r} skipped "
+                      f"[{v['start']}:{v.get('end')}] ({(v.get('text') or '')[:40]!r})")
         docs[key] = {"text": text, "spans": spans}
     return docs
 

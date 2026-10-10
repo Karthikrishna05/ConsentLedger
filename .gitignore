@@ -67,3 +67,9 @@ node_modules/
 # OS
 .DS_Store
 Thumbs.db
+# automatic adjudication (D50): item lists and sample sheets quote document text; decisions.tsv (ids + codes) is committed
+results/annotation/adjudication/items*.txt
+results/annotation/adjudication/sample_check_P*
+results/annotation/adjudication/decisions.tsv
+results/annotation/adjudication/rules_to_ratify.md
+results/annotation/adjudication/gold_audit.md

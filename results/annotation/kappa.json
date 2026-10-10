@@ -1,17 +1,171 @@
 {
-  "n_docs": 1,
-  "cohen_kappa_token": 0.5216989720094328,
+  "n_docs": 23,
+  "cohen_kappa_token": 0.4262548230340576,
   "threshold": 0.6,
-  "entity_precision": 0.40336134453781514,
-  "entity_recall": 0.5274725274725275,
-  "entity_f1": 0.4571428571428572,
+  "entity_precision": 0.40984848484848485,
+  "entity_recall": 0.39720998531571217,
+  "entity_f1": 0.4034302759134974,
   "per_doc": [
+    {
+      "doc_id": "01_setu_aa_terms",
+      "tokens": 6597,
+      "kappa": 0.537,
+      "spans_A": 36,
+      "spans_B": 36
+    },
+    {
+      "doc_id": "02_digio_terms",
+      "tokens": 5266,
+      "kappa": 0.5814,
+      "spans_A": 26,
+      "spans_B": 31
+    },
+    {
+      "doc_id": "03_oms_aa_terms",
+      "tokens": 4941,
+      "kappa": 0.5638,
+      "spans_A": 35,
+      "spans_B": 56
+    },
+    {
+      "doc_id": "04_pb_fintech_aa_terms",
+      "tokens": 5035,
+      "kappa": 0.3963,
+      "spans_A": 24,
+      "spans_B": 36
+    },
+    {
+      "doc_id": "05_onemoney_terms",
+      "tokens": 6496,
+      "kappa": 0.4873,
+      "spans_A": 26,
+      "spans_B": 43
+    },
+    {
+      "doc_id": "06_setu_aa_privacy",
+      "tokens": 3699,
+      "kappa": 0.564,
+      "spans_A": 78,
+      "spans_B": 73
+    },
+    {
+      "doc_id": "08_pennydrop_terms",
+      "tokens": 8090,
+      "kappa": 0.4885,
+      "spans_A": 177,
+      "spans_B": 137
+    },
+    {
+      "doc_id": "09_saafe_terms",
+      "tokens": 5429,
+      "kappa": 0.4963,
+      "spans_A": 24,
+      "spans_B": 42
+    },
+    {
+      "doc_id": "10_perfios_terms",
+      "tokens": 3228,
+      "kappa": 0.4038,
+      "spans_A": 29,
+      "spans_B": 29
+    },
+    {
+      "doc_id": "12_scoremeaa_terms",
+      "tokens": 3505,
+      "kappa": 0.2512,
+      "spans_A": 10,
+      "spans_B": 30
+    },
+    {
+      "doc_id": "14_nadl_charter",
+      "tokens": 2015,
+      "kappa": 0.6726,
+      "spans_A": 27,
+      "spans_B": 46
+    },
+    {
+      "doc_id": "16_oms_aa_privacy",
+      "tokens": 5267,
+      "kappa": 0.4276,
+      "spans_A": 23,
+      "spans_B": 42
+    },
+    {
+      "doc_id": "17_pb_fintech_aa_privacy",
+      "tokens": 2733,
+      "kappa": 0.4519,
+      "spans_A": 53,
+      "spans_B": 78
+    },
+    {
+      "doc_id": "19_saafe_privacy",
+      "tokens": 3773,
+      "kappa": 0.3339,
+      "spans_A": 63,
+      "spans_B": 52
+    },
+    {
+      "doc_id": "20_scoremeaa_charter",
+      "tokens": 1909,
+      "kappa": 0.0681,
+      "spans_A": 3,
+      "spans_B": 43
+    },
+    {
+      "doc_id": "21_nadl_terms",
+      "tokens": 2339,
+      "kappa": 0.1313,
+      "spans_A": 6,
+      "spans_B": 46
+    },
+    {
+      "doc_id": "22_setu_aa_charter",
+      "tokens": 2009,
+      "kappa": 0.0252,
+      "spans_A": 7,
+      "spans_B": 15
+    },
+    {
+      "doc_id": "23_upmint_aa_tos",
+      "tokens": 2732,
+      "kappa": 0.4077,
+      "spans_A": 30,
+      "spans_B": 35
+    },
+    {
+      "doc_id": "24_credbuddha_terms",
+      "tokens": 8891,
+      "kappa": 0.3704,
+      "spans_A": 267,
+      "spans_B": 128
+    },
     {
       "doc_id": "25_the_financiali_privacy",
       "tokens": 3638,
-      "kappa": 0.5217,
-      "spans_A": 91,
-      "spans_B": 119
+      "kappa": 0.6276,
+      "spans_A": 103,
+      "spans_B": 121
+    },
+    {
+      "doc_id": "26_zerodha_tos",
+      "tokens": 979,
+      "kappa": 0.108,
+      "spans_A": 17,
+      "spans_B": 25
+    },
+    {
+      "doc_id": "28_indifi_capital_privacy",
+      "tokens": 9418,
+      "kappa": 0.3165,
+      "spans_A": 247,
+      "spans_B": 138
+    },
+    {
+      "doc_id": "29_icici_home_fin_terms",
+      "tokens": 2584,
+      "kappa": 0.4952,
+      "spans_A": 54,
+      "spans_B": 55
     }
   ],
   "only_in_A": [],

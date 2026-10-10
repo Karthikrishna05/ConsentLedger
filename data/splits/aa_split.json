@@ -1,0 +1,91 @@
+{
+  "method": "connected components of (same organisation OR >= threshold shared 8-word sequences)",
+  "threshold": 0.1,
+  "glued_excluded_from_test": [
+    "02_digio_terms",
+    "10_perfios_terms"
+  ],
+  "groups": [
+    [
+      "01_setu_aa_terms",
+      "02_digio_terms",
+      "03_oms_aa_terms",
+      "04_pb_fintech_aa_terms",
+      "05_onemoney_terms",
+      "06_setu_aa_privacy",
+      "09_saafe_terms",
+      "12_scoremeaa_terms",
+      "16_oms_aa_privacy",
+      "17_pb_fintech_aa_privacy",
+      "19_saafe_privacy",
+      "20_scoremeaa_charter",
+      "22_setu_aa_charter"
+    ],
+    [
+      "14_nadl_charter",
+      "21_nadl_terms"
+    ],
+    [
+      "08_pennydrop_terms"
+    ],
+    [
+      "10_perfios_terms"
+    ],
+    [
+      "23_upmint_aa_tos"
+    ],
+    [
+      "24_credbuddha_terms"
+    ],
+    [
+      "25_the_financiali_privacy"
+    ],
+    [
+      "26_zerodha_tos"
+    ],
+    [
+      "28_indifi_capital_privacy"
+    ],
+    [
+      "29_icici_home_fin_terms"
+    ]
+  ],
+  "test_groups": [
+    2,
+    3,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+  ],
+  "max_test_adapt_overlap": 0.0472,
+  "test": [
+    "08_pennydrop_terms",
+    "14_nadl_charter",
+    "21_nadl_terms",
+    "23_upmint_aa_tos",
+    "24_credbuddha_terms",
+    "25_the_financiali_privacy",
+    "26_zerodha_tos",
+    "28_indifi_capital_privacy",
+    "29_icici_home_fin_terms"
+  ],
+  "adapt": [
+    "01_setu_aa_terms",
+    "02_digio_terms",
+    "03_oms_aa_terms",
+    "04_pb_fintech_aa_terms",
+    "05_onemoney_terms",
+    "06_setu_aa_privacy",
+    "09_saafe_terms",
+    "10_perfios_terms",
+    "12_scoremeaa_terms",
+    "16_oms_aa_privacy",
+    "17_pb_fintech_aa_privacy",
+    "19_saafe_privacy",
+    "20_scoremeaa_charter",
+    "22_setu_aa_charter"
+  ]
+}

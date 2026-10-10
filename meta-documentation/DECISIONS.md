@@ -1138,3 +1138,859 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
   the annotator skips it under the D44 contact-block ruling.
 - **No open annotation questions remain.** Guideline **v7.4** is the version for the fix pass.
 - **Status:** ✅ Send P4 v7.4 + regenerated fix list; begin the fix pass.
+
+### D47 — A DATA_TYPE context gap found mid fix pass: deferred to adjudication, guideline NOT changed
+- **Trigger:** during the fix pass P1 noticed the fix list proposing `password` / `username` in sentences
+  P1 had deliberately not marked.
+- **Evidence (Export4):** P1 marks credentials 17 times, every time in a sentence where the company collects
+  or handles them ("…such as your first and last name, username… passwords"); never in a duty sentence
+  ("You are solely responsible for maintaining the confidentiality of your username and password") or an
+  attack sentence ("password mining"). P4 marks them 54 times, roughly half in duty/attack sentences
+  (estimate from a keyword match; it over-counts denied practices such as "shall not request, access or
+  store your login credentials", which *are* data practices under Rule 18).
+- **The gap:** THIRD_PARTY has a context rule (Rule 16, data flow) and PURPOSE has one (Rule 10 check 1,
+  data-use frame); **DATA_TYPE has none**, only Rule 19 for names like "password mining". P1's reading also
+  matches the training data: per `NER_LABEL_MAPPING.md`, OPP-115 `Personal Information Type` spans come only
+  from First Party Collection/Use and Third Party Sharing/Collection statements.
+- **Proposed rule (not yet in the guideline):** *a DATA_TYPE is marked only where its sentence says the
+  company collects, receives, asks for, uses, stores, accesses or shares it — affirmed or denied (Rule 18)*.
+  Your duty to protect it, and attacks named after it, are not data practices.
+- **Decision (P1's): do not change anything now.** The fix pass has started under v7.4; a rule change midway
+  would leave some documents fixed under one rule and some under another. Guideline, fix lists and P4's
+  pack stay as they are. P1 skips these suggestions — they are in bucket 3 (CHECK, then ADD), which is the
+  annotator's judgement by design. P4 is not told mid-pass.
+- **Resolution point:** adjudication. These spans arrive in Export5 as one-sided disagreements; the
+  adjudication tool will group DATA_TYPE spans whose sentence has no data practice so they are ruled on
+  once, and the rule is written into the guideline then (as the version that describes the gold).
+- **Cost, stated honestly:** the post-fix-pass kappa is slightly lower than it could have been (~25-30 spans
+  of well over a thousand). Reported in the paper as a guideline gap found during the fix pass and resolved
+  at adjudication.
+- **Status:** ⏳ Deferred. Action when Export5A/B arrive: add the grouping to `adjudicate.py`, then rule.
+
+### D48 — Full-corpus kappa after the fix pass: 0.426 — rule violations are gone, recall differences remain
+- **Result (Export5A/B, all 23 documents, guideline v7.4, fix pass done by both):** token kappa **0.426**;
+  entity F1 0.403 (DATA_TYPE 0.491, PURPOSE 0.285, THIRD_PARTY 0.388); relaxed CONTENT micro-F1 0.490
+  (DATA_TYPE 0.549, PURPOSE 0.382, THIRD_PARTY 0.510). Spans: P1 1,365, P4 1,337. Round 1 on the same 23
+  documents was 0.279. History: 0.279 -> 0.374 (2 docs) -> 0.283 (1 doc, P4 without the guideline) ->
+  **0.522** (1 doc, independent, D43) -> **0.426** (23 docs, after the fix pass; not independent, D42).
+- **Per document:** 0.03 to 0.67. Two clear the gate (`14_nadl_charter` 0.673, `25_the_financiali_privacy`
+  0.628). The worst are the short charters/terms where one annotator marks almost nothing:
+  `22_setu_aa_charter` 0.025 (7 vs 15 spans), `20_scoremeaa_charter` 0.068 (3 vs 43), `26_zerodha_tos` 0.108,
+  `21_nadl_terms` 0.131 (6 vs 46).
+- **Buckets:** EXACT 537, BOUNDARY 93, LABEL 26, P1-only 709, P4-only 681 (round 1: 1,973 one-sided).
+- **Diagnosis — every one-sided span classified:**
+  | why the other did not match | P1 (828) | P4 (800) |
+  |---|---|---|
+  | the other never marks this phrase anywhere | 462 (56%) | 291 (36%) |
+  | the other marks it in other documents, not here | 75 | 193 |
+  | the other skipped a repeat in this document | 15 | 93 |
+  | boundary / label differs on an overlapping span | 127 | 126 |
+  | doubtful THIRD_PARTY kept (Rules 16/19) | 100 | 0 |
+  | own remaining rule violation (stoplist, edges, >5 words) | 29 | 93 |
+  | context-dependent PURPOSE | 20 | 4 |
+  So the fix pass did what it could: outright rule violations are down to ~120 spans in total. What is left
+  is **which entities each annotator notices** — P1 finds 430 PURPOSE spans to P4's 356 and P4 matches a
+  quarter of them. No list can close that, because a fix list only points at what a rule or a shared
+  vocabulary can detect. P4 also did not finish the mechanical buckets (40 edge/lead-word, 33 stoplist, 20
+  over-long PURPOSE remain), and P1 kept 100 THIRD_PARTY spans the Rule 16/19 check had flagged.
+- **Data problems found in the exports:** Export5B has **13 unusable highlights** — 3 with no label and 10
+  with labels outside the scheme (`KYC` x4, `APR` x2, `DRM` x2, `KFS`, `IPR`: an abbreviation typed as the
+  label). `load_ls_export` now accepts only the three labels and warns about the rest (it crashed before).
+  Export5A has one unsaved draft (`08_pennydrop_terms`, a one-span edge fix not submitted).
+- **Adjudication size (`adjudicate.py` on Export5):** proposed gold 1,052 spans; resolved automatically —
+  agreed 535, consensus 336, repeats +89, deleted 19; **left for humans 1,158** (one-sided 1,039, boundary 92,
+  label 26, rule 1). The one-sided items are 657 distinct phrases; 62 phrases cover 388 of them
+  (`lender` x49, `financial` x23, `data sharing` x20, `identity` x17).
+- **Pre-registered path (D35, D42):** no further annotation round; the numbers are reported as they are and
+  the corpus goes to adjudication.
+- **Status:** ⏳ Awaiting P1's choice of adjudication method.
+
+### D49 — Adjudication ruling: the Lender is a THIRD_PARTY, limited by Rule 16
+- **Trigger:** `lender` was the most frequent one-sided phrase in the adjudication worklist (49 items, plus
+  `lenders` 15, `partner institution(s)` 24). P1 ruled it must be marked: the lender is not part of
+  Credbuddha and receives the user's data to grant the loan.
+- **Ruling (P1's):** `Lender`, `Lenders`, `lending partner(s)`, `partner institution(s)` (and `Regulated
+  Entity` used in that sense) are **THIRD_PARTY**. Nothing excludes them: not the policy's own company
+  (Rule 17), not an AA-framework role word (Rule 8b), and Rule 8 already lists "lending partners" as a named
+  recipient.
+- **The limit (my proposal, P1 agreed):** Rule 16 still decides each occurrence — marked only where the
+  sentence says the **user's data** goes to the lender (shared, submitted, accessed, used for assessment),
+  affirmed or denied. Movement of **money** (disbursement), **documents sent to the user** (Key Fact
+  Statement), fees, recovery, legal action, mandates and definitions do not count. Reason: it is the same
+  logic that removes `affiliates` from an indemnity clause; marking every mention would turn THIRD_PARTY
+  into "any organisation named", and would drift from OPP-115, which labels recipients only inside
+  data-sharing statements.
+- **Evidence (Export5):** lender-type THIRD_PARTY spans — P1 **153** (`24_credbuddha_terms` 98,
+  `08_pennydrop_terms` 55), P4 **44**; only 33 identical. Many of P1's sit in sentences with no data flow.
+- **Tool limit recorded:** the automatic Rule 16 check passed 60 and flagged 60 of P1's 120 unmatched
+  lender spans, but it is unreliable in loan documents — its verb list reads "transfer of the Loan amount"
+  and "shall provide the Key Fact Statement" as data flows. These spans must be read in their sentence; the
+  check is not used to decide them.
+- **Where it lives:** guideline **PART I — Adjudication rulings**, entry I-1 (a new part for rulings made
+  after the fix pass; v7.4, under which the fix pass was done, is not reopened). D47 will be entered there
+  when ruled.
+- **Status:** ✅ Ruling in force for adjudication. Adjudication method still to be chosen by P1 (D48).
+
+### D50 — Gold built by automatic adjudication with a human sample check (1,153 spans)
+- **Why not a higher kappa first (asked by P1):** each export was cleaned on its own with written rules only
+  (no sight of the other): 0.426 -> 0.435 (own rule violations) -> 0.461 (own skipped repeats) -> **0.474**
+  (doubtful THIRD_PARTY removed). So a perfect second fix pass tops out near 0.47; 0.6 is reachable only by
+  showing the annotators each other's work (no longer agreement) or a new round on new documents (none left;
+  a third exception to the stop-loss). Kappa does not enter E1/E2 — the gold does.
+- **Decision (P1's):** option 1 — the disagreements are adjudicated automatically, rule by rule, and **both
+  annotators independently verify the same random sample** of rulings. Fully automatic adjudication was
+  declined: unverified, the set would be silver, and four of my judgement calls had been corrected by P1
+  in this project (telemetry, `required for KYC`, `Successor entities`, bracketed abbreviations).
+- **Method (`adjudicate_auto.py`, reproducible from the two exports + `decisions.tsv`):**
+  1. *Normalise* each export on its own — delete / trim / relabel / own-company — with that annotator's
+     spans only.
+  2. *Accept* what both marked identically: **511** spans (44 more, agreed but doubted by D47/D49/Rule 16,
+     were made items).
+  3. *Rule on every other span*, read in its sentence: **1,513 items** (1,371 one-sided, 72 boundary, 26
+     label conflicts, 44 agreed-but-doubted). One code per item naming the rule.
+  4. *Rule 7 second pass:* accepted phrases at positions neither annotator marked — **133** candidates, each
+     ruled in context (19 accepted; e.g. an accepted `Lender` is not copied into a fee clause).
+  5. Longest-wins de-overlap (Rule 15).
+- **Rulings:** one-sided 543 accepted / 828 rejected; boundary 66 / 6; label 18 / 8; agreed-but-doubted 16 /
+  28; repeats 19 / 114. Rejections by rule: R16 no data flow **329** (145 of them lender-type words under
+  D49's limit, against 31 lender-type spans accepted), R10 no data-use frame / not on the list 237, not an entity in that sense 117, **D47 69**,
+  R9 48, R19 41, company's own details 32, telemetry 29, umbrella 28 + 23, duplicates 24, R8b 6, R17 1.
+- **D47 ruled and applied:** a DATA_TYPE needs a data practice in its sentence (guideline PART I-2).
+- **Gold: 1,153 spans in 23 documents** — DATA_TYPE 532, PURPOSE 368, THIRD_PARTY 253; 4 to 212 per
+  document, median 30. Validated: 0 overlaps, 0 stoplist/telemetry terms, 0 edge problems. Five PURPOSE spans
+  are six words (no shorter contiguous phrase names the activity).
+- **Consistency audit of my own rulings:** every context-free rejection was compared with what both
+  annotators agreed on elsewhere. Four rulings were reversed to match them (`efficiency of the Platform` x3,
+  `user profile information`); two over-long purposes shortened; three agreed telemetry spans dropped and one
+  agreed boundary re-drawn. Other apparent conflicts were genuine differences of sense (`address` as a verb,
+  `title` in "rights, title and interest").
+- **Each annotator against the gold (exact match):** P1 precision 0.669 / recall 0.792 / F1 **0.725**
+  (token kappa 0.778); P4 0.475 / 0.551 / F1 **0.510** (kappa 0.541). **Stated plainly: the gold sits closer
+  to P1.** The guideline was built largely from P1's rulings and I applied it, so this is expected — and it
+  is the reason P4's independent sample check matters most.
+- **Sample check:** 123 rulings, stratified by item kind, random seed 42, identical sheet for both
+  (`sample_check_P1.csv`, `sample_check_P4.csv`). Blind — it does not say who marked what. Each row: the
+  highlight(s), the ruling, the rule, the sentence; the checker answers y/n. `adjudicate_auto score` reports
+  each acceptance rate, how often the two checkers agree with each other, and the rows either rejected.
+  At n = 123 a 90% rate has a margin of about +/-5 points. **Rule fixed now:** >= 90% from both -> the gold
+  stands; any rule category below that -> its rulings are reviewed in full.
+- **Tool safeguards:** second-pass items carry a stable key (document + offsets) so a changed ruling cannot
+  shift the others; a re-drawn span is matched across line breaks and glued words; `load_ls_export` rejects
+  labels outside the scheme.
+- **Repo hygiene:** `gold.json`, `decisions.tsv`, `items*.txt` and the sample sheets quote text ->
+  git-ignored; `auto_summary.json` (numbers only) and the code are committed.
+- **Limits to report:** adjudicated by a language model applying the written guideline, verified on a 123-item
+  sample by both annotators (rate to be filled in); 511 agreed spans were accepted without review apart from
+  the mechanical checks; onboarding/registration purposes are outside the closed Rule 10 list.
+- **Status:** ⏳ Gold built. Waiting for the two sample sheets -> `adjudicate_auto score`.
+
+### D51 — Correction of process: the rules are ratified by P1 and P4 together BEFORE the sample check
+- **What went wrong (mine):** D47 recorded that the DATA_TYPE context rule would be "ruled on once, together"
+  by both annotators at adjudication. When automatic adjudication was chosen (D50) I applied my own proposed
+  version of it, and along the way introduced further conventions of my own. P4 has agreed to none of them;
+  P1 only to the Lender rule (D49). P1 caught this: the plan had been a meeting.
+- **Two different questions, kept apart:** (A) *are the rules right?* — a policy decision for the two
+  annotators **together**; (B) *were the rules applied correctly?* — the **independent** sample check. Doing B
+  first would make every "no" ambiguous between a wrong rule and a wrong application.
+- **Rules put up for ratification** (`results/annotation/adjudication/rules_to_ratify.md`, git-ignored;
+  spans accepted / rejected under each): 1 Lender only where data flows (31 / 145) — P1's; 2 DATA_TYPE needs a
+  data practice (- / 69) — D47; 3 a data source is not a recipient (- / ~27); 4 registration / onboarding is
+  not a PURPOSE (- / 13), alternative: a 12th Rule 10 row; 5 `Account Aggregation Services` only where the
+  sentence handles financial information (3 / 14); 6 only the user's identity in consent-artefact lists
+  (10 / 13); 7 telemetry never, including 3 agreed spans dropped (- / 32); 8 the company's own details (- / 32);
+  9 shared-word lists merged over agreed fragments (27 / -); 10 five six-word PURPOSE spans (5 / -).
+- **Sequence now:** meeting -> each rule KEEP / CHANGE / DROP -> I re-apply any changed rule to exactly its
+  coded rulings and rebuild the gold -> a **fresh** sample is drawn -> independent check -> score. The sample
+  sheets written in D50 are provisional and must not be filled in yet.
+- **Agenda rewritten at P1's request** (the first version was a bare table): `rules_to_ratify.md` now explains
+  each rule in plain language — why the question arose, an analogy, real marked / not-marked sentences from the
+  corpus, the grey cases, what KEEP / CHANGE / DROP would each do to the gold file, a recommendation with its
+  confidence, and the questions to settle — plus whose highlights each rule removed (Rule 2: P4 54 of 67;
+  Rule 1: P1 98 of 131). It also states that the gold sits closer to P1 (F1 0.73 vs 0.51).
+- **Status:** ⏳ Waiting for the meeting's decisions. Gold (1,153 spans) is provisional until then.
+
+### D52 — The AA documents are not independent: split by text family, not only by company (decision pending)
+- **Finding:** preparing the test / adaptation split, the documents were compared pairwise (share of the
+  smaller document's 8-word sequences found in the other). Many AA terms are **one template with the company
+  name changed**: `09_saafe_terms` / `16_oms_aa_privacy` share 75%, `03_oms_aa_terms` /
+  `04_pb_fintech_aa_terms` 51%, and a family of 13 documents (Setu x3, Digio, OMS x2, PB Fintech x2, OneMoney,
+  Saafe x2, ScoremeAA x2) is linked at >= 10% or by organisation. Splitting by company alone (the plan so far)
+  would have placed near-copies on both sides — the leakage D4 was written to prevent.
+- **Method (`aa_split.py`, metadata and text only — never gold labels or model output):** link two
+  documents if same organisation or similarity >= threshold; connected components are groups; a group is
+  never split. At 10%: one family of 13, the NADL pair, and 8 single documents.
+- **Consequence:** D21's "15 test + 8 adaptation" cannot be kept without leakage. Two clean options:
+  | | test | adaptation | test entities (D / P / T) |
+  |---|---|---|---|
+  | **A — family in adaptation** | 9 documents, 8 independent groups | 14 (family + glued `10_perfios`) | **726** (282 / 246 / 198) |
+  | B — family in test | 12 near-duplicate documents (`02_digio` dropped: glued, and cannot go to adaptation) | 10 | 374 (only 52 third parties) |
+  A gives a test set that is larger in entities, balanced across labels and made of independent documents,
+  and makes E2 a strict test (adapt on AA-operator templates, test on other organisations' documents). B keeps
+  more documents in the test set but they are copies of each other and hold only 52 third parties.
+- **Glued-text constraint (D36):** `02_digio_terms` and `10_perfios_terms` may not be test documents. Shown
+  concretely by the converter: in `10_perfios` two gold spans sit inside one glued word and cannot be tagged
+  separately at word level.
+- **Converter built (`aa_to_conll.py`):** gold + split -> `data/ner_bio/aa_test.conll` / `aa_adapt.conll`
+  (git-ignored) with a document map for bootstrapping over document groups. Documents are cut into segments at
+  sentence ends, never inside a gold span, at most 100 tokens — because the trainer truncates at 256
+  sub-word pieces, which would silently drop gold entities. Every gold span is checked to come back out of the
+  BIO tags. Trial on the provisional gold (option A): test 560 segments / 726 entities, adaptation 845
+  segments / 426 entities, read back correctly by the trainer's own reader.
+- **Status:** ⏳ Tools ready; **the split is not written** until P1 chooses A or B. It must be fixed before any
+  model sees AA data.
+
+### D53 — Session record: what was discussed and decided but not yet written down
+- **Adjudication alternatives that were considered and rejected** (before option 1 was chosen in D50):
+  (a) *intersection* — keep only what both marked plus the automatic rule-based additions (~1,050 spans):
+  drops every one-sided span, including correct ones, so the gold under-counts (about half of P1's purposes
+  would vanish); (b) *union* — keep everything either marked unless a rule deletes it: keeps noise such as
+  `firewalls` as a PURPOSE and `software` as a DATA_TYPE; (c) *fully automatic rulings with no human check*:
+  best quality of the three but unverified, i.e. a silver set. Chosen: automatic rulings **plus** an
+  independent sample check by both annotators.
+- **How agreement will be reported in the paper** (agreed in discussion; four numbers, each labelled for
+  what it is): independent kappa **0.52** (one fresh document, both on the final guideline, D43); full-corpus
+  kappa **0.43** (23 documents after the fix pass, D48); rule-normalised kappa **0.47** (the same two exports
+  after the written rules are applied automatically and identically to each, no sight of the other, D50) —
+  supplementary and labelled as such; relaxed entity F1 **0.49**. On the usual Landis-Koch scale 0.41-0.60 is
+  "moderate". The gold is described as adjudicated, with the sample-check acceptance rate. The round-by-round
+  diagnosis (rule violations down to ~120 of 2,700 spans; the residue is recall) is reported as a finding in
+  its own right. Kappa does not enter E1/E2, which are scored against the gold.
+- **Export file naming, completed:** `ExportA/B` round 1 (23 docs); `Export2A/B` round-2 calibration (2 docs);
+  `Export3A/B` round 3 (`23_upmint_aa_tos`); `Export4A/B` round 4 (`25_the_financiali_privacy`);
+  `Export5A/B` after the fix pass on all 23 — the pair the gold is built from.
+- **Hand-off packs created for P4** (all in P1's Downloads, never in the repo — they quote policy text):
+  | file | content | status |
+  |---|---|---|
+  | `ConsentLedger_v7.4_fixpack_for_P4.zip` | guideline v7.4, P4's 23 fix lists (from Export4), one-page README | used for the fix pass |
+  | `ConsentLedger_rules_to_ratify_for_P4.zip` | the plain-language meeting guide + guideline | **current — send before the meeting** |
+  | `ConsentLedger_sample_check_for_P4.zip` | the 123-row sample sheet from D50 | **provisional — do not send / do not fill in**; a fresh sample is drawn after the meeting (D51) |
+  | `ConsentLedger_round2_fixlist_for_P4.zip`, `ConsentLedger_v5_fixpack_for_P4.zip` | earlier packs | stale — delete |
+- **Recommendations on record for the ten rules** (`rules_to_ratify.md`; the annotators decide, D51): KEEP 1, 2,
+  5, 6, 7, 8, 9, 10; rule 3 KEEP with only moderate confidence (alternative: credit bureaus and KYC registries
+  always count, since fetching a report means sending the user's identifiers); **rule 4 CHANGE — add a 12th
+  Rule 10 category "Account opening & onboarding"** (both annotators marked it independently, six times
+  each; the sentences are genuine purpose statements that fail only because the list has no slot). Rule 2 is
+  the one P4 is most likely to contest (it removes 54 of P4's highlights).
+- **Recommendation on record for the split (D52):** option A — the 13-document template family (plus glued
+  `10_perfios_terms`) as adaptation, the 9 independent documents as the test set. P1 has not chosen yet.
+- **Not built yet:** the E1/E2 evaluation script for the AA test set. Planned: entity-level P/R/F1 per label;
+  bootstrap confidence intervals over **document groups** (the NADL pair is one group) using the docmap;
+  a check that no segment is truncated; and a breakdown of the two error types predicted in advance — telemetry
+  and merger/acquisition words that an OPP-115-trained model will tag (D43).
+- **Stale statement elsewhere, now flagged:** `OVERVIEW.md` still gave "~15 gold test + ~8 adaptation"; a note
+  there now points to D52.
+- **State of the repository at the end of this session:** last commit `842e1bc`. Uncommitted and safe to
+  commit: the meta-documentation, `.gitignore`, `kappa.py` (label validation), the three new modules
+  `adjudicate_auto.py`, `aa_split.py`, `aa_to_conll.py`, `results/annotation/round5/` (`summary.csv`,
+  `report.md`), `adjudication/auto_summary.json`, `adjudication/worklist.md`, the kappa / relaxed JSONs.
+  Git-ignored by design: `gold.json`, `decisions.tsv`, `items*.txt`, `sample_check_P*.csv`,
+  `rules_to_ratify.md`, every `Export*.json`, `data/ner_bio/`.
+- **What happens next, in order:** (1) P1 + P4 meet and decide the ten rules; (2) P1 chooses split A or B;
+  (3) changed rules are re-applied to their coded rulings and the gold is rebuilt; (4) a fresh sample is
+  drawn and checked independently by both; `adjudicate_auto score`; >= 90% from both -> gold final;
+  (5) write `data/splits/aa_split.json`, run `aa_to_conll`; (6) build the evaluation script, run E1 then E2;
+  (7) gold to P2.
+- **Status:** ✅ Record complete; a new session should read `FLOW.md`, then D48-D53.
+
+### D54 — The AA split is fixed: option A (9 test / 14 adaptation)
+- **Decision (P1's):** option A of D52 — the 13-document template family goes to adaptation, the independent
+  documents form the test set.
+- **Written to `data/splits/aa_split.json`** (document ids only, committed) by
+  `aa_split.py --threshold 0.10 --test-groups 2 3 5 6 7 8 9 10 --write`:
+  - **Test (9 documents, 8 independent groups):** `08_pennydrop_terms`, `14_nadl_charter` + `21_nadl_terms`
+    (one group), `23_upmint_aa_tos`, `24_credbuddha_terms`, `25_the_financiali_privacy`, `26_zerodha_tos`,
+    `28_indifi_capital_privacy`, `29_icici_home_fin_terms`.
+  - **Adaptation (14 documents):** the family — `01_setu_aa_terms`, `02_digio_terms`, `03_oms_aa_terms`,
+    `04_pb_fintech_aa_terms`, `05_onemoney_terms`, `06_setu_aa_privacy`, `09_saafe_terms`,
+    `12_scoremeaa_terms`, `16_oms_aa_privacy`, `17_pb_fintech_aa_privacy`, `19_saafe_privacy`,
+    `20_scoremeaa_charter`, `22_setu_aa_charter` — plus `10_perfios_terms` (glued text, barred from test).
+- **Leakage check:** the largest text overlap between any test and any adaptation document is **4.7%**
+  (`14_nadl_charter` / `22_setu_aa_charter`, two citizen's charters quoting the same regulatory wording) —
+  under the 10% threshold; the tool refuses to write a split that exceeds it.
+- **Fixed before any model has seen AA data, and independent of the labels:** the split uses text and the
+  manifest only. The gold file is still provisional (D51), and rebuilding it cannot move a document across
+  the split. On the provisional gold the test set holds 726 entities (282 data types, 246 purposes,
+  198 third parties) and the adaptation set 426.
+- **Supersedes** D21's "~15 test + ~8 adaptation" and the placeholder `data/splits/splits.json` of D4.
+- **What the paper must state:** the test set is 9 documents from 8 organisations, six of them lenders / FIUs
+  and three AA operators; E2 adapts on AA-operator templates and is tested on other organisations'
+  documents, a deliberately strict setting; confidence intervals are bootstrapped over the 8 groups.
+- **Not done yet, on purpose:** `aa_to_conll` is not run into `data/ner_bio/` until the gold is final, so no
+  stale test file can be picked up by a training run.
+- **Status:** ✅ Split locked. The test set is opened once, for E1 and E2 (D4).
+
+### D55 — The P1 + P4 meeting: seven rules kept, one dropped, two changed; gold rebuilt (1,261 spans)
+- **What happened.** P1 and P4 met (the step D51 required) and decided each of the ten rulings that the
+  automatic adjudication had applied after the fix pass (`rules_to_ratify.md`).
+
+  | # | Rule | Decision |
+  |---|---|---|
+  | 1 | Lender only where data flows | KEEP |
+  | 2 | A data word needs a data practice (D47) | KEEP |
+  | 3 | A source is not a recipient | **DROP** |
+  | 4 | Registration / onboarding is not a purpose | **CHANGE** — add row 12, "Account opening & onboarding" |
+  | 5 | "Account Aggregation Services" only in the right sentence | KEEP |
+  | 6 | Only the user's identity | KEEP |
+  | 7 | Telemetry — the rule beats agreement | KEEP |
+  | 8 | The company's own details | KEEP |
+  | 9 | Shared-word lists as one highlight | **CHANGE** — merge only where a piece is meaningless alone |
+  | 10 | Five six-word purposes | KEEP |
+
+- **Rule 3 dropped — the annotators' reasoning:** an organisation the data is fetched *from* gets the user's
+  data indirectly (to pull a credit report the company must send the name and PAN), so data does flow to it.
+  Mark organisations, except the ones in the RBI AA pipeline. THIRD_PARTY therefore now means *an outside
+  organisation that exchanges the user's data with the company, in either direction*. Rule 16 still needs an
+  exchange in the sentence, and Rule 1 (Lender) is untouched — no Lender rejection sat in a "from" sentence.
+- **How each change was applied** (`decisions.tsv`; 85 rulings changed, backed up before):
+  - **Rule 3:** 48 rejections became accepts (40 highlights the annotators had drawn — 32 of P4's, 7 of P1's,
+    1 both — and 8 repeat candidates): credit bureaus by name, `Credit Information Companies`, `UIDAI`, the
+    Central KYC Registry, `business partners`, `verification agencies`, Indifi's long "information from
+    independent third parties" lists. 4 rejections stay but are re-coded to the rule that really decides them
+    (the "banks where your account is maintained" are the FIP — Rule 8b; `CKYCRR` inside `CKYCRR records` is
+    part of a data name — Rule 19).
+  - **Rule 4:** of the 12 onboarding highlights, **7 are now PURPOSE** (`register you as a user`,
+    `registration as a user`, `onboarding`, `customer onboarding` x3, `Registration` in "For Registration: we
+    may collect…"). 5 stay out because the sentence has no data-use frame ("at the time of registration",
+    "you must register", a list of message topics) or is a job application.
+  - **Rule 9:** of the 28 lists the adjudication had merged, **12 are split back into their pieces** (two of
+    them partly) and 16 stay whole. Test applied: *would the piece, highlighted alone, tell a reader what it
+    is?* Split: `ACH` / `NEFT` / `IMPS` / `UPI ID details`; `mutual fund` / `demat holdings`; `salary` /
+    `income details`; `bank account` / `credit card` / `debit card`; `Aadhaar` / `Virtual ID details`;
+    `marketing` / `promotional activities`; `prepare your financial plan` / `recommendations` / `portfolio
+    reviews` / `ongoing advice`; `KYC` / `AML` / `risk profiling requirements`. Kept whole: lists of bare
+    verbs (`Retrieving, viewing, … Financial Information`), `Verifying your identity and eligibility`, `loan
+    evaluation and servicing`, `Complying with legal, regulatory, and tax obligations`. Partly: `credit, debit
+    card` + `internet banking account information`.
+- **A consequence that needed a new mechanism — highlights nobody drew.** Both annotators had been told by the
+  fix lists to *delete* sources, so the exports under-contain them: in "Experian/CIBIL/CRIF" P4 had kept two
+  and nobody had `CIBIL`. A gold file with half a list marked is not consistent with any rule. So
+  `adjudicate_auto` gained one line type, `new <label> <doc> <start> <end> <text>` (kind **N**): **36
+  highlights added** — 33 THIRD_PARTY list-mates of a now-accepted source, `registration` beside `customer
+  onboarding`, and `KYC` / `AML` from the split list. They are in the audit trail and are sampled like every
+  other ruling. Found by (a) completing each sentence that had a flipped item, (b) a corpus sweep for known
+  organisation words after "from / provided by / sources" (96 candidates in 32 sentences, read one by one),
+  (c) comparing the pre-fix-pass exports for third parties deleted for this reason (8, of which 4 real).
+- **Result.** Gold **1,153 -> 1,261 spans** (DATA_TYPE 545, PURPOSE 382, THIRD_PARTY 334; 120 added, 12 list
+  spans removed; 8 documents changed). Validated: no overlaps, clean edges, nothing a mechanical rule drops;
+  the converter round-trips it (test 824 entities in 560 segments: D 295 / P 258 / T 271; adaptation 437).
+  Against the new gold, exact-match F1 is **P1 0.722, P4 0.510** (before: 0.725, 0.510). 12 new repeat
+  candidates appeared and were all rejected (definitions, headings, `CIBIL SCORE`, `Google Chrome`).
+- **Judgement calls made while applying — all five confirmed by P1 (2026-10-07):**
+  1. *Job applications* stay outside row 12 (the meeting sheet left that question blank; the guide suggested no).
+  2. *Pipeline boundary:* "banks / financial institutions where your account is maintained" = the FIP, not
+     marked; but `banks` in Indifi's general list of independent third parties is marked. Depositories and
+     registrars named as a **direct** source (`CDSL`, `NSDL`, `MF Central`, `CAMS`, `KFintech`) are marked —
+     this reverses the guideline's old tricky case.
+  3. *No exchange, no mark:* "CAS emails sent by registrars (CAMS, KFintech)" read from the user's own Gmail
+     stays unmarked — the company exchanges nothing with them.
+  4. *Rule 9 scope:* applied to lists the adjudication merged or chose; a list **both** annotators drew as one
+     highlight is left as drawn.
+  5. *"Stands alone" calls:* `mutual fund`, `salary`, `consents`, `licenses`, and `address` in "proofs of
+     identity and address" (both annotators had marked `address`) count as complete pieces.
+- **Limitations to state in the paper.** Row 12 and the source rule were fixed after annotation, so neither
+  annotator was looking for them; recall there rests on what somebody happened to mark plus the sweep above.
+  A source organisation in a sentence nobody marked, named with a word outside the sweep's list, can be missing.
+- **Guideline v7.5:** Rule 10 row 12, Rule 14 narrowed, Rule 16 "Sources" paragraph, PART I-3 and two tricky
+  cases rewritten. `fixlist.py` still words its THIRD_PARTY check the old way — it is a record of how the fix
+  pass was done and is not re-run.
+- **Fresh sample drawn** (seed 55, 124 rulings, all six kinds): `sample_check_P1.csv`, `sample_check_P4.csv`.
+  The earlier sheets are void.
+- **Status:** ✅ Rules ratified and applied. **Gold still provisional until both annotators check the sample
+  alone and both accept at least 90%** (`adjudicate_auto score`).
+
+### D56 — Sample check scored: P1 96.0%, P4 100% — the 90% gate is passed; five rows still to settle
+- **Result** (`adjudicate_auto score`, 124 rulings, seed 55, each annotator alone;
+  `results/annotation/adjudication/sample_check_result.json`):
+
+  | Checker | Accepted | Rate |
+  |---|---|---|
+  | P1 | 119 / 124 | **96.0%** (95% Wilson interval 90.9% - 98.3%) |
+  | P4 | 124 / 124 | **100%** |
+
+  The two checkers gave the same answer on 119 of 124 rows. Both are above the 90% bar set in D50, so the
+  acceptance rule is met and no rule needs a full review.
+- **Read the 100% with care.** P4 answered "y" on every row and wrote no comment. That can be genuine
+  agreement, but it cannot be told apart from a light read, so the informative figure is P1's 96.0% — and
+  even its lower confidence bound stays above 90%.
+- **The five rulings P1 rejected** (rows 28, 84, 91, 93, 117; four "mark" rulings and one "do not mark"; P4
+  accepted all five). None is an isolated row — each touches neighbours, so they are settled as a set, not
+  patched one by one:
+  1. `retrieving or collecting` (PURPOSE, `10_perfios_terms`) — P1: no object, cannot stand alone. The same
+     phrase is gold in `14_nadl_charter` and `21_nadl_terms` (in 21 both annotators drew it).
+  2. `process applications` (PURPOSE, `24_credbuddha_terms`) — P1: the sentence is about what withdrawing
+     consent affects; nothing in it should be marked. Five gold spans sit in that sentence.
+  3. `ongoing advice` (PURPOSE, `25_the_financiali_privacy`) — P1: maps to none of the 12 rows. It is one of
+     the pieces the Rule 9 change split out (D55), beside `recommendations` and `portfolio reviews`.
+  4. `Gmail` (DATA_TYPE, `25_the_financiali_privacy`, ruled "do not mark", Rule 9b) — P1: Gmail implies the
+     user's emails, so it is data. Four Gmail highlights in that document carry the same ruling.
+  5. `third-party advertising companies` (THIRD_PARTY, `28_indifi_capital_privacy`) — P1: the sentence states
+     no data flow to them (Rule 16). A single highlight.
+- **Tooling:** `adjudicate_auto score` now reads a sheet however the spreadsheet program saved it (comma or
+  tab separated; UTF-8, UTF-16 or Windows-1252) and prefers a `sample_check_<name>_filled*` file. The filled
+  sheets quote policy text; `.gitignore` now covers every `sample_check_P*` file, not only `.csv`.
+- **Status:** ✅ Gate passed. ⏳ Gold becomes final once the five rows are settled and re-applied; only then
+  is `aa_to_conll` run.
+
+### D57 — The five sample-check corrections applied; the gold file is FINAL (1,258 spans); test files generated
+- **Decision (P1's):** apply all five corrections from the sample check (D56) with the scope proposed —
+  each one together with the neighbouring highlights the same reasoning covers.
+
+  | Row | P1's objection | Applied |
+  |---|---|---|
+  | 28 | `retrieving or collecting` names no object | re-drawn as `retrieving or collecting such financial information` in all three documents (`10_perfios_terms`, `14_nadl_charter`, `21_nadl_terms` — in the last, both annotators had drawn the short form) |
+  | 84 | a sentence about what withdrawing consent affects; no data practice | all five highlights in the sentence removed: `process applications`, `verify information`, `assess eligibility` (Rule 10), `Lender`, `Partner Institution` (Rule 16) |
+  | 91 | `ongoing advice` fits none of the 12 purpose rows | `ongoing advice` and `recommendations` removed; `portfolio reviews` and `prepare your financial plan` kept |
+  | 93 | `Gmail` means the user's emails — it is data | `Gmail` marked DATA_TYPE at the four places it had been rejected, plus one repeat in the section heading; `Gmail` inside `Gmail OAuth` stays unmarked (Rule 19) |
+  | 117 | no data flow to `third-party advertising companies` in the sentence | that highlight removed (Rule 16) |
+
+- **In `decisions.tsv`:** 14 rulings changed, 1 `agreed` re-draw line added, 2 new repeat candidates ruled
+  (one accepted, one rejected).
+- **Final gold: 1,258 spans** — DATA_TYPE 550, PURPOSE 377, THIRD_PARTY 331 (was 1,261: 9 removed, 5 added,
+  3 re-drawn; 6 documents touched). Validated again: no overlaps, clean edges, nothing a mechanical rule
+  drops. Exact-match F1 of each annotator's own export against it: P1 0.721, P4 0.506.
+- **How the gold was reached, in one line for the paper:** two annotators (kappa 0.43 after the fix pass,
+  0.52 on a fresh document) -> rule-by-rule automatic adjudication of 1,513 disputed highlights -> the ten
+  post-hoc rules ratified by both annotators (7 kept, 1 dropped, 2 changed) -> an independent check of 124
+  random rulings by each (96.0% and 100% accepted) -> the five rejected rulings corrected.
+- **Model-ready files generated** by `aa_to_conll` into `data/ner_bio/` (git-ignored — they contain policy
+  text):
+  - `aa_test.conll` + `aa_test.docmap.json` — 9 documents, 559 segments, 40,686 tokens, **821 entities**
+    (DATA_TYPE 300, PURPOSE 253, THIRD_PARTY 268).
+  - `aa_adapt.conll` + `aa_adapt.docmap.json` — 14 documents, 845 segments, 59,887 tokens, 436 entities
+    (DATA_TYPE 249, PURPOSE 124, THIRD_PARTY 63); one of the 437 gold spans shares a glued word with another
+    in `10_perfios_terms` and cannot be tagged separately (D36) — the reason that document is barred from test.
+  - Checked: the training code's own reader (`read_conll`) reads back exactly those entity counts; the docmap
+    has one entry per segment and covers exactly the split's documents; the longest segment is 145 sub-word
+    pieces in the test file and 177 in the adaptation file across the three tokenizers — under the 256 limit,
+    so **nothing is truncated**.
+- **Tooling:** `adjudicate_auto apply --sample 0` rebuilds the gold without overwriting the sample sheets that
+  were already scored.
+- **The test set is now sealed** (D4): it is opened once, for E1 and E2. No model has seen any AA text.
+- **Status:** ✅ Gold final. ✅ Test and adaptation files ready. Next: the E1/E2 evaluation script; the gold
+  goes to P2.
+
+### D58 — Audit of the final gold from three perspectives: usable, not yet gold standard; 49 verified defects
+- **Why:** P1 asked for a deep check of the finished gold file (D57) as three readers — the user giving consent,
+  a financier / auditor, and a paper review panel — repeated three times, before it is used.
+- **How (nothing in the gold was changed):**
+  1. *Mechanical consistency* over all 1,258 spans: balance, provenance, label conflicts, span shape, and
+     whether identical text is annotated identically across documents.
+  2. *Reading for wrong and missed spans:* all 1,474 non-gold occurrences of gold phrases; rule-context probes
+     on every span; blind reading of 100 random gold spans and 70 random unmarked sentences.
+  3. *Verification and fitness:* each suspect re-read with its provenance; a sweep for 41 sensitive / regulated
+     terms; one test document read whole and the densest section of the largest.
+- **Measured quality:**
+
+  | Measure | Value |
+  |---|---|
+  | Clearly wrong spans (sample of 100) | 2% (range about 0.6-7%); a further 4% have a debatable boundary |
+  | Estimated recall | about 93% (range 90-95%) |
+  | Identical text annotated identically | 408 of 442 = 92.3% |
+  | Label conflicts, overlaps, dirty edges | none |
+
+- **49 verified defects** (full list with sentences: `results/annotation/adjudication/gold_audit.md`, git-ignored):
+  - **20 to remove** — e.g. `parent company / subsidiaries / affiliates / agents` in an indemnity clause;
+    `gender` in two non-discrimination clauses (the exact case PART I-2 excludes); `title` in "right, title and
+    interest"; `affiliates`, `group companies` where they *define* the policy's own company (2 of the 6 spans
+    in `26_zerodha_tos`); `identity` of the recipients; three `marketing communication` in opt-out sentences.
+  - **29 to add** — e.g. `user authentication credentials` in three template documents that lack it;
+    `biometric data` (absent from the gold, three clear cases, all in test documents); `UIDAI` in "share your
+    KYC data with CKYCRR, UIDAI"; `contacts` beside `gallery` in the lending prohibition; `receive all required
+    notices` in four documents.
+  - **1 to harmonise** — the consent-artefact field "identity and (optional) contact information" appears in
+    three different forms across nine template documents.
+- **The structural finding:** 16 of the 20 wrong spans were drawn **identically by both annotators**. Those
+  488 spans (39% of the gold) were accepted automatically and were never reviewed — the sample check (D56)
+  sampled *rulings*, and an agreed span has no ruling. Agreement was treated as correctness; it is not.
+  Second cause: the repeat pass (Rule 7) worked inside one document, never across the 13-document template
+  family, and skipped words under four letters.
+- **Design limits — correct under the rules, to be disclosed in the paper:** no polarity (7% of DATA_TYPE spans
+  follow a denial); umbrella terms unmarked (`financial information` 334 mentions); pipeline actors unmarked,
+  so THIRD_PARTY is not the full recipient list; telemetry and device access excluded while 33 purposes of
+  telemetry are marked; purposes carry no row number; 61% of the gold not agreed by two people; adjudication
+  by an AI assistant under human ratification; guideline developed on the test documents too; test and
+  adaptation sets are different sub-genres (24.5 vs 8.9 spans per 1,000 words; THIRD_PARTY 268 vs 63);
+  `28_indifi_capital_privacy` is 33% of the test set; label definitions differ from OPP-115.
+- **Verdict by reader:** *user* — trust the lists, not a summary that ignores negation; *auditor* — sign-off
+  after the biometric / UIDAI / contacts gaps are closed, and never call THIRD_PARTY "the recipients" without
+  qualification; *panel* — acceptable evaluation set with a stated error rate, not "gold standard" until the
+  unreviewed 39% and the template inconsistencies are fixed.
+- **Recommended:** apply the 49 corrections and the harmonisation through `decisions.tsv` after both
+  annotators see the list; add a `negated` flag per span; re-run the identical-text check (target above 98%);
+  regenerate the CoNLL files. No model has seen AA text, so correcting the gold now costs nothing in validity.
+- **Status:** ✅ Audit done. Corrections applied in D59.
+
+### D59 — Audit corrections applied with two changes by P1; gold 1,266 spans; identical text now 99.1% consistent
+- **Decision (P1's), on the list of D58:** apply it, with two changes.
+  1. **The signature is not data.** "…and your signature/digital signature" in the consent-artefact field list
+     is the *act of accepting the consent*, not data the user provides. So the two proposed additions in
+     `04_pb_fintech_aa_terms` are **not** made — and, for consistency, the four existing highlights of the
+     same clause (`signature`, `digital signature` in `02_digio_terms` and `03_oms_aa_terms`) are **removed**.
+     This overturns the guideline's old tricky case that listed `signature` among credential fields.
+  2. **`identity` and `contact information` are two highlights**, not one, in the consent-artefact field
+     ("your identity and (optional) contact information") — in all nine template documents. This overrides
+     the audit's proposal of a single highlight and the Rule 14 example that said one.
+- **Applied through `decisions.tsv`** (backed up first): 13 rulings changed; **16 agreed spans dropped** with a
+  new line type, `drop <label> <doc> <start> <end> <code> <text>` (one span, one position — the existing
+  `agreed … => -` line would have removed the phrase in every document); 30 `new` lines; 10 repeat candidates
+  created by the additions ruled (1 accepted — "verification through `UIDAI`'s e-KYC service" — 9 rejected).
+- **What changed in the gold** (19 documents): 28 highlights removed, 36 added.
+  - *Removed:* the 20 of D58 (indemnity list, `suppliers`, `title`, two `gender`, a heading, three `identity`
+    of others, one `Lender`, Zerodha's self-definition, a disclaimer, one `account aggregation services`, three
+    opt-out `marketing communication`); the 4 signature highlights; the 4 merged or half-formed versions of the
+    consent-artefact field (re-drawn as two).
+  - *Added:* `user authentication credentials` x3, `PINs`, `private keys`, `receive all required notices` x4,
+    `access, fetch or retrieve`, `UIDAI` x2, `court`, `biometric data` x3, `contacts`, `bank statement`,
+    `CAS` x2, `billing and collection`, `access and share your Financial Information`, `comply with any
+    applicable laws`, `lenders`; and `identity` / `contact information` wherever one of the pair was missing.
+- **Final gold: 1,266 spans** — DATA_TYPE 559, PURPOSE 381, THIRD_PARTY 326. Validated: no overlaps, clean
+  edges, nothing a mechanical rule drops.
+- **Identical text annotated identically: 464 of 468 = 99.1%** (was 408 of 442 = 92.3%). The four remaining
+  mismatches are not real: they are the checker failing to align words inside the two glued-text documents
+  (`02_digio_terms`, `10_perfios_terms`).
+- **CoNLL files regenerated** (`data/ner_bio/`, git-ignored): `aa_test.conll` — 559 segments, **826 entities**
+  (DATA_TYPE 307, PURPOSE 252, THIRD_PARTY 267); `aa_adapt.conll` — 845 segments, 439 entities (251 / 129 / 59;
+  one of 440 lost to a glued word). Read back exactly by the trainer's reader; longest segment 145 and 177
+  sub-word pieces, under 256.
+- **Against the final gold:** P1's own export scores exact F1 0.706, P4's 0.489; 473 gold spans (37%) were
+  drawn identically by both.
+- **Method lesson, now part of the process:** agreement between two annotators is evidence, not proof. The
+  gold was built by reviewing *disagreements*; the audit shows the agreed part needs its own check — here a
+  consistency test over identical text and a blind sample.
+- **Not done (still open from D58):** the `negated` flag per span and the purpose row number — P1 has not
+  asked for them. The estimated remainder — roughly 5 wrong and 50-90 missed spans that the samples imply
+  but did not locate — stays, and is reported as the gold's error rate.
+- **Whether P4 has seen the list** is not recorded here; 16 of the removals overturn something both annotators
+  drew. P1 decided.
+- **Status:** ✅ Gold final (second time). Test set sealed again; E1/E2 can proceed.
+
+### D60 — The E1/E2 evaluation script is built (`ner/evaluate.py`); the test set is still unopened
+- **What it reports,** for one model on one CoNLL file:
+  1. **Exact-match** entity precision / recall / F1 — micro, macro over the three labels, per label (seqeval,
+     as in training).
+  2. **Relaxed match** — a prediction counts if it overlaps a gold entity of the same label. Our boundary
+     conventions are specific to the guideline (D58), so exact match alone understates a transferred model.
+  3. **95% confidence intervals by bootstrap over document groups** (`aa_split.json`; the docmap says which
+     document each segment came from). Segments of one document are not independent, so resampling segments
+     would give intervals that are too narrow. 5,000 resamples, fixed seed.
+  4. **Per-group F1 and their unweighted mean** — one document holds a third of the test entities.
+  5. **Error breakdown.** Predictions: exact / right label, wrong boundary / wrong label / spurious. Gold:
+     found / found with another boundary / under another label / missed. Spurious predictions are sorted
+     into *telemetry*, *AA-framework role*, *umbrella term* (the three kinds that are entities under
+     OPP-115's definition and excluded by ours — the "definition mismatch"), *corporate transaction*, and
+     *other*; and F1 is also given with the definition-mismatch predictions set aside.
+  6. **Truncation check.** A segment longer than 256 sub-word pieces loses its tail silently in the trainer.
+     The script counts such segments, scores the lost tail as *missed* rather than dropping it, and refuses
+     to score an AA file that has any.
+- **Comparing two conditions** (`--compare … --against …`): any number of seeds per side, averaged; the
+  difference is bootstrapped on the *same* resamples of the groups (paired), giving a 95% interval for the
+  difference and the share of resamples in which A is ahead. "No significant difference" is printed when the
+  interval contains zero (D5).
+- **The seal is enforced in code.** `aa_test.conll` cannot be scored unless `--open-test` is passed; every
+  opening is appended to `results/ner/test_openings.jsonl` (time, model, commit, score). Results go to
+  `<model-dir>/test_metrics.json`, which `collect.py` already folds into the ablation table. The optional
+  `--errors` file lists the spurious phrases — it contains policy text and belongs under `artifacts_out/`.
+- **Checked three ways, none of them on the test set:**
+  1. Built-in self-check on hand-made tags (counts, relaxed match, error categories, deterministic intervals,
+     the comparison). Its micro-F1 is asserted equal to seqeval's on every run.
+  2. **OPP-115 dev, Legal-BERT seed 42: 0.397** against 0.401 logged at training time. The gap is explained:
+     18 of 430 dev segments are longer than 256 pieces, and the training-time metric drops their tails while
+     this script counts them as missed.
+  3. All nine E1 models on the **adaptation** file `aa_adapt.conll` (14 documents as 14 bootstrap units).
+- **Development finding from check 3 — not a result, the adaptation documents are E2's training data:**
+
+  | Backbone (3 seeds) | Exact micro-F1 | Relaxed micro-F1 | Exact, definition mismatch set aside |
+  |---|---|---|---|
+  | BERT-base | 0.090 ± 0.015 | 0.223 ± 0.015 | 0.117 |
+  | Legal-BERT | 0.090 ± 0.015 | 0.219 ± 0.017 | 0.116 |
+  | InLegalBERT | 0.088 ± 0.004 | 0.210 ± 0.001 | 0.112 |
+
+  The models score 0.40 on OPP-115 dev and about **0.09** on AA-operator documents. They predict 960-1,140
+  entities where the gold has 439; about 800-980 predictions are spurious, and roughly a third of those are
+  definition mismatches (`financial information`, `the services`, `third parties`, `Financial Information
+  Users`, `cookies`). The backbones are indistinguishable (paired comparison: every interval contains zero).
+  So expect E1 on the test set to be low, with a large part of the error explained by the two annotation
+  schemes meaning different things — which the script now measures instead of leaving as a guess.
+- **Also fixed:** the old `--out` path could not save its JSON (numpy integers from seqeval's report).
+- **Not done:** E2 training. `train.py` reads one training file; E2 needs three decisions from P1 —
+  joint training on OPP-115 + adaptation data or continuing from the E1 checkpoint; which data stops training
+  early (OPP-115 dev would select for OPP-115, not AA); and how many seeds.
+- **Status:** ✅ Script built and verified. Test set unopened. Next: P1's E2 design decisions, train E2, then
+  open the test set once for all E1 and E2 models.
+
+### D61 — E2 training design (P1's decisions): both ways of adapting, an AA mock test, three seeds each
+- **1. How the AA practice is given — both, as two conditions.**
+  - **E2-joint:** the pretrained backbone trained once on OPP-115 *and* the AA adaptation documents together.
+    The fair twin of E1 (same recipe, only the data differs) — but the AA part is small (726 of about 4,090
+    training segments, 350 of about 7,100 entities) and may be drowned out.
+  - **E2-sequential:** the finished E1 model of the same seed, trained further on the AA adaptation documents
+    only. P1's reasoning: the system exists to label Indian documents, so forgetting some of the American
+    lessons does not matter, and this is the variant expected to give the better result.
+  - Reporting both turns the choice into a finding: *does adapting on little data work better mixed in, or
+    as a second step?*
+- **2. When training stops — an AA mock test.** *(The documents and the counts in this point and in point 1
+  were revised in D62 — read that for the current picks.)* Two adaptation documents are held out of training and used
+  only to pick the best epoch: `09_saafe_terms` and `19_saafe_privacy` — one organisation held out whole, one
+  terms document and one privacy policy, **89 entities** (DATA_TYPE 43, PURPOSE 35, THIRD_PARTY 11). The other
+  12 documents train: 726 segments, **350 entities** (208 / 94 / 48). Neither glued-text document is in the
+  mock test. Known weakness: the Saafe documents share the template of the other eleven, so the mock score is
+  optimistic — acceptable, because it only selects an epoch and is never reported as a result.
+- **3. Repeats — seeds 42, 43, 44 for each of the three backbones,** the same as E1. So 9 + 9 = **18 new
+  runs**, and every E2 model has an E1 twin with the same seed.
+- **E1 models are never modified.** `--e2 joint` does not touch them; `--e2 sequential` only *reads* the E1
+  folder and writes to a new one. Folders: `<backbone>_s<seed>` (E1), `<backbone>_e2j_s<seed>`,
+  `<backbone>_e2s_s<seed>`.
+- **Deliberately unchanged:** learning rate, batch size, warm-up, patience and maximum epochs are the E1
+  recipe for both E2 variants (D5 — one recipe). For the sequential variant that means a second full-strength
+  round on 726 segments; tuning it would add choices E1 never had.
+- **What differs between E1 and E2 besides the AA documents — to state in the paper:** E1 stopped on OPP-115
+  dev, E2 stops on the AA mock test. That is part of what "having a little AA data" means, but it is a second
+  difference, not zero.
+- **Built:** `train.py --e2 joint|sequential` (requires `--seed`); `aa_to_conll` also writes
+  `aa_adapt_train.conll` and `aa_adapt_dev.conll` (the test file is byte-identical to before);
+  `run_meta.json` records condition, starting point, training files and dev file; `collect.py` notes that the
+  dev column is each run's own dev set; `evaluate.py --compare` expands wildcards itself.
+- **Verified by smoke runs** (1 epoch, 600 segments, Legal-BERT seed 42): both modes train, score on the AA
+  mock test and save to their own folder; the E1 weights file is untouched. The sequential smoke run reached
+  0.23 micro-F1 on the mock test after one short epoch (E1 scores about 0.09 on AA-operator documents) —
+  encouraging, not a result.
+- **Status:** ✅ Ready to train. Next: 18 training runs, then the test set is opened once for all 27 models.
+
+### D62 — The AA mock test re-picked by a rule: least shared text with the training documents (revises D61)
+- **Why:** D61 held out `09_saafe_terms` and `19_saafe_privacy` ("one organisation held out whole"). Measured
+  with the split's own similarity function, `09_saafe_terms` shares **75%** of its text with
+  `16_oms_aa_privacy`, which stays in training — the most-shared document of all fourteen. A quarter of that
+  mock test was close to a memory test, and a memory test keeps improving while the model overfits the
+  template: it would stop training too late.
+- **The rule (agreed by P1 before the picks were computed):** hold out the adaptation documents that share
+  the *least* text with the others, until the mock test holds about 100 entities; no glued-text document
+  (`02_digio_terms`, `10_perfios_terms`).
+- **The picks (P1 chose them over D61's):** `20_scoremeaa_charter` (shares 0%), `19_saafe_privacy` (14%),
+  `22_setu_aa_charter` (14%), `01_setu_aa_terms` (18%). The largest overlap between any mock-test document and
+  any training document is now **18%** (`01_setu_aa_terms` / `06_setu_aa_privacy`), down from 75%.
+  One tie: `17_pb_fintech_aa_privacy` shares as little as `19_saafe_privacy`; 19 was held out because 17
+  carries 17 of the 59 THIRD_PARTY entities, the scarcest label, and those are worth more in training.
+
+  | | Mock test (`aa_adapt_dev.conll`) | Training (`aa_adapt_train.conll`) |
+  |---|---|---|
+  | Documents | 4 — a terms document, a privacy policy, two charters | 10 |
+  | Segments | 195 | 650 |
+  | Entities | **107** (DATA_TYPE 59, PURPOSE 36, THIRD_PARTY 12) | **332** (192 / 93 / 47) |
+
+  Against D61's picks this costs 18 training entities, almost all DATA_TYPE; PURPOSE and THIRD_PARTY in
+  training are unchanged within one.
+- **Correction of two figures in D61 (and of what P1 was told in discussion):** OPP-115's training file holds
+  3,362 segments and **9,955** entities (the 6,776 of D16 predates span trimming, D25). So in **E2-joint** the
+  AA documents are 650 of 4,012 segments (16%) and 332 of about 10,290 entities (**3%**) — the dilution P1 was
+  worried about is stronger than stated.
+- **Changed:** one constant, `ADAPT_DEV` in `aa_to_conll.py`; the two files regenerated and read back by the
+  trainer's reader (counts above; longest segment 177 sub-word pieces). `aa_test.conll` and `aa_adapt.conll`
+  are byte-identical to before (checksums compared). No model had been trained on the old files.
+- **Everything else in D61 stands:** both conditions (E2-joint, E2-sequential), E1's recipe unchanged, seeds
+  42-44 for three backbones, E1 models only read, 18 runs, then the test set opened once for all 27 models.
+- **Status:** ✅ Ready to train.
+
+### D63 — THE RESULT: the test set opened once for all 27 models — a little AA data lifts F1 from 0.13 to 0.44
+- **What was run.** All 18 E2 models were trained by P1 (9 sequential, 9 joint). Before opening the test set:
+  all 27 model folders complete and correctly labelled; the nine E1 models still byte-identical to the backup
+  uploaded to the Hugging Face Hub before E2 training (so E2 did not alter them); `aa_test.conll` unchanged
+  since it was generated; no earlier opening on record. Then `evaluate.py --open-test` once per model:
+  27 entries in `results/ner/test_openings.jsonl`, 559 segments, 826 gold entities, 0 truncated, 0 failures.
+- **Headline — exact-match entity micro-F1 on the AA test set** (mean over seeds; 95% interval from a
+  bootstrap over the 8 document groups):
+
+  | Condition | All three backbones (9 runs) | Relaxed-match F1 |
+  |---|---|---|
+  | **E1** — OPP-115 only | **0.125** [0.101, 0.156] | 0.293 [0.253, 0.319] |
+  | **E2-joint** — OPP-115 + AA together | **0.252** [0.209, 0.331] | 0.442 [0.405, 0.500] |
+  | **E2-sequential** — E1 model, then AA | **0.439** [0.352, 0.494] | 0.606 [0.539, 0.646] |
+
+- **Every step is a real difference** (paired bootstrap, the same resamples for both sides; none of these
+  intervals contains zero, for the three backbones together and for each one alone):
+  - E2-sequential minus E1: **+0.314** [+0.241, +0.358]
+  - E2-joint minus E1: **+0.127** [+0.101, +0.179]
+  - E2-sequential minus E2-joint: **+0.187** [+0.126, +0.234]
+- **By backbone** (exact micro-F1, 3 seeds each):
+
+  | Backbone | E1 | E2-joint | E2-sequential |
+  |---|---|---|---|
+  | BERT-base | 0.130 ± 0.008 | 0.266 ± 0.016 | 0.412 ± 0.016 |
+  | InLegalBERT | 0.119 ± 0.003 | 0.225 ± 0.043 | 0.427 ± 0.038 |
+  | Legal-BERT | 0.126 ± 0.007 | 0.266 ± 0.008 | **0.479 ± 0.026** |
+
+  In E1 the backbones are indistinguishable (Legal-BERT minus BERT-base: -0.004 [-0.018, +0.022]). After
+  sequential adaptation **Legal-BERT is ahead** of BERT-base by +0.067 [+0.050, +0.084] and of InLegalBERT by
+  +0.052 [+0.029, +0.082]; InLegalBERT and BERT-base do not differ (+0.015 [-0.007, +0.033]). So the choice of
+  backbone only starts to matter once the model has seen in-domain data. The Indian-law model shows no
+  advantage on Indian fintech policies.
+- **By label** (all backbones; exact / relaxed F1):
+
+  | Condition | DATA_TYPE | PURPOSE | THIRD_PARTY |
+  |---|---|---|---|
+  | E1 | 0.135 / 0.269 | 0.111 / 0.353 | 0.128 / 0.247 |
+  | E2-joint | 0.336 / 0.477 | 0.191 / 0.499 | 0.195 / 0.312 |
+  | E2-sequential | 0.510 / 0.641 | 0.359 / 0.607 | 0.436 / 0.555 |
+
+  PURPOSE has the widest gap between exact and relaxed: the model finds the purpose but draws it longer or
+  shorter than the guideline's five-word convention.
+- **What the models did** (per run, average over all backbones; 826 gold entities):
+
+  | Condition | Predicted | Exact | Right label, wrong boundary | Spurious | of which definition mismatch | Gold missed |
+  |---|---|---|---|---|---|---|
+  | E1 | 944 | 111 | 150 | 663 | 170 | 550 |
+  | E2-joint | 630 | 184 | 144 | 286 | 66 | 494 |
+  | E2-sequential | 747 | 347 | 142 | 243 | 30 | 345 |
+
+  E1 over-predicts; a quarter of its spurious entities are things OPP-115 marks and our guideline does not
+  (`financial information`, `third parties`, cookies). Setting those aside moves E1 only from 0.125 to 0.138 —
+  **the definition gap is real but is not the main reason E1 is low**; E1 also misses two thirds of the gold.
+  Sequential adaptation removes almost all of the mismatch (170 -> 30) and triples the exact hits.
+- **P1's hypothesis (D61) is confirmed.** Mixed into OPP-115 the AA documents are 3% of the entities and are
+  largely drowned out; given as a second step they have the last word. The feared cost of the second step —
+  overfitting 10 documents that share one template — did not prevent transfer to other organisations'
+  documents of a different kind (lender privacy policies).
+- **Rehearsal versus exam:** E1 scored about 0.09 on the adaptation documents (D60) and 0.125 on the test set —
+  slightly higher, as expected for privacy policies, which are nearer to OPP-115's genre.
+- **Caveats, to be stated with the result:**
+  1. *Eight document groups.* The intervals are honest but coarse; with eight units a bootstrap can only move
+     in steps.
+  2. *One document weighs a third.* The plain average of the per-group F1 is lower than the pooled figure
+     (E2-sequential 0.375 against 0.439) because `28_indifi_capital_privacy` scores above average.
+     `26_zerodha_tos` scores about zero in every condition — it holds only four gold entities.
+  3. *The mock test flattered, as predicted* (D62): E2-sequential scored 0.58-0.74 on the held-out adaptation
+     documents and 0.41-0.48 on the test set. The mock score was used only to pick the epoch.
+  4. *E2 differs from E1 in two ways,* the AA training data and the AA stopping set (D61).
+  5. *The answer key has its own error rate* — about 2% wrong and about 7% missing (D58) — which caps every
+     score a little below 1.0.
+  6. *Exact match is harsh on boundaries*; relaxed F1 is reported beside it for that reason, not as a
+     replacement.
+  7. *Provenance:* the evaluation ran from an uncommitted working tree on top of commit `842e1bc` (that is the
+     commit the opening log records). P1 commits immediately after, so the code that produced the numbers is
+     the next commit.
+- **Files (committed, numbers only):** `results/ner/aa_test.md` and `aa_test.json` (written by the new
+  `collect.aa_test_report`), `ablation.md` / `.csv`, one `test_metrics.json` per run, `test_openings.jsonl`.
+  The lists of spurious phrases (`test_errors.tsv`) stay under `artifacts_out/` — they contain policy text.
+- **The test set is now spent.** Any further change to models, rules or gold followed by a re-score would be
+  tuning on the test set. New ideas are tried on the adaptation documents only.
+- **Status:** ✅ E1 and E2 complete — the headline result of the project.
+
+### D64 — LLM baseline: the protocol, fixed BEFORE any LLM sees the test set (harness built, not yet run)
+- **Why:** the first question a reviewer will ask of D63 is "how does a large language model do if you simply
+  give it your guideline?" If it beats the fine-tuned models, the paper's story changes — better to know.
+- **Why this does not break "the test set is spent" (D63):** that rule forbids changing something *after looking
+  at test results* and scoring again. This is a new system, specified in advance, developed only on the AA dev
+  documents, and scored on the test set once. The protocol below is written down before any run.
+- **Protocol:**
+  1. *Task.* One passage (a segment of the CoNLL file, detokenised) per request. The model returns JSON:
+     a list of `{text, label}`. Temperature 0, fixed seed, JSON mode.
+  2. *Prompt.* The guideline's general rules, condensed to about 470 words: the three labels, the 12 purpose
+     categories, and ten rules (shortest phrase, lists, name + abbreviation, umbrella terms, AA-framework
+     actors, own company, telemetry, data exchange for THIRD_PARTY, data-use frame for PURPOSE, every
+     occurrence). **The guideline's "tricky cases" are not in it — they quote test documents.** The self-check
+     refuses a prompt that names any test organisation.
+  3. *Two conditions.* **0-shot** (rules only) and **8-shot** (rules + 8 worked passages). The 8 examples are
+     drawn with a fixed seed from `aa_adapt_train.conll` only — the same ten documents E2 trains on: two
+     passages with no entity, six covering all three labels.
+  4. *Alignment.* Each returned phrase is matched word-for-word onto the passage (case-insensitive); every
+     occurrence is tagged; longer phrases win; a phrase that is not in the passage is dropped and counted
+     (hallucination rate is reported).
+  5. *Scoring.* The same `evaluate.evaluate` as the fine-tuned models — exact and relaxed F1, group-bootstrap
+     intervals, error breakdown — and the same paired comparison against E1 / E2.
+  6. *Development.* Only on `aa_adapt_dev.conll` (the four mock-test documents). At most the two conditions
+     above are carried to the test set; the prompt is frozen before `--open-test`.
+- **Built:** `ner/llm_baseline.py` — standard library only (no SDK), any OpenAI-compatible endpoint, default a
+  local Ollama server so no document text leaves the machine; replies cached and resumable under
+  `artifacts_out/llm/` (git-ignored — they contain policy text); the test set needs `--open-test` and is
+  logged like every other opening. Self-check passes (alignment, tolerant JSON parsing, deterministic examples
+  taken only from the training file, no test organisation in the prompt).
+- **Known limits of this baseline, to state with its result:**
+  1. *A conflict of interest for Claude models.* The answer key was adjudicated with an AI assistant from the
+     Claude family (D50-D59). A Claude model used as the baseline would be tested against a key it helped to
+     write. The baseline should therefore be a model from another family; if a Claude model is ever added, that
+     must be disclosed beside its score.
+  2. *The LLM may have read the test documents.* They are public web pages; a model's pre-training data may
+     contain them. It cannot have seen our labels, which were never published.
+  3. *Different supervision.* The fine-tuned models learn from 332 labelled entities and never see the rules;
+     the LLM sees the rules and at most 8 passages. The comparison is "which kind of effort pays", not a
+     like-for-like method comparison.
+  4. *A local 8-14 billion-parameter model is not a frontier model.* If only a local model is run, the paper
+     must say so; a reviewer may still ask for a hosted one.
+- **Blocked on P1:** no LLM is available on the machine — Ollama is installed but has no model, and no API key
+  is configured. P1 must choose the model(s) and either approve a download or set a key.
+- **Status:** ✅ Run as specified — results in D65.
+
+### D65 — LLM baseline result: a local 14B model given only the rules ties the best fine-tuned model on exact F1
+- **What was run (P1 chose local, open models, D64 option A):** `llama3.1:8b` (4.9 GB) and `qwen2.5:14b`
+  (9.0 GB) through Ollama on the laptop's GPU — no document text left the machine. Each in two conditions,
+  0-shot and 8-shot, exactly as fixed in D64. Developed on the four AA dev documents, then the test set scored
+  once per run: 4 new entries in `results/ner/test_openings.jsonl` (31 in total).
+- **Test set, exact-match micro-F1** (one run each, temperature 0; 95% interval over the 8 document groups),
+  next to the fine-tuned conditions of D63:
+
+  | System | Exact micro-F1 | Relaxed micro-F1 | Precision | Recall | Predicted (826 gold) |
+  |---|---|---|---|---|---|
+  | E1 (9 runs) | 0.125 [0.101, 0.156] | 0.293 | — | — | 944 |
+  | E2-joint (9 runs) | 0.252 [0.209, 0.331] | 0.442 | — | — | 630 |
+  | E2-sequential (9 runs) | 0.439 [0.352, 0.494] | 0.606 | — | — | 747 |
+  | E2-sequential, Legal-BERT (3 runs) | 0.479 [0.399, 0.529] | 0.637 | — | — | — |
+  | llama3.1:8b, 0-shot | 0.280 [0.221, 0.325] | 0.325 | 0.176 | 0.674 | 3,159 |
+  | llama3.1:8b, 8-shot | 0.414 [0.345, 0.457] | 0.471 | 0.307 | 0.633 | 1,703 |
+  | **qwen2.5:14b, 0-shot** | **0.479 [0.439, 0.514]** | 0.553 | 0.369 | 0.683 | 1,529 |
+  | qwen2.5:14b, 8-shot | 0.452 [0.369, 0.501] | 0.518 | 0.321 | 0.763 | 1,961 |
+
+- **Paired comparisons (same resamples of the groups):**
+  - qwen 0-shot minus E2-sequential (all backbones): exact **+0.040 [-0.016, +0.129]** — no significant
+    difference; relaxed -0.053 [-0.109, +0.036].
+  - qwen 0-shot minus Legal-BERT E2-sequential: exact **+0.000 [-0.052, +0.078]** — a tie; relaxed
+    **-0.084 [-0.136, -0.010]** — the fine-tuned model is better on relaxed match.
+  - qwen 0-shot beats E1 by +0.354 and E2-joint by +0.227 (both intervals clear of zero).
+  - llama 8-shot: level with E2-sequential overall (-0.025 [-0.092, +0.039]), behind Legal-BERT E2-sequential
+    (-0.065 [-0.124, -0.010]). llama 0-shot: above E1, level with E2-joint, well behind E2-sequential.
+- **What it means.**
+  1. **Reading the rulebook is worth as much as 330 labelled examples.** A 14-billion-parameter open model that
+     has never seen a labelled AA sentence, given a 470-word summary of the guideline, matches the best
+     adapted encoder on exact F1. The claim "a little local data fixes transfer" (D63) stays true *for
+     encoder models*; it is no longer the cheapest route.
+  2. **The two kinds of system fail differently.** The LLM finds more (recall 0.68 against about 0.42 for
+     E2-sequential) but marks about twice as much as there is (1,529 predictions for 826 entities; precision
+     0.37). The fine-tuned models are more precise and stay ahead on relaxed match (0.64 against 0.55).
+  3. **By label** (exact F1, qwen 0-shot against E2-sequential): THIRD_PARTY 0.606 against 0.436 — the LLM
+     knows what an organisation is; PURPOSE 0.437 against 0.359; DATA_TYPE 0.433 against 0.510 — the
+     fine-tuned models are better on the most frequent label.
+  4. **Examples help the small model and not the large one.** llama: 0.280 -> 0.414 with eight examples (and
+     hallucinated phrases fall from 413 of 3,170 to 46 of 1,595). qwen: 0.479 -> 0.452 — more recall, more
+     over-marking.
+  5. **The mock test misled.** On the AA dev documents the order was qwen 0-shot 0.35, llama 8-shot 0.26,
+     qwen 8-shot 0.26, llama 0-shot 0.12 — far below the test scores. The dev documents are AA-operator terms
+     with few entities; the test documents are denser privacy policies. No choice was made from the dev
+     scores, as agreed.
+- **Caveats specific to this baseline — to be printed beside the numbers:**
+  1. **The rules are fitted to the corpus, test documents included.** The guideline was developed over all 23
+     documents (D58), and the prompt condenses it. No test sentence is quoted, but the rules encode decisions
+     that were made while reading the test documents (lenders, credit bureaus, telemetry, the 12 purpose rows).
+     The fine-tuned models had no such access — they learned from ten other documents. This favours the LLM
+     and cannot be removed after the fact; a fair re-test needs documents the guideline has never seen.
+  2. **The prompt was written by the assistant that adjudicated the answer key** (D50-D59), from the guideline.
+  3. **The LLM may have read the test documents** in pre-training (public web pages) — not their labels.
+  4. **One run per condition.** Temperature 0 makes a run repeatable, not representative: there is no seed
+     variation, and the 0-shot / 8-shot difference for qwen is not established.
+  5. **Two open models of 8 and 14 billion parameters** — not a frontier model. A larger or hosted model would
+     probably score higher still.
+  6. **Cost is different in kind:** about 3-5 seconds per passage on a 16 GB GPU, against milliseconds for a
+     fine-tuned encoder.
+- **Run record.** A runaway reply (the small model repeating one entity without end) timed out a dev run; fixed
+  before any test run by capping the reply at 1,024 tokens and keeping the complete entities of a cut-off
+  reply (D64's alignment rule otherwise unchanged). The laptop shut down twice during the last test run
+  (qwen 8-shot, at passages 268 and 409 of 559); replies are cached per passage and the run resumed without
+  repeating a request. Ollama updated itself from 0.40.1 to 0.40.2 during the first restart: five passages
+  answered before the update were asked again afterwards and came back character-for-character identical. The
+  program and the test file were byte-identical throughout (checksums recorded at freeze).
+- **What this does to the paper (decision for P1 — not taken here):** the headline can no longer be only
+  "adaptation data fixes transfer". The stronger and more honest paper is a three-way comparison — transfer
+  alone (0.13), adaptation with a few hundred labels (0.44-0.48), and a rule-prompted open LLM with none
+  (0.48) — on a new, audited AA corpus, with the finding that the *guideline* is as valuable an artefact as
+  the labelled data. The corpus's role shifts from training set to benchmark.
+- **Files:** `results/ner/aa_test.md` / `.json` now include the LLM section (`collect.aa_test_report`);
+  `results/ner/llm_<run>/test_metrics.json` (numbers only). Raw replies stay in `artifacts_out/llm/`
+  (git-ignored — they quote the policies).
+- **Status:** ✅ Done. The test set has now been opened for 31 pre-specified runs and for nothing else.

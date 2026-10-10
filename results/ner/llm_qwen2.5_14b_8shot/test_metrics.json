@@ -1,0 +1,462 @@
+{
+  "conll_file": "C:\\Users\\pc\\Project-Programming\\Python\\ConsentLedger\\data\\ner_bio\\aa_test.conll",
+  "model_dir": "qwen2.5_14b_8shot",
+  "condition": "LLM-8shot",
+  "seed": 0,
+  "model": "qwen2.5:14b",
+  "shots": 8,
+  "truncated_segments": 0,
+  "phrases_returned": 1834,
+  "phrases_not_in_passage": 33,
+  "malformed_replies": 0,
+  "max_prompt_tokens": 1999,
+  "segments": 559,
+  "entities_gold": 826,
+  "entities_predicted": 1961,
+  "micro_f1": 0.45209903121636164,
+  "macro_f1": 0.4556745068250212,
+  "token_f1": 0.47214262973575294,
+  "precision": 0.3212646608873024,
+  "recall": 0.7627118644067796,
+  "per_label": {
+    "DATA_TYPE": {
+      "precision": 0.28656361474435194,
+      "recall": 0.7850162866449512,
+      "f1-score": 0.41986062717770034,
+      "support": 307.0
+    },
+    "PURPOSE": {
+      "precision": 0.3210332103321033,
+      "recall": 0.6904761904761905,
+      "f1-score": 0.43828715365239285,
+      "support": 252.0
+    },
+    "THIRD_PARTY": {
+      "precision": 0.3719723183391003,
+      "recall": 0.8052434456928839,
+      "f1-score": 0.5088757396449703,
+      "support": 267.0
+    }
+  },
+  "relaxed": {
+    "micro_f1": 0.5177688365626103,
+    "macro_f1": 0.5243204282809314,
+    "per_label": {
+      "DATA_TYPE": {
+        "precision": 0.31747919143876335,
+        "recall": 0.8794788273615635,
+        "f1": 0.4665430576723326
+      },
+      "PURPOSE": {
+        "precision": 0.4077490774907749,
+        "recall": 0.8492063492063492,
+        "f1": 0.550955265610438
+      },
+      "THIRD_PARTY": {
+        "precision": 0.40657439446366783,
+        "recall": 0.8764044943820225,
+        "f1": 0.5554629615600236
+      }
+    }
+  },
+  "group_mean_micro_f1": 0.38195586788933983,
+  "per_group": {
+    "08_pennydrop_terms": {
+      "micro_f1": 0.42824601366742593,
+      "relaxed_micro_f1": 0.4756668792470258,
+      "entities_gold": 128
+    },
+    "14_nadl_charter+21_nadl_terms": {
+      "micro_f1": 0.20105820105820105,
+      "relaxed_micro_f1": 0.3324006715165081,
+      "entities_gold": 43
+    },
+    "23_upmint_aa_tos": {
+      "micro_f1": 0.4516129032258064,
+      "relaxed_micro_f1": 0.49462365591397855,
+      "entities_gold": 31
+    },
+    "24_credbuddha_terms": {
+      "micro_f1": 0.43581081081081086,
+      "relaxed_micro_f1": 0.46035059977516163,
+      "entities_gold": 157
+    },
+    "25_the_financiali_privacy": {
+      "micro_f1": 0.5415549597855227,
+      "relaxed_micro_f1": 0.6201045903544451,
+      "entities_gold": 130
+    },
+    "26_zerodha_tos": {
+      "micro_f1": 0.04444444444444444,
+      "relaxed_micro_f1": 0.04444444444444444,
+      "entities_gold": 4
+    },
+    "28_indifi_capital_privacy": {
+      "micro_f1": 0.518957345971564,
+      "relaxed_micro_f1": 0.5992289828146772,
+      "entities_gold": 268
+    },
+    "29_icici_home_fin_terms": {
+      "micro_f1": 0.4339622641509434,
+      "relaxed_micro_f1": 0.5381695487136229,
+      "entities_gold": 65
+    }
+  },
+  "errors": {
+    "pred_exact": 630,
+    "pred_boundary": 93,
+    "pred_wrong_label": 19,
+    "pred_spurious": 1219,
+    "spurious_telemetry": 44,
+    "spurious_aa_role": 65,
+    "spurious_umbrella_term": 124,
+    "spurious_corporate_transaction": 8,
+    "spurious_other": 978,
+    "gold_exact": 630,
+    "gold_boundary": 88,
+    "gold_wrong_label": 17,
+    "gold_missed": 91,
+    "definition_mismatch": 233,
+    "micro_f1_without_definition_mismatch": 0.49334377447141736
+  },
+  "counts": {
+    "groups": [
+      "08_pennydrop_terms",
+      "14_nadl_charter+21_nadl_terms",
+      "23_upmint_aa_tos",
+      "24_credbuddha_terms",
+      "25_the_financiali_privacy",
+      "26_zerodha_tos",
+      "28_indifi_capital_privacy",
+      "29_icici_home_fin_terms"
+    ],
+    "labels": [
+      "DATA_TYPE",
+      "PURPOSE",
+      "THIRD_PARTY"
+    ],
+    "exact": [
+      [
+        [
+          40,
+          142,
+          49
+        ],
+        [
+          19,
+          73,
+          30
+        ],
+        [
+          35,
+          96,
+          49
+        ]
+      ],
+      [
+        [
+          17,
+          85,
+          33
+        ],
+        [
+          0,
+          29,
+          8
+        ],
+        [
+          2,
+          32,
+          2
+        ]
+      ],
+      [
+        [
+          10,
+          38,
+          14
+        ],
+        [
+          6,
+          17,
+          12
+        ],
+        [
+          5,
+          7,
+          5
+        ]
+      ],
+      [
+        [
+          21,
+          156,
+          28
+        ],
+        [
+          76,
+          170,
+          86
+        ],
+        [
+          32,
+          109,
+          43
+        ]
+      ],
+      [
+        [
+          41,
+          89,
+          54
+        ],
+        [
+          28,
+          74,
+          38
+        ],
+        [
+          32,
+          80,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          8,
+          0
+        ],
+        [
+          1,
+          9,
+          4
+        ],
+        [
+          0,
+          24,
+          0
+        ]
+      ],
+      [
+        [
+          98,
+          271,
+          111
+        ],
+        [
+          28,
+          120,
+          50
+        ],
+        [
+          93,
+          185,
+          107
+        ]
+      ],
+      [
+        [
+          14,
+          52,
+          18
+        ],
+        [
+          16,
+          50,
+          24
+        ],
+        [
+          16,
+          45,
+          23
+        ]
+      ]
+    ],
+    "relaxed": [
+      [
+        [
+          46,
+          142,
+          46,
+          49
+        ],
+        [
+          22,
+          73,
+          21,
+          30
+        ],
+        [
+          37,
+          96,
+          36,
+          49
+        ]
+      ],
+      [
+        [
+          21,
+          85,
+          19,
+          33
+        ],
+        [
+          10,
+          29,
+          6,
+          8
+        ],
+        [
+          2,
+          32,
+          2,
+          2
+        ]
+      ],
+      [
+        [
+          11,
+          38,
+          11,
+          14
+        ],
+        [
+          7,
+          17,
+          7,
+          12
+        ],
+        [
+          5,
+          7,
+          5,
+          5
+        ]
+      ],
+      [
+        [
+          22,
+          156,
+          22,
+          28
+        ],
+        [
+          81,
+          170,
+          82,
+          86
+        ],
+        [
+          33,
+          109,
+          33,
+          43
+        ]
+      ],
+      [
+        [
+          47,
+          89,
+          48,
+          54
+        ],
+        [
+          35,
+          74,
+          34,
+          38
+        ],
+        [
+          34,
+          80,
+          33,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          8,
+          0,
+          0
+        ],
+        [
+          1,
+          9,
+          1,
+          4
+        ],
+        [
+          0,
+          24,
+          0,
+          0
+        ]
+      ],
+      [
+        [
+          105,
+          271,
+          109,
+          111
+        ],
+        [
+          40,
+          120,
+          42,
+          50
+        ],
+        [
+          106,
+          185,
+          106,
+          107
+        ]
+      ],
+      [
+        [
+          15,
+          52,
+          15,
+          18
+        ],
+        [
+          25,
+          50,
+          21,
+          24
+        ],
+        [
+          18,
+          45,
+          19,
+          23
+        ]
+      ]
+    ]
+  },
+  "ci95": {
+    "micro_f1": [
+      0.36920283624972255,
+      0.500571496270063
+    ],
+    "macro_f1": [
+      0.3676383129672202,
+      0.49456145082120806
+    ],
+    "relaxed_micro_f1": [
+      0.4354843604462508,
+      0.5761107386593249
+    ],
+    "relaxed_macro_f1": [
+      0.43722994185668396,
+      0.5753414857909389
+    ]
+  },
+  "bootstrap": {
+    "n_groups": 8,
+    "resamples": 5000,
+    "seed": 0
+  }
+}

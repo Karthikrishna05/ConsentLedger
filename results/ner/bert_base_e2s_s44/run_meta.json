@@ -1,0 +1,36 @@
+{
+  "config": {
+    "model_name": "bert-base-uncased",
+    "labels": [
+      "O",
+      "B-DATA_TYPE",
+      "I-DATA_TYPE",
+      "B-PURPOSE",
+      "I-PURPOSE",
+      "B-THIRD_PARTY",
+      "I-THIRD_PARTY"
+    ],
+    "seed": 42,
+    "learning_rate": 2e-05,
+    "num_train_epochs": 20,
+    "per_device_train_batch_size": 16,
+    "weight_decay": 0.01,
+    "warmup_ratio": 0.1,
+    "early_stopping_patience": 3,
+    "metric_for_best_model": "eval_f1",
+    "train_file": "data/ner_bio/train.conll",
+    "dev_file": "data/ner_bio/dev.conll",
+    "output_dir": "artifacts_out/ner/bert_base"
+  },
+  "seed": 44,
+  "epochs": 20,
+  "smoke": false,
+  "condition": "E2-sequential",
+  "init_from": "C:\\Users\\pc\\Project-Programming\\Python\\ConsentLedger\\artifacts_out\\ner\\bert_base_s44",
+  "train_files": [
+    "data/ner_bio/aa_adapt_train.conll"
+  ],
+  "dev_file": "data/ner_bio/aa_adapt_dev.conll",
+  "git_commit": "842e1bc",
+  "model_name": "bert-base-uncased"
+}

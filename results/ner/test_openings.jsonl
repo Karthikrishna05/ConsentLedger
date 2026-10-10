@@ -1,0 +1,31 @@
+{"time": "2026-10-09T15:31:45", "model_dir": "artifacts_out\\ner\\bert_base_e2j_s42", "condition": "E2-joint", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.27886977886977893}
+{"time": "2026-10-09T15:31:56", "model_dir": "artifacts_out\\ner\\bert_base_e2j_s43", "condition": "E2-joint", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.24752475247524752}
+{"time": "2026-10-09T15:32:07", "model_dir": "artifacts_out\\ner\\bert_base_e2j_s44", "condition": "E2-joint", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.27034677990092004}
+{"time": "2026-10-09T15:32:19", "model_dir": "artifacts_out\\ner\\bert_base_e2s_s42", "condition": "E2-sequential", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.41301460823373176}
+{"time": "2026-10-09T15:32:30", "model_dir": "artifacts_out\\ner\\bert_base_e2s_s43", "condition": "E2-sequential", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.4275118004045853}
+{"time": "2026-10-09T15:32:43", "model_dir": "artifacts_out\\ner\\bert_base_e2s_s44", "condition": "E2-sequential", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.3949299533022015}
+{"time": "2026-10-09T15:32:56", "model_dir": "artifacts_out\\ner\\bert_base_s42", "condition": "E1", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.13776999416228838}
+{"time": "2026-10-09T15:33:08", "model_dir": "artifacts_out\\ner\\bert_base_s43", "condition": "E1", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.12227074235807861}
+{"time": "2026-10-09T15:33:19", "model_dir": "artifacts_out\\ner\\bert_base_s44", "condition": "E1", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.12980269989615786}
+{"time": "2026-10-09T15:33:31", "model_dir": "artifacts_out\\ner\\inlegalbert_e2j_s42", "condition": "E2-joint", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.2516914749661705}
+{"time": "2026-10-09T15:33:43", "model_dir": "artifacts_out\\ner\\inlegalbert_e2j_s43", "condition": "E2-joint", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.2472222222222222}
+{"time": "2026-10-09T15:33:55", "model_dir": "artifacts_out\\ner\\inlegalbert_e2j_s44", "condition": "E2-joint", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.17461482024944974}
+{"time": "2026-10-09T15:34:06", "model_dir": "artifacts_out\\ner\\inlegalbert_e2s_s42", "condition": "E2-sequential", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.38811881188118813}
+{"time": "2026-10-09T15:34:18", "model_dir": "artifacts_out\\ner\\inlegalbert_e2s_s43", "condition": "E2-sequential", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.46348823174411585}
+{"time": "2026-10-09T15:34:30", "model_dir": "artifacts_out\\ner\\inlegalbert_e2s_s44", "condition": "E2-sequential", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.4283887468030691}
+{"time": "2026-10-09T15:34:41", "model_dir": "artifacts_out\\ner\\inlegalbert_s42", "condition": "E1", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.11797752808988764}
+{"time": "2026-10-09T15:34:52", "model_dir": "artifacts_out\\ner\\inlegalbert_s43", "condition": "E1", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.12203023758099352}
+{"time": "2026-10-09T15:35:04", "model_dir": "artifacts_out\\ner\\inlegalbert_s44", "condition": "E1", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.11638954869358671}
+{"time": "2026-10-09T15:35:15", "model_dir": "artifacts_out\\ner\\legalbert_e2j_s42", "condition": "E2-joint", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.27464788732394363}
+{"time": "2026-10-09T15:35:26", "model_dir": "artifacts_out\\ner\\legalbert_e2j_s43", "condition": "E2-joint", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.2600408441116405}
+{"time": "2026-10-09T15:35:38", "model_dir": "artifacts_out\\ner\\legalbert_e2j_s44", "condition": "E2-joint", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.26422764227642276}
+{"time": "2026-10-09T15:35:49", "model_dir": "artifacts_out\\ner\\legalbert_e2s_s42", "condition": "E2-sequential", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.5062093435836782}
+{"time": "2026-10-09T15:36:01", "model_dir": "artifacts_out\\ner\\legalbert_e2s_s43", "condition": "E2-sequential", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.47665251667677383}
+{"time": "2026-10-09T15:36:12", "model_dir": "artifacts_out\\ner\\legalbert_e2s_s44", "condition": "E2-sequential", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.4533500313087038}
+{"time": "2026-10-09T15:36:24", "model_dir": "artifacts_out\\ner\\legalbert_s42", "condition": "E1", "seed": 42, "git_commit": "842e1bc", "micro_f1": 0.12823397075365578}
+{"time": "2026-10-09T15:36:36", "model_dir": "artifacts_out\\ner\\legalbert_s43", "condition": "E1", "seed": 43, "git_commit": "842e1bc", "micro_f1": 0.13163972286374137}
+{"time": "2026-10-09T15:36:48", "model_dir": "artifacts_out\\ner\\legalbert_s44", "condition": "E1", "seed": 44, "git_commit": "842e1bc", "micro_f1": 0.11872705018359853}
+{"time": "2026-10-09T19:01:00", "model_dir": "llm/llama3.1_8b_0shot", "condition": "LLM-0shot", "seed": 0, "micro_f1": 0.27954830614805526}
+{"time": "2026-10-09T19:31:21", "model_dir": "llm/llama3.1_8b_8shot", "condition": "LLM-8shot", "seed": 0, "micro_f1": 0.41360221431395805}
+{"time": "2026-10-09T20:09:36", "model_dir": "llm/qwen2.5_14b_0shot", "condition": "LLM-0shot", "seed": 0, "micro_f1": 0.4789808917197452}
+{"time": "2026-10-10T13:02:15", "model_dir": "llm/qwen2.5_14b_8shot", "condition": "LLM-8shot", "seed": 0, "micro_f1": 0.45209903121636164}

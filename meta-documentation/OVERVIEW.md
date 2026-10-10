@@ -363,6 +363,12 @@ dozens of answers, not 15 answers.*
 **Plan:** annotate all ~23 usable docs (feasible: ~30–45 min/doc, 4 people, ~1 week) → ~15 gold test +
 ~8 adaptation. If time is tight, do the **test set first** (E1 needs only a test set; E2 is the bonus).
 
+> **Update (D52).** All 23 documents were annotated, but "15 + 8" turned out not to be possible without
+> leakage: 13 of the documents are one template with the company name changed (up to 75% shared text), so
+> they must all sit on the same side of the split. The recommended split is 9 independent test documents
+> (826 entities in the final gold, D59) and 14 adaptation documents — the split P1 chose
+> (`DECISIONS.md` D52, D54).
+
 ---
 
 ## If κ > 0.6, why still adjudicate? (a common confusion)

@@ -1,0 +1,462 @@
+{
+  "conll_file": "C:\\Users\\pc\\Project-Programming\\Python\\ConsentLedger\\data\\ner_bio\\aa_test.conll",
+  "model_dir": "llama3.1_8b_0shot",
+  "condition": "LLM-0shot",
+  "seed": 0,
+  "model": "llama3.1:8b",
+  "shots": 0,
+  "truncated_segments": 0,
+  "phrases_returned": 3170,
+  "phrases_not_in_passage": 413,
+  "malformed_replies": 0,
+  "max_prompt_tokens": 833,
+  "segments": 559,
+  "entities_gold": 826,
+  "entities_predicted": 3159,
+  "micro_f1": 0.27954830614805526,
+  "macro_f1": 0.2835044103815552,
+  "token_f1": 0.32204472843450477,
+  "precision": 0.17632162076606522,
+  "recall": 0.6743341404358354,
+  "per_label": {
+    "DATA_TYPE": {
+      "precision": 0.1620897521768252,
+      "recall": 0.7882736156351792,
+      "f1-score": 0.2688888888888889,
+      "support": 307.0
+    },
+    "PURPOSE": {
+      "precision": 0.22179732313575526,
+      "recall": 0.4603174603174603,
+      "f1-score": 0.29935483870967744,
+      "support": 252.0
+    },
+    "THIRD_PARTY": {
+      "precision": 0.17410323709536307,
+      "recall": 0.7453183520599251,
+      "f1-score": 0.2822695035460993,
+      "support": 267.0
+    }
+  },
+  "relaxed": {
+    "micro_f1": 0.3253234750462107,
+    "macro_f1": 0.34230163412789705,
+    "per_label": {
+      "DATA_TYPE": {
+        "precision": 0.17749497655726726,
+        "recall": 0.8827361563517915,
+        "f1": 0.2955605216911749
+      },
+      "PURPOSE": {
+        "precision": 0.3154875717017208,
+        "recall": 0.6388888888888888,
+        "f1": 0.4223941232121987
+      },
+      "THIRD_PARTY": {
+        "precision": 0.19072615923009623,
+        "recall": 0.8127340823970037,
+        "f1": 0.3089502574803175
+      }
+    }
+  },
+  "group_mean_micro_f1": 0.2470492987445186,
+  "per_group": {
+    "08_pennydrop_terms": {
+      "micro_f1": 0.22885572139303484,
+      "relaxed_micro_f1": 0.25333202183642356,
+      "entities_gold": 128
+    },
+    "14_nadl_charter+21_nadl_terms": {
+      "micro_f1": 0.15432098765432098,
+      "relaxed_micro_f1": 0.20286235712227452,
+      "entities_gold": 43
+    },
+    "23_upmint_aa_tos": {
+      "micro_f1": 0.31496062992125984,
+      "relaxed_micro_f1": 0.3855179349648005,
+      "entities_gold": 31
+    },
+    "24_credbuddha_terms": {
+      "micro_f1": 0.27366020524515394,
+      "relaxed_micro_f1": 0.2919042189281642,
+      "entities_gold": 157
+    },
+    "25_the_financiali_privacy": {
+      "micro_f1": 0.3318777292576419,
+      "relaxed_micro_f1": 0.4048644300383286,
+      "entities_gold": 130
+    },
+    "26_zerodha_tos": {
+      "micro_f1": 0.0,
+      "relaxed_micro_f1": 0.0,
+      "entities_gold": 4
+    },
+    "28_indifi_capital_privacy": {
+      "micro_f1": 0.35502958579881655,
+      "relaxed_micro_f1": 0.4280926813448164,
+      "entities_gold": 268
+    },
+    "29_icici_home_fin_terms": {
+      "micro_f1": 0.3176895306859206,
+      "relaxed_micro_f1": 0.37152085767301213,
+      "entities_gold": 65
+    }
+  },
+  "errors": {
+    "pred_exact": 557,
+    "pred_boundary": 91,
+    "pred_wrong_label": 51,
+    "pred_spurious": 2460,
+    "spurious_telemetry": 59,
+    "spurious_aa_role": 146,
+    "spurious_umbrella_term": 297,
+    "spurious_corporate_transaction": 2,
+    "spurious_other": 1956,
+    "gold_exact": 557,
+    "gold_boundary": 92,
+    "gold_wrong_label": 48,
+    "gold_missed": 129,
+    "definition_mismatch": 502,
+    "micro_f1_without_definition_mismatch": 0.3198392190640253
+  },
+  "counts": {
+    "groups": [
+      "08_pennydrop_terms",
+      "14_nadl_charter+21_nadl_terms",
+      "23_upmint_aa_tos",
+      "24_credbuddha_terms",
+      "25_the_financiali_privacy",
+      "26_zerodha_tos",
+      "28_indifi_capital_privacy",
+      "29_icici_home_fin_terms"
+    ],
+    "labels": [
+      "DATA_TYPE",
+      "PURPOSE",
+      "THIRD_PARTY"
+    ],
+    "exact": [
+      [
+        [
+          41,
+          341,
+          49
+        ],
+        [
+          15,
+          104,
+          30
+        ],
+        [
+          36,
+          231,
+          49
+        ]
+      ],
+      [
+        [
+          23,
+          145,
+          33
+        ],
+        [
+          0,
+          24,
+          8
+        ],
+        [
+          2,
+          112,
+          2
+        ]
+      ],
+      [
+        [
+          11,
+          53,
+          14
+        ],
+        [
+          6,
+          16,
+          12
+        ],
+        [
+          3,
+          27,
+          5
+        ]
+      ],
+      [
+        [
+          24,
+          288,
+          28
+        ],
+        [
+          60,
+          176,
+          86
+        ],
+        [
+          36,
+          256,
+          43
+        ]
+      ],
+      [
+        [
+          36,
+          143,
+          54
+        ],
+        [
+          15,
+          68,
+          38
+        ],
+        [
+          25,
+          117,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          33,
+          0
+        ],
+        [
+          0,
+          10,
+          4
+        ],
+        [
+          0,
+          57,
+          0
+        ]
+      ],
+      [
+        [
+          92,
+          415,
+          111
+        ],
+        [
+          10,
+          80,
+          50
+        ],
+        [
+          78,
+          251,
+          107
+        ]
+      ],
+      [
+        [
+          15,
+          75,
+          18
+        ],
+        [
+          10,
+          45,
+          24
+        ],
+        [
+          19,
+          92,
+          23
+        ]
+      ]
+    ],
+    "relaxed": [
+      [
+        [
+          43,
+          341,
+          44,
+          49
+        ],
+        [
+          21,
+          104,
+          20,
+          30
+        ],
+        [
+          38,
+          231,
+          37,
+          49
+        ]
+      ],
+      [
+        [
+          28,
+          145,
+          27,
+          33
+        ],
+        [
+          3,
+          24,
+          3,
+          8
+        ],
+        [
+          2,
+          112,
+          2,
+          2
+        ]
+      ],
+      [
+        [
+          12,
+          53,
+          12,
+          14
+        ],
+        [
+          10,
+          16,
+          8,
+          12
+        ],
+        [
+          3,
+          27,
+          3,
+          5
+        ]
+      ],
+      [
+        [
+          24,
+          288,
+          24,
+          28
+        ],
+        [
+          66,
+          176,
+          66,
+          86
+        ],
+        [
+          38,
+          256,
+          38,
+          43
+        ]
+      ],
+      [
+        [
+          43,
+          143,
+          44,
+          54
+        ],
+        [
+          25,
+          68,
+          23,
+          38
+        ],
+        [
+          25,
+          117,
+          25,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          33,
+          0,
+          0
+        ],
+        [
+          0,
+          10,
+          0,
+          4
+        ],
+        [
+          0,
+          57,
+          0,
+          0
+        ]
+      ],
+      [
+        [
+          99,
+          415,
+          103,
+          111
+        ],
+        [
+          25,
+          80,
+          25,
+          50
+        ],
+        [
+          92,
+          251,
+          92,
+          107
+        ]
+      ],
+      [
+        [
+          16,
+          75,
+          17,
+          18
+        ],
+        [
+          15,
+          45,
+          16,
+          24
+        ],
+        [
+          20,
+          92,
+          20,
+          23
+        ]
+      ]
+    ]
+  },
+  "ci95": {
+    "micro_f1": [
+      0.22123312285594898,
+      0.3253721286873049
+    ],
+    "macro_f1": [
+      0.22220143663425393,
+      0.3179090576367687
+    ],
+    "relaxed_micro_f1": [
+      0.2549229193907229,
+      0.3889342795733064
+    ],
+    "relaxed_macro_f1": [
+      0.27356659036928255,
+      0.39674471553151547
+    ]
+  },
+  "bootstrap": {
+    "n_groups": 8,
+    "resamples": 5000,
+    "seed": 0
+  }
+}

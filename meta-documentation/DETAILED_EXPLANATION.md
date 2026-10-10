@@ -5,7 +5,7 @@ decision was made, and how every line of code works — well enough to explain i
 re-implement it yourself, no AI needed. Language is deliberately simple, with analogies. **Keep this file
 updated whenever anything new is built** (it is part of the audit trail).
 
-> Companions: `OVERVIEW.md` (short plain-language tour), `DECISIONS.md` (why each choice, D1–D22),
+> Companions: `OVERVIEW.md` (short plain-language tour), `DECISIONS.md` (why each choice, D1–D65),
 > `FLOW.md` (progress), `NER_LABEL_MAPPING.md`, `TEAM.md`, `SETUP.md`, `DEADLINE_PLAN.md`,
 > `ANNOTATION_GUIDELINE.md`. This file is the deep version of all of them combined.
 
@@ -25,9 +25,11 @@ updated whenever anything new is built** (it is part of the audit trail).
    - 5.6 `clean.py`
    - 5.7 `ls_import_export.py` + `kappa.py` (annotation tooling)
    - 5.8 `trim_spans.py`
-   - 5.9 Annotation: round 1 (kappa 0.28), the rescue tools, round-2 calibration, Rules 9-22
+   - 5.9 Annotation, start to finish (5.9.1-5.9.26): round 1 (kappa 0.28), the rescue tools, rounds 2-4,
+     Rules 7-23, the fix pass (kappa 0.43), adjudication and the gold file, the rules meeting
    - 5.10 The summarizer dataset — P2's track (D33, D34)
    - 5.11 The smart contract — P3's track
+   - 5.12 The test / adaptation split and the gold -> CoNLL converter (D52)
 6. NER model pipeline — file by file
    - 6.1 `seed.py`
    - 6.2 `ner/dataset.py`
@@ -166,14 +168,15 @@ ConsentLedger/
 ├── configs/                  one YAML per experiment (model + hyperparameters)
 ├── src/consentledger/        THE code package
 │   ├── seed.py               determinism helper
-│   ├── data/                 load_opp115, bio_tagging, scrape_aa, clean, kappa, ...
+│   ├── data/                 load_opp115, bio_tagging, scrape_aa, clean, kappa, fixlist, adjudicate,
+│   │                         adjudicate_auto, aa_split, aa_to_conll, ...
 │   ├── ner/                  dataset, train, evaluate, predict
 │   ├── summ/  chain/  pipeline/  consent_artefact/   (later phases, still stubs)
 ├── data/
 │   ├── external/             DOWNLOADED corpora (git-ignored): opp115, mapp, app350, cuad
 │   ├── aa/                   our AA corpus: manifest.csv, raw/{html,pdf,text}, annotated/
-│   ├── ner_bio/              train.conll / dev.conll (git-ignored, regenerable)
-│   └── splits/               splits.json (which AA docs are test vs adaptation)
+│   ├── ner_bio/              train.conll / dev.conll, aa_test.conll / aa_adapt.conll (git-ignored)
+│   └── splits/               aa_split.json (which AA docs are test vs adaptation - doc ids only)
 ├── artifacts_out/            trained models (git-ignored, large)
 ├── results/                  metrics/tables (committed, small)
 ├── tests/                    verification gates
@@ -380,7 +383,8 @@ documents" is unreliable — export everything and use `kappa.py --docs <doc_ids
 (2) **Only submitted work is exported**: a re-annotated document that was not clicked *Submit* (or
 *Update*) stays a draft and silently keeps its old version. (3) Use **JSON**, not JSON-MIN — the full
 format keeps the `doc_id` everything matches on. (4) Name each round's files distinctly:
-`ExportA/B.json` (round 1), `Export2A/B.json` (round-2 calibration), `Export3A/B.json` (round 3). They
+`ExportA/B.json` (round 1), `Export2A/B.json` (round-2 calibration), `Export3A/B.json` (round 3),
+`Export4A/B.json` (round 4), `Export5A/B.json` (after the fix pass — the pair the gold is built from). They
 all embed the full document text, so they are **never committed** — the committed record is the numbers
 in `results/annotation/`.
 
@@ -846,6 +850,261 @@ The tools follow: the four regulators are deleted automatically, the bracket's c
 highlight, and three-letter abbreviations such as PAN and OTP are finally proposed as repeats (a length floor
 had been hiding them). Guideline **v7.4** has no open questions left.
 
+#### 5.9.18 After the fix pass: kappa 0.426, and what a fix list cannot fix (D48)
+
+Both annotators worked through their fix lists on all 23 documents. Agreement on the whole corpus rose from
+0.279 (round 1) to **0.426** — better, still under 0.6, and lower than the 0.522 measured on the single
+round-4 document. Individual documents range from 0.03 to 0.67.
+
+Classifying every remaining disagreement shows why. The rule violations the lists targeted are nearly gone
+(about 120 spans left out of 2,700). What remains is **noticing**: more than half of the highlights only P1
+made are phrases P4 never marks anywhere, and a third of P4's are phrases P1 never marks. In four short
+charter documents one annotator marked a handful of spans and the other forty. *Analogy: two proof-readers
+now agree on the spelling rules, but one of them reads every footnote and the other skims them — no rulebook
+changes that.*
+
+This is the honest limit of the design. The lists can only point at what a rule or a shared vocabulary can
+see; they cannot make two people find the same entities in a 6,000-word contract. It is also why
+adjudication was always the last step: it is the one place the two sets of highlights are laid side by
+side. The tool resolves about 960 spans on its own (535 agreed, 336 by shared vocabulary, 89 repeats) and
+leaves **1,158 for a human decision** — 657 distinct phrases, many of them repeated (`lender` 49 times), so
+deciding by phrase rather than by item cuts the work considerably.
+
+#### 5.9.19 First adjudication ruling: the Lender (D49)
+
+The most common disputed phrase was `lender`. P1 ruled that it is a third party: in a loan platform's
+terms, the lender is a different company from the one writing the policy, and it receives your data to
+decide whether to lend. That is exactly what THIRD_PARTY means.
+
+One limit was kept, the same one that applies to every recipient: the lender is marked **only in sentences
+where your data goes to it**. "We submit your information to the lender for eligibility" — yes. "The lender
+transfers the loan amount" — no, that is money. "The lender may start legal proceedings" — no. *Analogy: the
+courier is a recipient when the parcel is handed to them, not every time the word "courier" appears in the
+terms of carriage.* Without that limit, the label would slide from "who receives your data" to "any
+organisation mentioned".
+
+Rulings like this, made after the fix pass, are kept in a separate part of the guideline (PART I) so it stays
+clear which rules the annotators worked under and which were applied when building the gold file.
+
+#### 5.9.20 Building the answer key: automatic adjudication, checked by people (D50)
+
+Two questions came first. *Could kappa be pushed higher?* Measured: even if both annotators finished every
+mechanical fix perfectly, without seeing each other's work, it tops out near **0.47**. Getting past 0.6 would
+need them to compare notes — and then the number no longer measures agreement. Since the experiments are
+scored against the answer key and not against kappa, the effort went into the key instead.
+
+*Could the key be built with no human at all?* Yes, but unverified it would be a "silver" set, and several of
+my own judgement calls had already been corrected by P1 during the project. So the middle path was taken.
+
+**How the gold file was built** (`adjudicate_auto.py`):
+1. Each export is cleaned on its own with the written rules.
+2. What both annotators marked identically is accepted: 511 spans.
+3. Every other highlight — 1,513 of them — is read in its sentence and ruled on with the guideline, each
+   ruling tagged with the rule that decided it.
+4. Phrases accepted in a document are checked at the 133 places nobody had marked.
+
+The result is **1,153 spans** (532 data types, 368 purposes, 253 third parties). The biggest single reason
+for rejection was "the sentence does not say your data goes to them" (329 — nearly half of them the word *lender* in
+fee, repayment and legal clauses, against 31 places where the lender does receive your data), then "no data-use frame" for purposes (237).
+
+**The check.** Both annotators get the same random sheet of 123 rulings — without being told who marked what —
+and answer agree or disagree. *Analogy: an exam marked by one examiner, with a second and third examiner
+re-marking a random tenth of the scripts.* If both accept at least 90%, the key stands; any category that
+falls short is reviewed in full.
+
+**One step was put back in its place (D51).** Checking a sample tells you whether the rules were *applied*
+correctly; it does not tell you whether the rules are *right*. Ten rules had been set after the fix pass —
+one by P1, the rest by the adjudicator — and P4 had agreed to none. So before the sample check the two
+annotators meet and decide each rule together: keep, change or drop. Because every ruling carries the code
+of its rule, a changed rule is re-applied to exactly its spans and the key rebuilt in minutes.
+
+One honest caveat is recorded: the finished key matches P1's annotations more closely than P4's (F1 0.73
+against 0.51). That is expected — the guideline grew out of P1's rulings — and it is exactly why P4's check
+is the one that matters most.
+
+#### 5.9.21 Loose ends: the passwords rule, the roads not taken, and what the paper will say (D47, D53)
+
+**The passwords rule (D47).** During the fix pass P1 noticed the fix list suggesting `password` in sentences
+P1 had deliberately skipped — *"You are solely responsible for maintaining the confidentiality of your
+password."* The data showed a clean pattern: P1 marks credentials only where the company *handles* them;
+P4 marks them wherever the word appears. The guideline had a "the sentence matters" rule for third parties
+(Rule 16) and for purposes (Rule 10) but none for data types. The proposed fix: **a data word is marked only
+where its sentence says the company collects, asks for, uses, stores, accesses or shares it** — including
+when it says it does *not* ("we never ask for your password"). *Analogy: "we record your blood group in your
+file" tells you what the hospital holds; "patients should know their own blood group" does not.* It was found
+mid fix pass, so nothing was changed then; it was applied when the gold was built and is one of the ten
+rules the annotators now decide on (rule 2, the one that removes most of P4's highlights — 54 of 67).
+
+**Three roads not taken when building the answer key.** *Intersection* (keep only what both marked): safe
+but far too small — half of the real purposes would disappear. *Union* (keep everything either marked):
+complete but noisy — `firewalls` would be a purpose. *Fully automatic with no human check*: good, but
+unverified, so strictly a "silver" set. The chosen route sits between: rule-by-rule automatic rulings, then
+both annotators independently check the same random sample.
+
+**What the paper will say about agreement.** Four numbers, each named for what it is: **0.52** (one fresh
+document, both annotators on the final guideline — the only fully independent figure), **0.43** (all 23
+documents after the fix pass), **0.47** (the same exports after the written rules are applied to each
+automatically — supplementary), and relaxed entity F1 **0.49**. On the usual scale that is "moderate"
+agreement. It never reached the 0.6 gate the project set itself, and the paper says so. What it offers
+instead is the diagnosis: the rule violations were driven down to about 120 spans in 2,700, and what is left
+is two careful people *noticing different things* in long contracts — a finding about this kind of
+document, not just a low number. The experiments themselves are scored against the answer key, not kappa.
+
+**The meeting guide.** `rules_to_ratify.md` (kept out of git: it quotes the policies) takes each of the ten
+rules through the same steps — the rule in one line, why the question arose, an everyday analogy, real
+sentences that were marked and not marked, the genuinely debatable cases, what keeping, changing or dropping
+it would do to the answer key in numbers, a recommendation with how sure it is, and a box for the decision.
+Two recommendations are not "keep": rule 3 (sources) is held with only moderate confidence, and rule 4
+suggests *adding* a twelfth purpose category for account opening and onboarding, because both annotators
+marked it independently and the list simply had no slot for it.
+
+#### 5.9.22 The rules meeting: one rule dropped, two changed, and the answer key rebuilt (D55)
+
+**Why a meeting at all.** While building the answer key, ten small rulings had been applied that the two
+annotators had never agreed to together (D51). *Analogy: a referee who invents ten new rules at half-time
+has to get both captains to accept them before the result counts.* P1 and P4 went through all ten.
+Seven they kept. Three they changed.
+
+**1. A source counts as a third party (rule dropped).** The old ruling said: if the company *fetches* your
+credit report **from** a bureau, the bureau is not a recipient. The annotators disagreed, with a practical
+argument: to fetch your report the company has to hand the bureau your name and PAN, so the bureau does get
+your data. *Analogy: asking a librarian for your borrowing history means telling the librarian who you are.*
+So THIRD_PARTY now means **any outside organisation that exchanges your data with the company, in either
+direction** — except the Account Aggregator pipeline's own bodies (AA, FIP, FIU, RBI and the other
+regulators), which were never marked. A sentence with no exchange at all — an indemnity clause, a definition,
+"the Lender pays out the loan" — still marks nothing.
+
+**2. A twelfth purpose: opening an account (rule changed).** The fixed list of purposes had no row for
+registration and onboarding, although policies plainly say "we use your information to register you as a
+user" and both annotators had marked it. *Analogy: a menu without a dish that half the customers order —
+add it to the menu rather than serve it at some tables only.* Row 12 follows the same test as every row: the
+sentence must say your data is used for it. "Information given **at the time of registration**" is a moment,
+not a reason, and stays unmarked. Of the 12 highlights involved, 7 became purposes.
+
+**3. Lists: merge only what cannot stand alone (rule changed).** The answer key had turned many lists into
+one long highlight wherever the items shared a word. The annotators kept that only where a piece would be
+meaningless by itself. The test: *highlighted alone, would the piece still tell a reader what it is?*
+`Retrieving, viewing, consolidating … Financial Information` stays whole — "viewing" alone says nothing.
+`ACH, NEFT, IMPS and UPI ID details` becomes four highlights — each names a payment record. *Analogy: "tea
+and coffee cups" must stay together; "cups, plates and bowls" are three things.* 12 merged lists were split
+back, 16 stayed whole.
+
+**The awkward consequence, and the fix.** The fix lists had told both annotators to *delete* sources. So when
+that rule was reversed, the exports held only the sources somebody had ignored the instruction on — in
+"Experian/CIBIL/CRIF" two were marked and one was not. An answer key with half a list marked follows no rule
+at all. So for the first time the key received highlights **nobody had drawn**: 36 of them, each the
+list-mate of something now accepted. They are written in the audit trail as `new` lines, and they go into
+the sample check like every other ruling, so both annotators get to reject them. They were found three ways:
+finishing every sentence that had a changed ruling, sweeping all 23 documents for organisation words after
+"from / provided by / sources", and checking what the annotators had deleted for this reason during the fix
+pass.
+
+**The numbers.** 85 rulings changed. The key grew from 1,153 to **1,261 highlights** (545 data types, 382
+purposes, 334 third parties) — almost all the growth is third parties, and most of it in one document
+(Indifi's privacy policy lists two dozen kinds of organisation it collects information from). Measured
+against the new key, P1's own highlights score F1 0.72 and P4's 0.51 — unchanged, so the meeting did not tilt
+the key towards either annotator.
+
+**What stays honest.** Two of the three changes introduce things nobody was looking for while annotating
+(sources, onboarding). The paper says so: recall for those rests on what somebody happened to mark plus a
+systematic sweep, and is likely lower than for the rest. Five judgement calls made while applying the
+decisions are listed in D55; P1 confirmed all five. And the key is **still provisional**: a fresh random sample
+of 124 rulings now goes to each annotator, to be checked alone.
+
+#### 5.9.23 The sample check: both annotators accept the answer key (D56)
+
+Each annotator, alone, went through the same 124 randomly drawn rulings and wrote agree or disagree beside
+each. *Analogy: two inspectors each pull the same 124 items off a production line of 1,700; if both pass at
+least nine in ten, the whole batch is accepted.* **P1 accepted 119 (96.0%), P4 all 124 (100%)** — both above
+the 90% bar, so the answer key stands and no rule has to be reopened.
+
+Two honest notes. P4's sheet is "yes" on every row with no comment, which may be real agreement or a quick
+read — the two cannot be told apart — so the figure that carries weight is P1's 96%. With 124 rows, the range
+it could plausibly lie in is about 91% to 98%, still above the bar. And P1's five rejections are not thrown
+away: each one points at a small group of neighbouring highlights (the same phrase in two other documents,
+the other purposes in the same sentence, the other mentions of Gmail), so they are settled as a set and then
+re-applied — the last step before the answer key is final and the test file is generated.
+
+#### 5.9.24 The answer key is final (D57)
+
+P1's five rejections from the sample check were applied — each together with its neighbours, because a
+correction that fixes one highlight and leaves its twin untouched just creates a new inconsistency.
+*Analogy: if a proof-reader finds "recieve" on page 12, you search the whole book for it, not just page 12.*
+So `retrieving or collecting` gained its object (`… such financial information`) in all three documents that
+contain it; a sentence about what happens when consent is withdrawn lost all five of its highlights; two
+vague advisory "purposes" were removed; `Gmail` became a data type everywhere it means the user's emails;
+and one advertiser with no stated data flow was dropped.
+
+**The final answer key has 1,258 highlights**: 550 data types, 377 purposes, 331 third parties. The chain
+that produced it is worth stating in one breath, because it is the paper's method: two annotators -> their
+disagreements settled rule by rule, each ruling tagged with its rule -> the rules themselves approved by both
+annotators -> a random sample of the rulings checked independently by each (96% and 100% accepted) -> the
+rejected ones corrected.
+
+**The exam paper is printed.** `aa_to_conll` wrote the model-ready files: `aa_test.conll` (9 documents cut
+into 559 segments, **821 entities**) and `aa_adapt.conll` (14 documents, 845 segments, 436 entities). Three
+checks were run on them: the training code's own reader counts back exactly the same entities; the list that
+says which document each segment came from is complete; and the longest segment is 177 word-pieces against a
+limit of 256, so the silent cut-off described in section 5.12 cannot happen. From here the test set is
+**sealed**: it is opened exactly once, for E1 and E2.
+
+#### 5.9.25 Auditing the finished answer key from three chairs (D58)
+
+Before using the answer key, it was read again as three different people would read it: the **user** whose
+consent is being asked, a **financier or auditor** checking a regulated process, and a **review panel**
+judging a research dataset. Each chair went round three times — first the mechanical checks, then reading for
+wrong and missed highlights, then re-reading every suspect to throw out false alarms.
+
+**What it found.** The key is clean on the surface — no label conflicts, no overlaps — and about 98% of its
+highlights are right. But roughly 7% of what should be marked is missing, and where two documents contain the
+*same sentence* (13 of them share a template) the highlights agree only 92% of the time. 49 specific defects
+were pinned down: 20 highlights to remove, 29 to add.
+
+**The lesson.** 16 of the 20 wrong highlights were ones *both annotators had drawn identically*. The whole
+process had treated agreement as proof — an agreed highlight went straight into the key and nobody looked at
+it again. *Analogy: two students who copy the same wrong line from the textbook agree perfectly, and are both
+wrong.* Both marked the list of companies in an indemnity clause; both marked "title" in "right, title and
+interest". The sample check could not catch these either, because it sampled the *rulings*, and an agreed
+highlight never had a ruling. The second cause is that the "mark every repeat" step worked inside one
+document only, so it never noticed that a sentence marked in one company's terms was unmarked in the
+identical sentence of another's.
+
+**What each chair concluded.** The *user* can trust the lists of data and recipients but not a summary that
+ignores "not": 7% of the data highlights sit in sentences where the company promises **not** to take the
+thing, and the key marks them the same as things it does take. The *auditor* wants three gaps closed —
+`biometric data` appears nowhere in the key although three test documents mention it, one named recipient of
+KYC data is missed, and a lending prohibition is half-marked. The *panel* accepts it as an evaluation set with
+a stated error rate, and asks that the paper's limitations section say plainly what the scheme leaves out
+(umbrella terms such as "financial information", the pipeline's own actors, device data) and how the key was
+made.
+
+Nothing was changed: the answer key had been approved by both annotators, so the corrections wait for their
+decision. The full list is in `gold_audit.md` beside the adjudication files.
+
+#### 5.9.26 The audit corrections go in (D59)
+
+P1 went through the audit's list and accepted it with two changes of his own. First, the **signature** named
+in the consent form's field list is not data the user hands over — it is the act of saying yes — so it is not
+marked anywhere (four highlights came out, two proposed ones were not added). Second, **`identity` and
+`contact information`** in that same list are two separate things and get two highlights, in all nine
+documents that carry the clause.
+
+To remove a highlight that *both* annotators had drawn, the tool needed one new instruction — "drop this one
+highlight at this one place" — because the only removal it knew ("drop this phrase wherever both marked it")
+would have deleted correct highlights in other documents too. *Analogy: striking one wrong entry from a
+ledger, not every entry that happens to share its name.*
+
+**The result.** The answer key now has **1,266 highlights** (559 data types, 381 purposes, 326 third
+parties). The check that mattered most — is the same sentence marked the same way in every document that
+contains it? — went from 92.3% to **99.1%**, and the four mismatches left are the checker stumbling over the
+two documents whose words are glued together, not real differences. The test file was regenerated: 826
+entities in 559 segments.
+
+**What the project learned.** Two annotators agreeing is evidence, not proof. The answer key had been built by
+examining every place they *disagreed*; nobody had examined where they agreed, and 16 of the 20 wrong
+highlights were hiding there. The paper will describe both checks: adjudicating the disagreements, and
+auditing the agreements.
+
 ### 5.10 The summarizer dataset — P2's track (D33, D34)
 
 This belongs to P2; the builder and its guide were handed to P2 via Drive and are **not committed by P1**.
@@ -893,6 +1152,58 @@ P3 owns this; the full step-by-step guide is `meta-documentation/P3.md`. The ess
   **invalid**, a revoked one **invalid**.
 - **Honest limits for the paper:** it proves a record was not *changed*, not that whoever created it was
   *honest*; and per D28 it is a reference implementation of a known pattern, not a novel mechanism.
+
+### 5.12 The test / adaptation split and the gold -> CoNLL converter (D52)
+
+**The problem nobody had looked for.** The plan was to split the 23 documents by company — a company's
+documents all on one side — so the model is never tested on text it trained on. But company names hide
+something: **many AA terms are the same template with the name changed.** `aa_split.py` compares every pair
+of documents by how much of the shorter one's wording (runs of eight words) also appears in the other.
+`09_saafe_terms` and `16_oms_aa_privacy` share 75%; `03_oms_aa_terms` and `04_pb_fintech_aa_terms` share 51%;
+and a *family of 13 documents* — Setu, Digio, OMS, PB Fintech, OneMoney, Saafe, ScoremeAA — is tied together
+by shared text or shared company. *Analogy: thirteen students handed in essays copied from the same guidebook.
+Put six in the practice set and seven in the exam, and the exam tests memory, not understanding.*
+
+**How the tool works.** Link two documents if they are from the same organisation **or** share at least 10%
+of their wording. Follow the links: every connected cluster is a *group*, and a group is never split. It uses
+only the text and the manifest — never the gold labels and never a model's output — so the split cannot be
+tuned, even accidentally, to make results look better. It refuses to write a split that leaks, or one that
+puts a glued-text document in the test set.
+
+**The consequence.** The old plan of "15 test + 8 adaptation" cannot be done cleanly: the family of 13 has to
+sit on one side. Two honest options remain. **A — family as adaptation:** the test set is the 9 independent
+documents (PennyDrop, CredBuddha, The Financialist, Zerodha, Indifi, ICICI, Upmint, NADL x2) with 726
+entities, well balanced across the three labels. **B — family as test:** 12 documents that are largely copies
+of one another, 374 entities, only 52 third parties. A is recommended: nearly twice the entities, genuinely
+independent documents, and a stricter E2 — the model practises on AA-operator templates and is examined on
+other organisations' documents. Its cost is a test set of 9 documents instead of 15. **P1 chose A (D54).** The split is written to
+`data/splits/aa_split.json`; the largest overlap between a test and an adaptation document is 4.7% — two
+citizen's charters quoting the same regulatory wording.
+
+**`aa_to_conll.py` — from the gold file to what the model reads.** The models were trained on files with
+one word per line and a tag beside it (`bank B-DATA_TYPE` / `statements I-DATA_TYPE` / `for O`). The AA
+gold file is a list of character positions in long documents, so it has to be converted — with one trap.
+The model reads at most 256 word-pieces at a time and the training code *silently cuts off* anything longer.
+Feed it a 6,000-word document and nearly all the gold answers would be dropped without any error.
+*Analogy: a scanner that only reads the top third of each page and never tells you.* So each document is cut
+into **segments** of at most 100 words, at sentence ends, **never in the middle of a gold highlight**.
+OPP-115's training segments are paragraphs of about the same size, so the model sees input of a familiar
+length.
+
+Two safeguards. First, after converting, every document's highlights are rebuilt from the tags and counted
+against the gold file — if one was lost, split or merged, the tool stops. Second, a small companion file
+(the *docmap*) records which document each segment came from, because the statistics must be computed over
+**documents**, not segments: two segments of the same contract are not independent evidence.
+
+**What the glued documents taught.** The check failed once, on `10_perfios_terms`: two gold highlights sat
+inside one glued "word" (`…depositaccountsandcurrentdepositaccounts`), and a word-level file can give a word
+only one tag. That is the concrete reason the two glued documents may be used for practice but never for the
+exam. The tool allows it for those two by name, reports it, and treats it as a bug anywhere else.
+
+A trial on the provisional gold with option A — in a scratch folder, nothing written to the project — gave
+560 test segments holding 726 entities and 845 adaptation segments holding 426, and the training code's own
+reader read both back correctly. Repeated after the rules meeting (D55): the same 560 and 845 segments, now
+holding **824** test entities (295 data types, 258 purposes, 271 third parties) and 437 adaptation entities.
 
 ---
 
@@ -946,11 +1257,77 @@ version. Driven by a YAML config so hyperparameters aren't buried in code.
 **Smoke test result:** F1 rose 0.0 → 0.034 over 5 epochs on a 600-sample subset while loss fell
 0.80 → 0.63 — proving the pipeline *learns* correctly (the point of a smoke test; real runs use all data).
 
+**E2: two ways to give the model AA practice (D61).** The same script trains E2 with one extra flag.
+
+- `--e2 joint` — start from the untouched pretrained model and train once on the American policies **and**
+  the AA practice documents mixed together. *Analogy: a driver who practises in Delhi and Mumbai in the same
+  weeks.* Fairest comparison with E1, but the AA documents are a small share of the pile (about 330 of 10,300
+  highlights) and may barely be heard.
+- `--e2 sequential` — take the finished E1 model and give it a second round on the AA documents alone.
+  *Analogy: finish learning in Delhi, then move to Mumbai and practise only there.* It may forget some Delhi
+  habits — which hardly matters, since the model's job is Indian documents.
+
+Both are run, so the paper can say which way of using a small amount of local data works better.
+
+**The mock test.** Training goes in rounds and stops when a mock-test score stops improving. E1 used American
+policies for that. For E2 four AA practice documents are kept out of training and used as the mock test, so progress is
+judged on the right subject. They were chosen by a rule (D62): the practice documents that share the *least*
+text with the ones left for training — at most 18% — holding 107 highlights between them. (The first choice,
+two Saafe documents, turned out to include one that is 75% identical to a training document. *A mock paper
+that repeats the textbook's worked examples tests memory, not understanding* — and would have let training
+run on while the model was only memorising the template.) *Analogy: a student preparing for a
+Hindi exam should check progress with a Hindi mock paper, not an English one.* The mock score may still flatter a
+little (all these documents come from the same family of AA operators), but it only picks the best round; it
+is never reported as a result. The real test documents are never used for this.
+
+**Copies, not originals.** An E2 run never changes an E1 model. `joint` does not open one at all; `sequential`
+*reads* the E1 model and writes its result into a new folder (`legalbert_e2s_s42` beside `legalbert_s42`).
+The E1 models must stay exactly as they are, because they still have to sit the exam themselves.
+
+**Repeats.** Each of the three model types is trained three times per condition with the same three random
+starting points as E1 — 18 new runs — so every E2 model has an E1 twin that differs only in the AA practice.
+
 ### 6.4 `ner/evaluate.py` — score a trained model
 
-Loads a saved model and a CoNLL file, predicts, and prints a full seqeval `classification_report`
-(per-label + micro/macro P/R/F1). **The test set is opened exactly once, in Phase 6** — the file header
-says so; day-to-day you point it at dev.
+Loads a saved model and a CoNLL file, predicts, and scores. It answers six questions, because a single F1
+number would hide most of what this project needs to know (D60).
+
+1. **How many entities did it get exactly right?** Exact-match precision, recall and F1 — overall, averaged
+   over the three labels, and per label. Same measure as during training.
+2. **How many did it roughly get?** *Relaxed* match: the prediction counts if it overlaps a gold entity of the
+   same label. Our answer key draws boundaries by our own guideline (`email address`, not `your email
+   address`); a model trained elsewhere that marks `your email address` found the right thing. *Analogy:
+   marking a spelling test by "right word" as well as "every letter right".*
+3. **How sure are we?** A 95% confidence interval. The trick is *what to resample*. Sentences from one
+   document resemble each other, so shuffling sentences would make us look more certain than we are. The
+   script resamples whole **document groups** — a company's documents, or documents sharing a template, count
+   as one. *Analogy: to know how a class will do next year you look at different classes, not at the same
+   pupils' answers reshuffled.* With 8 groups in the test set the intervals will be wide, and that is honest.
+4. **Does one document decide everything?** One test document holds a third of the entities, so the score of
+   each group is listed and their plain average is given next to the pooled score.
+5. **What kind of mistakes?** Each prediction is exact, right-label-wrong-boundary, wrong-label, or spurious;
+   each gold entity is found, found with another boundary, found under another label, or missed. Spurious
+   predictions are then sorted: *telemetry* (`IP address`), *AA role* (`Financial Information User`),
+   *umbrella term* (`financial information`, `third parties`) — things OPP-115 taught the model to mark and
+   our guideline deliberately leaves out — plus *corporate transaction* and *other*. F1 is reported again with
+   those "different definition" predictions set aside, so the paper can separate "the model is wrong" from
+   "the two rulebooks disagree".
+6. **Was anything cut off?** The model reads at most 256 word-pieces; anything longer loses its tail without a
+   word. The script counts such segments and scores the lost part as missed.
+
+**Comparing E1 with E2.** `--compare <E2 runs> --against <E1 runs>` averages each side over its seeds and
+bootstraps the *difference* on the same resamples for both (a paired test — both sides face the same luck of
+the draw). If the interval for the difference contains zero, it prints "no significant difference".
+
+**The seal.** The test file cannot be scored by accident: it needs `--open-test`, and each opening is written
+to `results/ner/test_openings.jsonl`. Day-to-day the script points at dev.
+
+**Checked before use, without touching the test set:** a self-check on hand-made examples; the OPP-115 dev
+score reproduced (0.397 against 0.401 at training time — the difference is the 18 over-long dev segments whose
+tails training silently ignored); and all nine E1 models run on the *adaptation* documents. That last run is
+a rehearsal, not a result, but it is a warning: about **0.09** exact and **0.22** relaxed F1, with the models
+predicting more than twice as many entities as the key holds and a third of the extra ones being
+different-definition cases. E1 on the test set should be expected to be low.
 
 ### 5.8 `trim_spans.py` — shorten OPP-115 spans to entity-shaped noun phrases
 
@@ -1006,6 +1383,103 @@ card — same method, swap one ingredient (the backbone) to compare fairly.*
 
 ---
 
+### 6.7 The headline result: what a little local data is worth (D63)
+
+The exam was opened once, for all 27 models at the same sitting: nine that had only studied American privacy
+policies (**E1**), nine that studied American policies and Indian AA documents mixed together
+(**E2-joint**), and nine that finished the American course first and then took a short second course on the
+Indian documents alone (**E2-sequential**).
+
+| | Strict score (exact match) | Lenient score (overlap) |
+|---|---|---|
+| E1 — American policies only | **0.13** | 0.29 |
+| E2-joint — both together | **0.25** | 0.44 |
+| E2-sequential — American first, then Indian | **0.44** | 0.61 |
+
+*Analogy: a driver trained only in Delhi, tested in Mumbai, gets about one manoeuvre in eight exactly right.
+Mix a few Mumbai lessons into the Delhi course and it is one in four. Give the same few lessons as a
+separate finishing course and it is nearly one in two.*
+
+**Three things the numbers say.**
+
+1. **Learning elsewhere is not enough.** A model that scores 0.40 on American policies scores 0.13 on Indian
+   AA documents. It marks too much (944 guesses for 826 answers) and still misses two thirds of the real
+   ones. Part of this is the two rulebooks disagreeing — the American data marks "financial information" and
+   "third parties", ours does not — but taking those cases out only lifts 0.125 to 0.138. Mostly, the model
+   simply does not recognise what matters in these documents.
+2. **A small amount of local data is worth a great deal — about 330 highlighted phrases from 10 documents
+   more than tripled the score.** And the gain shows up on *other companies'* documents of a different kind,
+   so it is not memorising a template.
+3. **How you give the local data matters as much as having it.** Mixed into 10,000 American examples, 330
+   Indian ones are a 3% voice and are mostly drowned out. Given afterwards, they have the last word. This was
+   P1's prediction before the run (D61), and the difference between the two ways (+0.19) is as large as the
+   whole benefit of the mixed way.
+
+**The model types.** With American data only, the three are indistinguishable. After the second course,
+Legal-BERT is clearly ahead (0.48 against 0.41-0.43). The model pre-trained on Indian court judgments
+(InLegalBERT) gains nothing from being Indian: fintech privacy policies are not court judgments.
+
+**How sure is this?** Each difference was tested the paired way described in 6.4, and none of the intervals
+comes near zero. What keeps the conclusions modest is the size of the exam: 9 documents from 8 organisations,
+one of which holds a third of the answers, and an answer key that is itself about 2% wrong and 7% incomplete.
+The *ordering* E1 < joint < sequential is solid; the exact decimals are not.
+
+**The exam is now used up.** Looking at these results and then changing a model or a rule and re-scoring would
+be studying with the answer sheet open. Anything new is tried on the practice documents.
+
+### 6.8 `ner/llm_baseline.py` — what if you just give a chatbot the rulebook? (D64)
+
+The models of 6.7 *learned by example*: they were shown highlighted text and never read a rule. A large
+language model can do the opposite — read the rules and try, with no training at all. If that works as well,
+there was no need to annotate training data. *Analogy: two ways to learn a board game — play 300 practice
+rounds with someone correcting you, or read the rulebook once and start. The paper needs to know which player
+is better.*
+
+**How it works.** One passage at a time is sent to the model with a 470-word summary of the labelling rules.
+The model answers with a list of phrases and labels. Each phrase is located in the passage word for word and
+turned into the same tags the other models produce, then marked by the same marking program. A phrase the
+model invented — not present in the passage — is thrown away and counted.
+
+**Two versions.** *Zero-shot*: rules only. *Eight-shot*: rules plus eight worked passages, taken from the same
+ten practice documents the E2 models trained on.
+
+**Three safeguards.** (1) The rule summary contains only general rules; the guideline's list of "tricky cases"
+quotes the exam documents and is left out — the program refuses to run if the prompt names an exam company.
+(2) All trial-and-error happens on the four mock-test documents; the exam is scored once with everything
+frozen. (3) The baseline model should not be from the Claude family, because an assistant from that family
+helped settle the answer key — it would be marking its own homework.
+
+**Where it runs.** By default on a model installed on the laptop itself (through Ollama), so no policy text is
+sent anywhere. A hosted model can be used instead by pointing the program at its address.
+
+**What happened (D65).** Two free, open models were run on the laptop: a small one (Llama 3.1, 8 billion
+parameters) and a larger one (Qwen 2.5, 14 billion).
+
+| | Strict score | Lenient score |
+|---|---|---|
+| E1 — learned from American policies | 0.13 | 0.29 |
+| Best fine-tuned model (Legal-BERT, second course on AA documents) | 0.48 | 0.64 |
+| Small chatbot, rules only | 0.28 | 0.33 |
+| Small chatbot, rules + 8 examples | 0.41 | 0.47 |
+| **Larger chatbot, rules only** | **0.48** | 0.55 |
+| Larger chatbot, rules + 8 examples | 0.45 | 0.52 |
+
+**The player who only read the rulebook drew with the player who practised.** On the strict score the larger
+chatbot, with no training and no examples, ties the best trained model (the difference is 0.000, with a range
+from -0.05 to +0.08). It is a different kind of player, though. It finds more of the answers (about two in
+three, against two in five) but highlights nearly twice as many phrases as there are answers — *an eager
+student who underlines half the page*. The trained model is more careful, and stays ahead on the lenient
+score. The chatbot is much better at spotting organisations; the trained model is better at data types.
+
+**Why this is good news and a warning at once.** Good news: writing clear rules — which this project spent
+five annotation rounds doing — turns out to be as valuable as the labelled data itself. Warning: the rules
+were written while reading all 23 documents, the exam documents among them. They quote none of them, but they
+were *shaped* by them, and the trained models never had that advantage. So the tie is an upper estimate for
+the chatbot. The fair re-match needs fresh documents the rulebook has never met.
+
+Other limits: one run each, two modest open models (a bigger commercial one would likely do better), and the
+chatbot takes seconds per passage where the trained model takes milliseconds.
+
 ## 7. How everything connects (end-to-end)
 
 ```
@@ -1016,14 +1490,18 @@ OPP-115 (usableprivacy) → load_opp115.py → spans.jsonl → bio_tagging.py �
                                                                               │
                                                                      ner/train.py → model + dev metrics
                                                                               │
-AA docs (manifest) → scrape_aa.py → raw html/pdf → clean.py → 23 text docs → [ANNOTATE] → AA test.conll
+AA docs (manifest) → scrape_aa.py → raw html/pdf → clean.py → 23 text docs → [ANNOTATE x2]
+      → kappa.py (agreement) → fixlist.py (each fixes own work) → adjudicate_auto.py (+ sample check)
+      → gold.json → aa_split.py (leak-free test/adapt) → aa_to_conll.py → aa_test.conll / aa_adapt.conll
                                                                               │
                                                               ner/evaluate.py → E1 / E2 results
 ```
 
-The AA branch's last step (annotate) is human work (the team), using `ANNOTATION_GUIDELINE.md`. Once the
-AA docs are annotated, they run through the *same* span→BIO machinery and become the test set (E1) and a
-small training add-on (E2).
+The annotation itself is human work (two annotators, using `ANNOTATION_GUIDELINE.md`). Everything after it
+is tooling: measure how far they agree, let each correct their own work, settle what is left rule by rule,
+have both check a sample of those rulings, then split the documents so nothing leaks and convert the result
+with the *same* word-and-tag machinery used for OPP-115. The test file is used for E1 and E2; the adaptation
+file is the small training add-on for E2.
 
 ---
 
@@ -1036,31 +1514,56 @@ the ranking flipping on token-F1 — i.e. **no clear backbone winner**, as the h
 scraped, cleaned (23 documents), double-annotated. Consent-artefact schema verified against the primary
 source (D27); contribution claims revised after a systematic search (D28, `RELATED_WORK.md`).
 
-**Annotation — where it stands:** round 1 kappa **0.279** (D29); corpus audit found the failure mechanical
-(D30); personal fix lists replace the corpus cut (D31); round-2 calibration kappa **0.374** with PURPOSE
-F1 0.000 (D32); relaxed matching showed PURPOSE failing on *where* to look, not on edges, leading to the
-10-category **Rule 10** (D35); a full granular audit added **Rules 11-22** (D36); Rule 10's first check
-became an actor test — your rights and procedures are not purposes (D37). **Guideline is v7.1.**
-Tools: `kappa.py` (`--docs`), `agreement_report.py`, `annotation_audit.py` (`--strict`), `adjudicate.py`,
-`fixlist.py` (Rule 9/9b buckets), `relaxed_agreement.py`.
+**Annotation — where it stands:** five measurements, all reported: round 1 kappa **0.279** on 23 documents
+(D29); round-2 calibration **0.374** (D32); round 3 **0.283** — P4 had not received the guideline (D41);
+round 4 **0.522** on a fresh document with both on the final rules, the one fully independent figure (D43);
+and **0.426** on all 23 after both annotators worked through their personal fix lists (D48). The guideline
+grew from v4 to **v7.5** (Rules 7-23) plus **PART I**, the rulings made while building the gold file.
+The lesson of the last round: the fix lists removed almost all rule violations, and what remains is which
+entities each annotator *notices* — which no list can fix.
+
+**The gold file is final** (D50, D55-D59): **1,266 highlights** (559 data types, 381 purposes, 326 third
+parties) built by settling 1,513 disputed highlights rule by rule. The annotators **met and decided the ten
+rules** set after the fix pass — seven kept, one dropped, two changed (D55); each then **independently
+checked a random sample** of 124 rulings — P1 accepted 96.0%, P4 100% (D56); and the five rulings P1 rejected
+were corrected (D57). A three-perspective audit then found 49 defects, mostly among highlights both
+annotators had drawn identically; they were corrected with two changes by P1 (D58, D59).
+`data/ner_bio/aa_test.conll` (826 entities) and `aa_adapt.conll` (439) are generated.
+
+Tools: `kappa.py` (`--docs`, rejects labels outside the scheme), `agreement_report.py`,
+`annotation_audit.py` (`--strict`), `fixlist.py` (15 buckets), `relaxed_agreement.py`, `adjudicate.py`
+(joint worklist), `adjudicate_auto.py` (`items` / `apply` / `score`), `aa_split.py`, `aa_to_conll.py`.
 
 **Summarizer (P2's track):** dataset builder and plan delivered to P2 via Drive (D33, D34); not in P1's
-commits.
+commits. P2 is waiting for the final gold file.
+
+**Audit of the final gold (D58, D59):** before correction, about 98% of highlights correct, about 93% of
+markable entities present, 92% consistency on identical text. The 49 verified defects are now corrected;
+consistency on identical text is 99.1%. The unlocated remainder (roughly 5 wrong, 50-90 missed) is the
+gold's stated error rate.
 
 **Pending — in priority order:**
-1. ~~Rounds 3 and 4~~ done: 0.283 (P4 lacked v7.1, D41), then **0.522** on `25_the_financiali_privacy`
-   (D42, D43) — final. Guideline is now **v7.4** (send to P4; no open questions, D46). **Now: fix pass** on all 23 from the
-   Export4 fix lists.
-2. Fix pass on all 23 documents in parallel (regenerate fix lists first), then round-2 kappa on the full
-   corpus, then adjudicate the residue -> gold.
-3. Glued-text documents (`02_digio_terms`, `10_perfios_terms`): fix `clean.py`, then re-annotate or remap
-   offsets for those two only — never re-clean mid-annotation (D36).
-4. Convert gold to `aa_test.conll`; run **E1/E2** on the AA test set — the headline number.
-5. Hand P2 the gold export for the reference-free summarizer test; P3 contract in parallel.
-6. Paper: Related Work and the annotation-methodology story (0.28 -> 0.37 -> 0.28 -> 0.52, with the diagnosis
-   at each step) can be written now.
+0. ~~Decide on the 49 audit corrections~~ **done — applied with two changes by P1; CoNLL regenerated (D59).**
+   Still optional: a `negated` flag per highlight and the purpose row number (D58).
+1. ~~P1 + P4 meeting~~ **done — 7 kept, rule 3 dropped, rules 4 and 9 changed (D55).**
+2. ~~Choose the split~~ **done — option A, 9 test / 14 adaptation (D54).**
+3. ~~Re-apply the changed rules, rebuild the gold, draw a fresh sample, both check it alone~~ **done — P1
+   96.0%, P4 100%, gate passed; the five rejected rulings corrected; gold FINAL (D55-D57).**
+4. ~~Run `aa_to_conll`~~ **done — `aa_test.conll` (826 entities), `aa_adapt.conll` (439) (D57, D59).**
+5. ~~Build the evaluation script~~ **done (D60): exact and relaxed F1, group-bootstrap intervals, error
+   breakdown with definition mismatch, truncation check, paired E1-vs-E2 comparison, sealed test set.**
+   E2 design decided and built (D61, D62). **All 18 E2 models trained; the test set opened once for all 27
+   (D63): exact micro-F1 E1 0.125 -> E2-joint 0.252 -> E2-sequential 0.439, every step significant;
+   Legal-BERT best after adaptation (0.479).** **LLM baseline (D64, D65): a local 14B model given only the
+   rules scores 0.479 — a tie with the best fine-tuned model on exact F1, behind it on relaxed F1.** The
+   test set is spent — no re-scoring after changes. Open: how the paper is framed now (D65).
+6. Hand P2 the final gold; P3's contract and P4's integration in parallel; then the end-to-end pipeline.
+7. Glued-text documents (`02_digio_terms`, `10_perfios_terms`): fixing `clean.py` is still open; they are
+   adaptation-only until then (D36, D52).
+8. Paper: Related Work and the annotation-methodology section can be written now (the agreement story is
+   complete: 0.28 -> 0.37 -> 0.28 -> 0.52 -> 0.43, with the diagnosis at each step).
 
-See `FLOW.md` for live status and `DECISIONS.md` (D1-D46) for the reasoning behind every choice.
+See `FLOW.md` for live status and `DECISIONS.md` (D1-D65) for the reasoning behind every choice.
 
 ---
 
@@ -1081,8 +1584,11 @@ See `FLOW.md` for live status and `DECISIONS.md` (D1-D46) for the reasoning behi
 - `data/aa/annotated/ls_import_tasks.json`, `Export*A.json` / `Export*B.json`, `gold.json` — the Label
   Studio import file and every annotation export. **Git-ignored**: each embeds the full document text.
   Shared between annotators privately.
-- `results/annotation/kappa.json`, `kappa_per_doc.csv`, `relaxed.json` — agreement numbers.
-  **Committed** (numbers only, no text).
+- `results/annotation/kappa.json`, `kappa_per_doc.csv`, `relaxed.json` — agreement numbers for the latest
+  run (now Export5, all 23 documents); `relaxed_round3.json`, `relaxed_round4.json` keep the two calibration
+  rounds. **Committed** (numbers only, no text).
+- `results/annotation/round5/` — the agreement report after the fix pass: `summary.csv` + `report.md`
+  **committed**; `docs/` git-ignored.
 - `results/annotation/agreement/` and `round2_calib/` — `summary.csv` + `report.md` **committed**;
   `docs/` (the actual disagreeing phrases) **git-ignored** — any report folder's `docs/` is, after one
   such folder nearly slipped into a commit.
@@ -1092,6 +1598,22 @@ See `FLOW.md` for live status and `DECISIONS.md` (D1-D46) for the reasoning behi
   annotation; it must never be mistaken for the answer key, so it is committed only once regenerated from
   the round-2 exports.
 - `results/annotation/fixlist/README.md` (counts) **committed**; `P1/`, `P4/` (quote the text) ignored.
+- `data/aa/annotated/gold.json` — **the answer key**: for each of the 23 documents, its text and every
+  accepted highlight (start, end, label). Git-ignored (contains the text); provisional until the rules
+  meeting and the sample check are done.
+- `results/annotation/adjudication/` (automatic adjudication, D50) —
+  `decisions.tsv`: one line per disputed highlight with the code of the rule that settled it — the full audit
+  trail of the gold file (plus `agreed` lines for the four agreed spans a rule overrode and `new` lines for the
+  36 highlights added after the rules meeting, D55); `items.txt`, `items_repeats.txt`: the disputed highlights shown in their sentences;
+  `sample_check_P1.csv`, `sample_check_P4.csv`: the sheets the annotators fill in;
+  `rules_to_ratify.md`: the meeting guide; `gold_audit.md`: the three-perspective audit of the final gold with
+  its 49 defects (D58). **All git-ignored** (they quote the policies).
+  `auto_summary.json`: counts only — gold size, rulings by kind, rejections by rule — **committed**.
+  `sample_check_result.json` appears once the sheets are scored — **committed** (numbers only).
+- `data/splits/aa_split.json` — which documents are test and which are adaptation, with the groups and the
+  largest text overlap across the split. Document ids only — **committed**. Written: option A (D54).
+- `data/ner_bio/aa_test.conll`, `aa_adapt.conll` and their `.docmap.json` — the AA documents in the model's
+  word-and-tag format, plus the document each segment came from. Git-ignored (text). *Not written yet.*
 - `data/summ/*.jsonl` — P2's summarizer data. **Git-ignored** (quotes text), except `gold_refs.jsonl`.
 - `src/consentledger/summ/build_dataset.py` — P2's code, kept out of P1's commits by a **local-only**
   rule in `.git/info/exclude` (it does not affect anyone else's repo, so P2 can commit their own version).

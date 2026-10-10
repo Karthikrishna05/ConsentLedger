@@ -1,4 +1,8 @@
-"""Fine-tune a token-classification backbone on the OPP-115 BIO data (E1).
+"""Fine-tune a token-classification backbone: E1 on OPP-115, or E2 with the AA adaptation documents (D61).
+
+    --e2 joint       pretrained backbone, trained once on OPP-115 + AA adaptation together   -> <name>_e2j_s<seed>
+    --e2 sequential  the finished E1 model of the same seed, trained on AA adaptation only   -> <name>_e2s_s<seed>
+Both stop on the AA dev documents (aa_adapt_dev.conll). The E1 folder is only read, never written.
 
 Uniform recipe across backbones, NO layer-freezing (D5). Entity-level seqeval metrics; early stopping
 on dev. Reads a YAML config (configs/ner_*.yaml). Saves best model + tokenizer + metrics + run_meta.
@@ -71,6 +75,7 @@ def main() -> None:
     ap.add_argument("--epochs", type=int, help="override num_train_epochs")
     ap.add_argument("--smoke", action="store_true", help="1 epoch + capped samples, to validate the pipeline")
     ap.add_argument("--seed", type=int, help="override config seed (for multi-seed runs; suffixes output dir)")
+    ap.add_argument("--e2", choices=("joint", "sequential"), help="train an E2 model (see the module docstring)")
     args = ap.parse_args()
 
     cfg = yaml.safe_load(args.config.read_text(encoding="utf-8"))
@@ -88,18 +93,33 @@ def main() -> None:
     dev_limit = 200 if args.smoke else None
     max_length = int(cfg.get("max_length", 256))
     out_dir = PROJECT_ROOT / cfg["output_dir"]
+    e1_dir = out_dir.parent / f"{out_dir.name}_s{seed}"
+    init, train_files, dev_file, condition = cfg["model_name"], [cfg["train_file"]], cfg["dev_file"], cfg.get("condition", "E1")
+    if args.e2:
+        assert args.seed is not None, "--e2 needs --seed (each E2 run is paired with the E1 run of that seed)"
+        ner_bio = "data/ner_bio"
+        dev_file, condition = f"{ner_bio}/aa_adapt_dev.conll", f"E2-{args.e2}"
+        train_files = [cfg["train_file"], f"{ner_bio}/aa_adapt_train.conll"] if args.e2 == "joint" else [f"{ner_bio}/aa_adapt_train.conll"]
+        if args.e2 == "sequential":
+            assert (e1_dir / "config.json").exists(), f"no E1 model at {e1_dir} - train E1 with --seed {seed} first"
+            init = str(e1_dir)
+        out_dir = out_dir.parent / f"{out_dir.name}_e2{args.e2[0]}"
     if args.seed is not None:
         out_dir = out_dir.parent / f"{out_dir.name}_s{seed}"
+    assert out_dir != e1_dir or not args.e2
     if args.smoke:
         out_dir = out_dir.parent / (out_dir.name + "_smoke")
 
-    tokenizer = AutoTokenizer.from_pretrained(cfg["model_name"], use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(init, use_fast=True)
     model = AutoModelForTokenClassification.from_pretrained(
-        cfg["model_name"], num_labels=len(LABELS), id2label=ID2LABEL, label2id=LABEL2ID,
+        init, num_labels=len(LABELS), id2label=ID2LABEL, label2id=LABEL2ID,
     )
 
-    train_ds = build_dataset(PROJECT_ROOT / cfg["train_file"], tokenizer, max_length, train_limit)
-    dev_ds = build_dataset(PROJECT_ROOT / cfg["dev_file"], tokenizer, max_length, dev_limit)
+    from datasets import concatenate_datasets
+    train_ds = concatenate_datasets([build_dataset(PROJECT_ROOT / f, tokenizer, max_length) for f in train_files])
+    if train_limit:
+        train_ds = train_ds.shuffle(seed=seed).select(range(min(train_limit, len(train_ds))))
+    dev_ds = build_dataset(PROJECT_ROOT / dev_file, tokenizer, max_length, dev_limit)
     collator = DataCollatorForTokenClassification(tokenizer)
 
     targs = TrainingArguments(
@@ -137,12 +157,13 @@ def main() -> None:
     (out_dir / "dev_metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     (out_dir / "run_meta.json").write_text(json.dumps({
         "config": cfg, "seed": seed, "epochs": epochs, "smoke": args.smoke,
-        "condition": cfg.get("condition", "E1"),
+        "condition": condition, "init_from": init, "train_files": train_files, "dev_file": dev_file,
         "git_commit": _git_commit(), "model_name": cfg["model_name"],
     }, indent=2), encoding="utf-8")
 
     print("\n=== NER train done ===")
-    print(f"model      : {cfg['model_name']}  ({'SMOKE' if args.smoke else 'full'}, {epochs} epoch(s), seed {seed})")
+    print(f"model      : {cfg['model_name']} [{condition}]  ({'SMOKE' if args.smoke else 'full'}, {epochs} epoch(s), seed {seed})")
+    print(f"trained on : {', '.join(train_files)} ({len(train_ds)} segments) | stopped on {dev_file}")
     print(f"dev metrics: entity micro-F1 {metrics.get('eval_f1', 0):.4f} | macro-F1 "
           f"{metrics.get('eval_macro_f1', 0):.4f} | token-F1 {metrics.get('eval_token_f1', 0):.4f} | "
           f"P {metrics.get('eval_precision', 0):.4f} | R {metrics.get('eval_recall', 0):.4f}")

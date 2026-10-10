@@ -148,7 +148,8 @@ def _tp_reason(text: str, i: int, j: int) -> str | None:
     a, _ = _bounds(text, i, j)
     preps = _PREP.findall(text[a:i])
     if preps and preps[-1].lower() == "from":
-        return "data comes FROM them - a source, not a recipient (Rule 16)"
+        # D55: a source IS a THIRD_PARTY now (unless an AA-pipeline body). Still flagged, so a ruling confirms it.
+        return "data comes FROM them - a source (Rule 16; marked since D55 unless in the AA pipeline)"
     return None
 
 

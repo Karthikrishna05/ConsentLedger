@@ -1,0 +1,20 @@
+{
+  "P1": {
+    "checked": 124,
+    "agree": 119,
+    "rate": 0.9597
+  },
+  "P4": {
+    "checked": 124,
+    "agree": 124,
+    "rate": 1.0
+  },
+  "checkers_agree_with_each_other": 0.9597,
+  "rejected_by_either": [
+    28,
+    84,
+    91,
+    93,
+    117
+  ]
+}

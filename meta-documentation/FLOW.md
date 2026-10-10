@@ -88,30 +88,80 @@ practice help?*
 [done] 10a. AA scrape   data/aa/manifest.csv (29 docs) + scrape_aa.py → 28/29 fetched into
                         data/aa/raw/ (1 blocked, ~5 JS-shells; ~23 solid — surplus for deadline). D20.
 [done] 10b. AA clean    clean.py DONE → 23 usable docs in data/aa/raw/text/ (median ~3,100 words);
-                        5 JS-shells (0 chars) dropped; 0 errors. 23 ≈ 15 test + 8 adapt (D21). ✓
-[now]  10c. Annotate    Round 1 (all 23 docs, double-annotated): kappa 0.279 — FAILED (D29); failure is
-                        mechanical, not conceptual (D30). Round-2 calibration (2 docs): kappa 0.374 —
-                        FAILED, PURPOSE F1 0.000 (D32). Guideline now v7.4: Rules 7-23, no open questions (D29-D46); fix lists audited (D44).
-                        Tools: kappa.py --docs, agreement_report, annotation_audit --strict, adjudicate,
-                        fixlist (Rules 7/8/8b/9/9b/11/15/17 + PURPOSE check), relaxed_agreement.
-                        Round 3 (23_upmint): kappa 0.283 — P4 never had v7.1 (D41). Round 4
-                        (25_the_financiali_privacy, independent, final): kappa 0.522, PURPOSE relaxed 0.658
-                        (D42, D43). Guideline now v7.4 (D45, D46). NOW: fix pass on all 23
-                        (Export4 fix lists) -> Export5 -> full-corpus kappa -> adjudicate -> gold.
-                        Glued-text docs 02_digio / 10_perfios last (D36).
+                        5 JS-shells (0 chars) dropped; 0 errors. 23 ≈ 15 test + 8 adapt (D21; superseded by D52). ✓
+[done] 10c. Annotate    Two annotators, all 23 docs, five agreement measurements, all reported:
+                        round 1 kappa 0.279 (D29) -> round 2 calibration 0.374 (D32) -> round 3 0.283, P4
+                        without the guideline (D41) -> round 4 0.522, one fresh doc, independent (D43)
+                        -> fix pass by both on all 23 -> 0.426 full corpus (D48).
+                        Guideline v4 -> v7.5 (Rules 7-23, D29-D46, D55) + PART I adjudication rulings (D49-D55).
+                        Finding: rule violations nearly gone (~120 of 2,700 spans); the residue is what
+                        each annotator NOTICES. Rule-normalised ceiling 0.47 -> no further round (D50).
+                        Tools: kappa.py, agreement_report, annotation_audit, fixlist (15 buckets, audited
+                        D44), relaxed_agreement, adjudicate.
+[done] 10d. Gold        adjudicate_auto.py (D50): 511 agreed spans accepted, 1,513 disputed highlights + 133
+                        repeat candidates ruled one by one, each tagged with its rule -> gold.json,
+                        1,153 spans. Then the P1 + P4 RULES MEETING (D51, D55): 7 rules kept; rule 3
+                        dropped (a data SOURCE is a THIRD_PARTY too); rule 4 changed (PURPOSE row 12,
+                        account opening & onboarding); rule 9 changed (merge a list only where a piece is
+                        meaningless alone). 85 rulings changed + 36 highlights nobody drew added ("new"
+                        lines) -> gold REBUILT: 1,261 spans (D 545 / P 382 / T 334). STILL PROVISIONAL.
+                        SAMPLE CHECK (D56): 124 rulings, each alone -> P1 96.0%, P4 100% -> the 90% gate
+                        is PASSED. The 5 rulings P1 rejected corrected with their neighbours (D57).
+                        Gold of D57: 1,258 spans.
+                        AUDIT (D58), three perspectives x three passes: ~98% of spans correct, ~93% recall,
+                        92.3% consistency on identical text. 49 verified defects (20 remove, 29 add) —
+                        16 of the 20 wrong spans were drawn identically by BOTH annotators and never
+                        reviewed. APPLIED with two changes by P1 (D59): the consent-artefact signature
+                        is not data; identity / contact information are two highlights.
+                        GOLD FINAL: 1,266 spans (D 559 / P 381 / T 326); identical-text consistency 99.1%.
+[done] 10e. Split       aa_split.py + aa_to_conll.py BUILT and tested (D52). Finding: 13 documents are one
+                        template family (up to 75% shared text) -> "15 test + 8 adapt" (D21) would leak.
+                        P1 chose option A (D54): TEST = 9 independent docs / 8 groups (08, 14+21, 23, 24,
+                        25, 26, 28, 29), ADAPT = 14 (the family + glued 10_perfios). Max overlap across
+                        the split 4.7%. data/splits/aa_split.json written. aa_to_conll RUN on the final gold (D59):
+                        data/ner_bio/aa_test.conll (559 segments, 826 entities), aa_adapt.conll (845, 439);
+                        read back by the trainer's reader, longest segment 177 of 256 pieces. TEST SET SEALED.
 [done] 11. E1 on dev    3 backbones x 3 seeds on OPP-115 dev (D38): Legal-BERT 0.400, InLegalBERT 0.386,
                         BERT-base 0.382 entity macro-F1; ranking flips on token-F1 -> no winner.
-                        E1/E2 on the AA test set (the headline) waits on gold; needs a gold ->
-                        aa_test.conll converter (not built yet).
+[done] 12. E1/E2 on AA  The headline. Gold, split and CoNLL files are READY. ner/evaluate.py BUILT (D60):
+                        exact + relaxed F1, 95% CIs by bootstrap over document groups, per-group F1,
+                        error breakdown incl. "definition mismatch" with OPP-115, truncation check,
+                        paired E1-vs-E2 comparison; aa_test.conll needs --open-test and is logged.
+                        Rehearsal on the ADAPTATION docs (not a result): E1 ~0.09 exact / ~0.22 relaxed,
+                        all three backbones alike. TEST SET STILL UNOPENED.
+                        E2 DESIGN (D61, P1): BOTH ways — E2-joint (OPP-115 + AA together) and
+                        E2-sequential (E1 model continued on AA only); stop on an AA mock test
+                        (D62: the 4 adaptation docs sharing least text with the rest — 01_setu_aa_terms,
+                        19_saafe_privacy, 20_scoremeaa_charter, 22_setu_aa_charter; 107 entities; 10 docs /
+                        332 entities train); seeds 42-44 x 3 backbones = 18 runs. train.py --e2 built, smoke-tested.
+                        E1 models are only read, never overwritten.
+                        DONE (D63): 18 E2 models trained; test set OPENED ONCE for all 27 (logged).
+                        Exact micro-F1 (9 runs each, CI over 8 doc groups): E1 0.125 [0.10, 0.16] ->
+                        E2-joint 0.252 [0.21, 0.33] -> E2-sequential 0.439 [0.35, 0.49]; relaxed 0.29 ->
+                        0.44 -> 0.61. All paired differences significant. Backbones tie in E1; Legal-BERT
+                        leads after sequential adaptation (0.479). results/ner/aa_test.md.
+                        THE TEST SET IS SPENT: no re-scoring after any change.
+                        LLM BASELINE (D64): protocol fixed in advance (rules-only prompt without the
+                        guideline's test-document cases; 0-shot and 8-shot from adapt-train; develop on
+                        adapt-dev; test once). ner/llm_baseline.py built.
+                        RESULT (D65), local open models via Ollama, test set, exact micro-F1:
+                        llama3.1:8b 0-shot 0.280, 8-shot 0.414; qwen2.5:14b 0-shot 0.479, 8-shot 0.452.
+                        qwen 0-shot TIES Legal-BERT E2-sequential on exact F1 (+0.000 [-0.05, +0.08]),
+                        loses on relaxed (-0.084); LLM = high recall, low precision. Caveat: the rules were
+                        developed on all 23 documents incl. the test ones -> upper estimate for the LLM.
 [par]  P2 summarizer   P2's track; dataset builder + plan handed over by Drive (D33, D34): text ->
                         summary, reference-free test against gold facts. Needs P1's gold export.
 [par]  P3 contract     P3's track; see P3.md. Reference implementation (not a novelty claim, D28).
-[later] 11. Rest        summarizer + faithfulness (P2 — see P2.md), smart contract (P3 — see P3.md),
+[later] 13. Rest        summarizer + faithfulness (P2 — see P2.md), smart contract (P3 — see P3.md),
                         end-to-end pipeline, user study, paper.
 ```
 
-**One thing still open (a gate, not a blocker):** the three labels are only *candidate* transferable
-until the loader loads the real files and the spot-check passes (D10). That's the next real milestone.
+**Open decision:** none blocking. Gold final after the audit (D59), rules ratified (D55), split fixed (D54).
+Optional, undecided: a `negated` flag per highlight (D58). E1/E2 (D63) and the LLM baseline (D65) are complete.
+**Open decision for P1: the paper's framing** now that a rule-prompted LLM ties fine-tuning (D65). Then: the
+results section, uploading the 18 E2 models to the Hub, P2's summariser and the end-to-end pipeline.
+P2 can be sent the final gold.
+A new session should read this block, then `DECISIONS.md` D55-D65.
 
 ---
 

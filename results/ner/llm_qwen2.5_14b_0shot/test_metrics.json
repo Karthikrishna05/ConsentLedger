@@ -1,0 +1,462 @@
+{
+  "conll_file": "C:\\Users\\pc\\Project-Programming\\Python\\ConsentLedger\\data\\ner_bio\\aa_test.conll",
+  "model_dir": "qwen2.5_14b_0shot",
+  "condition": "LLM-0shot",
+  "seed": 0,
+  "model": "qwen2.5:14b",
+  "shots": 0,
+  "truncated_segments": 0,
+  "phrases_returned": 1430,
+  "phrases_not_in_passage": 28,
+  "malformed_replies": 0,
+  "max_prompt_tokens": 852,
+  "segments": 559,
+  "entities_gold": 826,
+  "entities_predicted": 1529,
+  "micro_f1": 0.4789808917197452,
+  "macro_f1": 0.4923587738359993,
+  "token_f1": 0.5132671662953211,
+  "precision": 0.36886854153041204,
+  "recall": 0.6828087167070218,
+  "per_label": {
+    "DATA_TYPE": {
+      "precision": 0.29572446555819476,
+      "recall": 0.8110749185667753,
+      "f1-score": 0.433420365535248,
+      "support": 307.0
+    },
+    "PURPOSE": {
+      "precision": 0.37752161383285304,
+      "recall": 0.5198412698412699,
+      "f1-score": 0.43739565943238734,
+      "support": 252.0
+    },
+    "THIRD_PARTY": {
+      "precision": 0.5411764705882353,
+      "recall": 0.6891385767790262,
+      "f1-score": 0.6062602965403625,
+      "support": 267.0
+    }
+  },
+  "relaxed": {
+    "micro_f1": 0.552819208386326,
+    "macro_f1": 0.5738338035843761,
+    "per_label": {
+      "DATA_TYPE": {
+        "precision": 0.33016627078384797,
+        "recall": 0.8990228013029316,
+        "f1": 0.4829639514316827
+      },
+      "PURPOSE": {
+        "precision": 0.5043227665706052,
+        "recall": 0.6944444444444444,
+        "f1": 0.5843071786310517
+      },
+      "THIRD_PARTY": {
+        "precision": 0.5852941176470589,
+        "recall": 0.7415730337078652,
+        "f1": 0.6542302806903937
+      }
+    }
+  },
+  "group_mean_micro_f1": 0.4098444656294275,
+  "per_group": {
+    "08_pennydrop_terms": {
+      "micro_f1": 0.44619422572178474,
+      "relaxed_micro_f1": 0.4864127345082433,
+      "entities_gold": 128
+    },
+    "14_nadl_charter+21_nadl_terms": {
+      "micro_f1": 0.39416058394160586,
+      "relaxed_micro_f1": 0.4817184643510055,
+      "entities_gold": 43
+    },
+    "23_upmint_aa_tos": {
+      "micro_f1": 0.4155844155844156,
+      "relaxed_micro_f1": 0.44155844155844154,
+      "entities_gold": 31
+    },
+    "24_credbuddha_terms": {
+      "micro_f1": 0.5188284518828451,
+      "relaxed_micro_f1": 0.5494844214239184,
+      "entities_gold": 157
+    },
+    "25_the_financiali_privacy": {
+      "micro_f1": 0.5660377358490566,
+      "relaxed_micro_f1": 0.6803359972000232,
+      "entities_gold": 130
+    },
+    "26_zerodha_tos": {
+      "micro_f1": 0.0,
+      "relaxed_micro_f1": 0.0,
+      "entities_gold": 4
+    },
+    "28_indifi_capital_privacy": {
+      "micro_f1": 0.4725415070242657,
+      "relaxed_micro_f1": 0.5747126436781609,
+      "entities_gold": 268
+    },
+    "29_icici_home_fin_terms": {
+      "micro_f1": 0.46540880503144655,
+      "relaxed_micro_f1": 0.5508896797153026,
+      "entities_gold": 65
+    }
+  },
+  "errors": {
+    "pred_exact": 564,
+    "pred_boundary": 88,
+    "pred_wrong_label": 25,
+    "pred_spurious": 852,
+    "spurious_telemetry": 54,
+    "spurious_aa_role": 18,
+    "spurious_umbrella_term": 134,
+    "spurious_corporate_transaction": 5,
+    "spurious_other": 641,
+    "gold_exact": 564,
+    "gold_boundary": 85,
+    "gold_wrong_label": 24,
+    "gold_missed": 153,
+    "definition_mismatch": 206,
+    "micro_f1_without_definition_mismatch": 0.5248953001395998
+  },
+  "counts": {
+    "groups": [
+      "08_pennydrop_terms",
+      "14_nadl_charter+21_nadl_terms",
+      "23_upmint_aa_tos",
+      "24_credbuddha_terms",
+      "25_the_financiali_privacy",
+      "26_zerodha_tos",
+      "28_indifi_capital_privacy",
+      "29_icici_home_fin_terms"
+    ],
+    "labels": [
+      "DATA_TYPE",
+      "PURPOSE",
+      "THIRD_PARTY"
+    ],
+    "exact": [
+      [
+        [
+          41,
+          153,
+          49
+        ],
+        [
+          11,
+          42,
+          30
+        ],
+        [
+          33,
+          58,
+          49
+        ]
+      ],
+      [
+        [
+          25,
+          71,
+          33
+        ],
+        [
+          0,
+          13,
+          8
+        ],
+        [
+          2,
+          10,
+          2
+        ]
+      ],
+      [
+        [
+          10,
+          34,
+          14
+        ],
+        [
+          3,
+          7,
+          12
+        ],
+        [
+          3,
+          5,
+          5
+        ]
+      ],
+      [
+        [
+          25,
+          140,
+          28
+        ],
+        [
+          71,
+          116,
+          86
+        ],
+        [
+          28,
+          65,
+          43
+        ]
+      ],
+      [
+        [
+          43,
+          89,
+          54
+        ],
+        [
+          23,
+          59,
+          38
+        ],
+        [
+          24,
+          40,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          10,
+          0
+        ],
+        [
+          0,
+          4,
+          4
+        ],
+        [
+          0,
+          4,
+          0
+        ]
+      ],
+      [
+        [
+          92,
+          298,
+          111
+        ],
+        [
+          13,
+          79,
+          50
+        ],
+        [
+          80,
+          138,
+          107
+        ]
+      ],
+      [
+        [
+          13,
+          47,
+          18
+        ],
+        [
+          10,
+          27,
+          24
+        ],
+        [
+          14,
+          20,
+          23
+        ]
+      ]
+    ],
+    "relaxed": [
+      [
+        [
+          45,
+          153,
+          45,
+          49
+        ],
+        [
+          13,
+          42,
+          13,
+          30
+        ],
+        [
+          35,
+          58,
+          34,
+          49
+        ]
+      ],
+      [
+        [
+          32,
+          71,
+          29,
+          33
+        ],
+        [
+          0,
+          13,
+          0,
+          8
+        ],
+        [
+          2,
+          10,
+          2,
+          2
+        ]
+      ],
+      [
+        [
+          11,
+          34,
+          11,
+          14
+        ],
+        [
+          3,
+          7,
+          3,
+          12
+        ],
+        [
+          3,
+          5,
+          3,
+          5
+        ]
+      ],
+      [
+        [
+          26,
+          140,
+          26,
+          28
+        ],
+        [
+          77,
+          116,
+          78,
+          86
+        ],
+        [
+          28,
+          65,
+          28,
+          43
+        ]
+      ],
+      [
+        [
+          48,
+          89,
+          48,
+          54
+        ],
+        [
+          37,
+          59,
+          35,
+          38
+        ],
+        [
+          24,
+          40,
+          24,
+          38
+        ]
+      ],
+      [
+        [
+          0,
+          10,
+          0,
+          0
+        ],
+        [
+          0,
+          4,
+          0,
+          4
+        ],
+        [
+          0,
+          4,
+          0,
+          0
+        ]
+      ],
+      [
+        [
+          102,
+          298,
+          102,
+          111
+        ],
+        [
+          31,
+          79,
+          31,
+          50
+        ],
+        [
+          92,
+          138,
+          92,
+          107
+        ]
+      ],
+      [
+        [
+          14,
+          47,
+          15,
+          18
+        ],
+        [
+          14,
+          27,
+          15,
+          24
+        ],
+        [
+          15,
+          20,
+          15,
+          23
+        ]
+      ]
+    ]
+  },
+  "ci95": {
+    "micro_f1": [
+      0.4386330754869772,
+      0.5140252546779541
+    ],
+    "macro_f1": [
+      0.4269297400527807,
+      0.5249275963652961
+    ],
+    "relaxed_micro_f1": [
+      0.4946890232445039,
+      0.6006802292065088
+    ],
+    "relaxed_macro_f1": [
+      0.5043026841154745,
+      0.6120521308209645
+    ]
+  },
+  "bootstrap": {
+    "n_groups": 8,
+    "resamples": 5000,
+    "seed": 0
+  }
+}
