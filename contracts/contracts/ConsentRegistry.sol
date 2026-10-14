@@ -1,5 +1,4 @@
-
- // SPDX-License-Identifier: MIT
+// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
 /// @title ConsentRegistry
@@ -24,6 +23,7 @@ contract ConsentRegistry {
 
     event ConsentCreated(
         bytes32 indexed consentId,
+        address indexed owner,
         bytes32 artefactHash,
         uint64 expiry,
         uint256 nonce
@@ -34,17 +34,30 @@ contract ConsentRegistry {
 
     event AccessRecorded(
         bytes32 indexed consentId,
+        address indexed accessor,
         bytes32 presentedHash,
         bool valid
     );
 
-    /// Create a consent record.
+    /// The id a given owner gets for a given fingerprint and nonce. Nobody else can obtain it.
+    function consentIdFor(
+        address owner,
+        bytes32 artefactHash,
+        uint256 nonce
+    ) public pure returns (bytes32) {
+        return keccak256(abi.encode(owner, artefactHash, nonce));
+    }
+
+    /// Create a consent record. The id is computed here, from the caller's own address.
     function createConsent(
-        bytes32 consentId,
         bytes32 artefactHash,
         uint64 expiry,
         uint256 nonce
-    ) external {
+    ) external returns (bytes32 consentId) {
+        require(expiry > block.timestamp, "expiry in past");
+
+        consentId = consentIdFor(msg.sender, artefactHash, nonce);
+
         require(
             consents[consentId].status == Status.NONE,
             "consent exists"
@@ -58,7 +71,7 @@ contract ConsentRegistry {
             status: Status.CREATED
         });
 
-        emit ConsentCreated(consentId, artefactHash, expiry, nonce);
+        emit ConsentCreated(consentId, msg.sender, artefactHash, expiry, nonce);
     }
 
     /// Grant consent. Only its owner can grant it.
@@ -73,11 +86,14 @@ contract ConsentRegistry {
         emit ConsentGranted(consentId);
     }
 
-    /// Revoke previously granted consent.
+    /// Revoke a consent that was created or granted. Only its owner can.
     function revokeConsent(bytes32 consentId) external {
         Consent storage c = consents[consentId];
 
-        require(c.status == Status.GRANTED, "not granted");
+        require(
+            c.status == Status.CREATED || c.status == Status.GRANTED,
+            "not active"
+        );
         require(c.owner == msg.sender, "not owner");
 
         c.status = Status.REVOKED;
@@ -85,27 +101,21 @@ contract ConsentRegistry {
         emit ConsentRevoked(consentId);
     }
 
-    /// Verify access and record the result on-chain.
+    /// Verify access and record the result, and who asked, on-chain.
     function recordAccess(
         bytes32 consentId,
         bytes32 presentedHash
     ) external returns (bool valid) {
-        Consent storage c = consents[consentId];
+        valid = isValid(consentId, presentedHash);
 
-        valid = (
-            c.status == Status.GRANTED &&
-            block.timestamp <= c.expiry &&
-            c.artefactHash == presentedHash
-        );
-
-        emit AccessRecorded(consentId, presentedHash, valid);
+        emit AccessRecorded(consentId, msg.sender, presentedHash, valid);
     }
 
     /// Read-only consent verification.
     function isValid(
         bytes32 consentId,
         bytes32 presentedHash
-    ) external view returns (bool) {
+    ) public view returns (bool) {
         Consent storage c = consents[consentId];
 
         return (

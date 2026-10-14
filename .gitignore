@@ -11,8 +11,7 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-# Secrets
-.env
+
 
 # Model artifacts (large)
 artifacts_out/
@@ -73,3 +72,12 @@ results/annotation/adjudication/sample_check_P*
 results/annotation/adjudication/decisions.tsv
 results/annotation/adjudication/rules_to_ratify.md
 results/annotation/adjudication/gold_audit.md
+
+# Hardhat generated files
+contracts/artifacts/
+contracts/cache/
+contracts/ignition/deployments/chain-31337/
+
+.env
+.env.*
+!.env.example

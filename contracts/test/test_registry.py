@@ -1,10 +1,13 @@
-
 import json
 import sys
 import unittest
 from pathlib import Path
-from types import SimpleNamespace
 from unittest.mock import Mock
+
+from eth_account import Account
+from eth_account.signers.local import LocalAccount
+from eth_utils import to_checksum_address
+from web3 import Web3
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
@@ -58,31 +61,42 @@ class ConsentRegistryTests(unittest.TestCase):
     def make_send_mocks(self, receipt_status=1):
         """Prepare mock objects for testing the send() helper."""
         w3 = Mock()
-        account = Mock()
+        account = Account.create()
         function = Mock()
 
         w3.eth.chain_id = 11155111
         w3.eth.get_transaction_count.return_value = 7
-        w3.eth.send_raw_transaction.return_value = SimpleNamespace(
-            hex=lambda: "0xtesttransaction"
-        )
-        w3.eth.wait_for_transaction_receipt.return_value = SimpleNamespace(
+        w3.eth.wait_for_transaction_receipt.return_value = Mock(
             status=receipt_status
         )
 
         function.estimate_gas.return_value = 100
-        function.build_transaction.return_value = {"to": "0x1234"}
+        function.build_transaction.return_value = {
+            "to": to_checksum_address("0x" + "12" * 20),
+            "value": 0,
+            "gas": 120,
+            "nonce": 7,
+            "chainId": 11155111,
+            "gasPrice": 1_000_000_000,
+        }
 
-        account.address = "0xTestAccount"
-        account.sign_transaction.return_value = SimpleNamespace(
-            raw_transaction=b"signed-transaction"
+        # Sign a real dummy transaction locally; no network or funds required.
+        transaction = function.build_transaction.return_value.copy()
+        signed = account.sign_transaction(transaction)
+
+        account_wrapper = Mock()
+        account_wrapper.address = account.address
+        account_wrapper.sign_transaction.return_value = signed
+
+        w3.eth.send_raw_transaction.return_value = Web3.keccak(
+            text="test-transaction"
         )
 
-        return w3, account, function
+        return w3, account_wrapper, function, signed
 
     def test_send_successfully_builds_and_sends_transaction(self):
         """Check gas buffer, nonce, signing, and successful receipt."""
-        w3, account, function = self.make_send_mocks()
+        w3, account, function, signed = self.make_send_mocks()
 
         receipt = send(w3, account, function)
 
@@ -98,13 +112,13 @@ class ConsentRegistryTests(unittest.TestCase):
 
         account.sign_transaction.assert_called_once()
         w3.eth.send_raw_transaction.assert_called_once_with(
-            b"signed-transaction"
+            signed.rawTransaction
         )
         w3.eth.wait_for_transaction_receipt.assert_called_once()
 
     def test_send_raises_error_when_transaction_fails(self):
         """Check that a failed blockchain transaction raises an error."""
-        w3, account, function = self.make_send_mocks(receipt_status=0)
+        w3, account, function, _ = self.make_send_mocks(receipt_status=0)
 
         with self.assertRaisesRegex(RuntimeError, "Transaction failed"):
             send(w3, account, function)

@@ -1,107 +1,162 @@
 
-"""Canonicalize consent data, hash it, and register/grant consent."""
+"""Register a consent artefact on the ConsentRegistry contract."""
+
+from __future__ import annotations
 
 import argparse
-import hashlib
 import json
-import time
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+from typing import Any
 
 from web3 import Web3
 
-from .web3_client import get_web3, get_account, get_contract, send
+from .web3_client import get_account, get_contract, get_web3, send
+
+ROOT = Path(__file__).resolve().parents[3]
 
 
-def canonicalize(data: dict) -> bytes:
-    """Serialize JSON deterministically so equivalent data gets the same hash."""
+def canonicalize(artefact: dict[str, Any]) -> bytes:
+    """Return deterministic JSON bytes, ignoring underscore-prefixed comments."""
+    if not isinstance(artefact, dict):
+        raise TypeError("The consent artefact must be a JSON object.")
+
+    clean = {key: value for key, value in artefact.items()
+             if not key.startswith("_")}
+
     return json.dumps(
-        data,
+        clean,
         sort_keys=True,
         separators=(",", ":"),
         ensure_ascii=False,
     ).encode("utf-8")
 
 
-def keccak_hash(data: bytes) -> bytes:
-    """Return the Ethereum Keccak-256 hash."""
-    return Web3.keccak(data)
+def hash_artefact(artefact: dict[str, Any]) -> bytes:
+    """Calculate the Keccak-256 hash of the canonical artefact."""
+    return Web3.keccak(canonicalize(artefact))
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Register and grant consent on ConsentRegistry."
-    )
-    parser.add_argument(
-        "--file",
-        required=True,
-        help="Path to the consent JSON file.",
-    )
-    parser.add_argument(
-        "--expiry-days",
-        type=int,
-        default=30,
-        help="Number of days until consent expires (default: 30).",
-    )
-    args = parser.parse_args()
+def expiry_timestamp(artefact: dict[str, Any]) -> int:
+    """Use ConsentDetail.consentExpiry, falling back to expiry_days."""
+    detail = artefact.get("ConsentDetail", {})
+    expiry = detail.get("consentExpiry") if isinstance(detail, dict) else None
 
-    if args.expiry_days <= 0:
-        parser.error("--expiry-days must be greater than zero.")
+    if expiry:
+        value = str(expiry).strip()
+        if value.endswith("Z"):
+            value = value[:-1] + "+00:00"
 
-    with open(args.file, "r", encoding="utf-8") as file:
-        consent_data = json.load(file)
+        parsed = datetime.fromisoformat(value)
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
 
-    if not isinstance(consent_data, dict):
-        parser.error("The consent JSON must contain a JSON object.")
+        timestamp = int(parsed.timestamp())
+        if timestamp <= int(datetime.now(timezone.utc).timestamp()):
+            raise ValueError("Consent expiry must be in the future.")
+        return timestamp
 
-    canonical_data = canonicalize(consent_data)
-    artefact_hash = keccak_hash(canonical_data)
+    days = artefact.get("expiry_days", 30)
+    if isinstance(days, bool) or not isinstance(days, int) or days <= 0:
+        raise ValueError("expiry_days must be a positive integer.")
 
-    # Derive a deterministic consent ID from the document hash and a unique nonce.
-    nonce = int(time.time_ns())
-    consent_id = Web3.keccak(
-        artefact_hash + nonce.to_bytes(32, byteorder="big")
-    )
+    return int((datetime.now(timezone.utc) + timedelta(days=days)).timestamp())
 
-    expiry = int(time.time()) + args.expiry_days * 24 * 60 * 60
 
+def register(artefact: dict[str, Any]) -> dict[str, Any]:
+    """Register an artefact, then grant consent; return its on-chain details."""
     w3 = get_web3()
     account = get_account(w3)
     contract = get_contract(w3)
 
-    print("Connecting to Sepolia...")
-    print(f"Wallet address: {account.address}")
-    print(f"Consent ID: 0x{consent_id.hex()}")
-    print(f"Document hash: 0x{artefact_hash.hex()}")
-    print(f"Expiry timestamp: {expiry}")
+    artefact_hash = hash_artefact(artefact)
+    expiry = expiry_timestamp(artefact)
 
-    input("Review the details above. Press Enter to submit, or Ctrl+C to cancel.")
+    # Nonce helps the contract generate a distinct ID for each registration.
+    nonce = w3.eth.get_transaction_count(account.address, "pending")
 
-    created_receipt = send(
+    receipt = send(
         w3,
         account,
         contract.functions.createConsent(
-            consent_id,
             artefact_hash,
             expiry,
             nonce,
         ),
     )
 
-    if created_receipt.status != 1:
-        raise RuntimeError("createConsent transaction failed.")
+    events = contract.events.ConsentCreated().process_receipt(receipt)
+    if not events:
+        raise RuntimeError(
+            "The transaction succeeded, but no ConsentCreated event was found."
+        )
 
-    print(f"Consent created. Transaction: {created_receipt.transactionHash.hex()}")
+    consent_id = events[0]["args"]["consentId"]
 
-    granted_receipt = send(
+    grant_receipt = send(
         w3,
         account,
         contract.functions.grantConsent(consent_id),
     )
 
-    if granted_receipt.status != 1:
-        raise RuntimeError("grantConsent transaction failed.")
+    return {
+        "consent_id": Web3.to_hex(consent_id),
+        "artefact_hash": Web3.to_hex(artefact_hash),
+        "expiry_timestamp": expiry,
+        "create_transaction": Web3.to_hex(receipt.transactionHash),
+        "grant_transaction": Web3.to_hex(grant_receipt.transactionHash),
+        "granted": True,
+    }
 
-    print(f"Consent granted. Transaction: {granted_receipt.transactionHash.hex()}")
-    print("Save the consent ID above; you will need it to verify consent later.")
+
+def run_selfcheck() -> None:
+    """Check deterministic hashing without a network or wallet."""
+    original = {
+        "purpose": "Research",
+        "data": {"subject": "Demo User"},
+        "_comment": "This field should not affect the hash.",
+    }
+    reordered = {
+        "_comment": "Different comment.",
+        "data": {"subject": "Demo User"},
+        "purpose": "Research",
+    }
+    changed = {
+        "purpose": "Clinical Research",
+        "data": {"subject": "Demo User"},
+    }
+
+    assert hash_artefact(original) == hash_artefact(reordered)
+    assert hash_artefact(original) != hash_artefact(changed)
+    print("Self-check passed: stable JSON hashing and change detection work.")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Register and grant a consent artefact."
+    )
+    parser.add_argument(
+        "--file",
+        default=str(ROOT / "sample_consent.json"),
+        help="Path to the consent JSON file.",
+    )
+    parser.add_argument(
+        "--selfcheck",
+        action="store_true",
+        help="Test hashing locally without connecting to a blockchain.",
+    )
+    args = parser.parse_args()
+
+    if args.selfcheck:
+        run_selfcheck()
+        return
+
+    file_path = Path(args.file)
+    artefact = json.loads(file_path.read_text(encoding="utf-8-sig"))
+
+    print("Connecting to the configured blockchain...")
+    result = register(artefact)
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

@@ -14,8 +14,7 @@ from web3 import Web3
 ROOT = Path(__file__).resolve().parents[3]
 
 # Load environment variables from the project root.
-load_dotenv(ROOT / ".env")
-
+load_dotenv(ROOT / ".env.local", override=True)
 
 def get_web3() -> Web3:
     """Connect to the Sepolia Ethereum test network."""
@@ -93,9 +92,8 @@ def send(w3: Web3, acct, fn):
     )
 
     signed = acct.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+    tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
     receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-
     if receipt.status != 1:
         raise RuntimeError(
             f"Transaction failed: {tx_hash.hex()}"
