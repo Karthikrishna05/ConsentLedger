@@ -1,7 +1,0 @@
-﻿{
-  "consent_id": "demo-consent-001",
-  "purpose": "Research data access",
-  "data_subject": "Demo User",
-  "recipient": "Research Team",
-  "expiry_days": 30
-}

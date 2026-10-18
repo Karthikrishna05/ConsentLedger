@@ -1,31 +1,51 @@
+"""Revoke a consent on the ConsentRegistry contract (only its owner's wallet can).
 
-from consentledger.chain.web3_client import get_web3, get_account, get_contract, send
+    python -m consentledger.chain.revoke_consent --consent-id 0x<64 hex>          # asks before sending
+    python -m consentledger.chain.revoke_consent --consent-id 0x<64 hex> --yes
+"""
 
-CONSENT_ID = "1efb43bf5cca6c37fd09363cbe3b9a36117f684457d091362f89290986956507"
+from __future__ import annotations
 
-def main():
+import argparse
+import json
+
+from web3 import Web3
+
+from .web3_client import explorer_link, get_account, get_contract, get_web3, send
+
+
+def parse_consent_id(value: str) -> bytes:
+    raw = bytes.fromhex(value.strip().removeprefix("0x"))
+    if len(raw) != 32:
+        raise ValueError("a consent id is 32 bytes (64 hex characters)")
+    return raw
+
+
+def revoke(consent_id: str) -> dict:
+    """Revoke the consent; return the transaction and its audit link. Revoking cannot be undone."""
     w3 = get_web3()
-    account = get_account(w3)
-    contract = get_contract(w3)
+    receipt = send(w3, get_account(w3), get_contract(w3).functions.revokeConsent(parse_consent_id(consent_id)))
+    return {"consent_id": consent_id, "revoke_transaction": Web3.to_hex(receipt.transactionHash),
+            "block": receipt.blockNumber, "audit_link": explorer_link(w3, receipt.transactionHash)}
 
-    consent_id = bytes.fromhex(CONSENT_ID.removeprefix("0x"))
 
-    print("Network:", w3.eth.chain_id)
-    print("Wallet:", account.address)
-    print("Consent ID:", "0x" + consent_id.hex())
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Revoke a consent (cannot be undone).")
+    parser.add_argument("--consent-id", required=True, help="Consent ID printed by register_consent.py.")
+    parser.add_argument("--yes", action="store_true", help="Do not ask for confirmation.")
+    args = parser.parse_args()
 
-    if w3.eth.chain_id != 31337:
-        raise RuntimeError("Safety check failed: this test must use local Hardhat (31337).")
+    try:
+        parse_consent_id(args.consent_id)
+    except ValueError as exc:
+        parser.error(f"--consent-id: {exc}")
 
-    confirm = input("Revoke this demo consent? Type YES to continue: ")
-    if confirm != "YES":
+    if not args.yes and input(f"Revoke {args.consent_id}? This cannot be undone. Type YES: ") != "YES":
         print("Cancelled.")
         return
 
-    receipt = send(w3, account, contract.functions.revokeConsent(consent_id))
-    print("Consent revoked successfully.")
-    print("Transaction:", receipt.transactionHash.hex())
-    print("Block:", receipt.blockNumber)
+    print(json.dumps(revoke(args.consent_id), indent=2))
+
 
 if __name__ == "__main__":
     main()

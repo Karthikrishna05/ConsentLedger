@@ -11,7 +11,7 @@ from typing import Any
 
 from web3 import Web3
 
-from .web3_client import get_account, get_contract, get_web3, send
+from .web3_client import explorer_link, get_account, get_contract, get_web3, send
 
 ROOT = Path(__file__).resolve().parents[3]
 
@@ -106,6 +106,7 @@ def register(artefact: dict[str, Any]) -> dict[str, Any]:
         "create_transaction": Web3.to_hex(receipt.transactionHash),
         "grant_transaction": Web3.to_hex(grant_receipt.transactionHash),
         "granted": True,
+        "audit_link": explorer_link(w3, receipt.transactionHash),
     }
 
 
@@ -137,7 +138,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--file",
-        default=str(ROOT / "sample_consent.json"),
+        default=str(ROOT / "data" / "aa" / "consent_artefacts" / "demo_consent.json"),
         help="Path to the consent JSON file.",
     )
     parser.add_argument(

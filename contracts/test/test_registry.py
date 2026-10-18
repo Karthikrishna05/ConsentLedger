@@ -123,6 +123,35 @@ class ConsentRegistryTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "Transaction failed"):
             send(w3, account, function)
 
+    def test_only_test_networks_are_accepted(self):
+        """Mainnet (or any chain but Sepolia / local Hardhat) is refused before anything is sent."""
+        from unittest.mock import patch
+        from consentledger.chain import web3_client as wc
+
+        for chain_id, ok in ((1, False), (wc.SEPOLIA, True), (wc.LOCAL, True)):
+            fake = Mock()
+            fake.is_connected.return_value = True
+            fake.eth.chain_id = chain_id
+            with self.subTest(chain_id=chain_id), patch.dict("os.environ", {"SEPOLIA_RPC_URL": "http://x"}), \
+                    patch.object(wc, "Web3", return_value=fake):
+                if ok:
+                    self.assertIs(wc.get_web3(), fake)
+                else:
+                    with self.assertRaisesRegex(RuntimeError, "refused"):
+                        wc.get_web3()
+
+    def test_audit_link_and_consent_id(self):
+        """Etherscan link on Sepolia, none locally; a consent id must be 32 bytes."""
+        from consentledger.chain.revoke_consent import parse_consent_id
+        from consentledger.chain.web3_client import LOCAL, SEPOLIA, explorer_link
+
+        tx = "0x" + "ab" * 32
+        self.assertEqual(explorer_link(Mock(eth=Mock(chain_id=SEPOLIA)), tx), "https://sepolia.etherscan.io/tx/" + tx)
+        self.assertIsNone(explorer_link(Mock(eth=Mock(chain_id=LOCAL)), tx))
+        self.assertEqual(parse_consent_id("0x" + "11" * 32), bytes.fromhex("11" * 32))
+        with self.assertRaises(ValueError):
+            parse_consent_id("0x1234")
+
 
 if __name__ == "__main__":
     unittest.main()

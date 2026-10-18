@@ -1,5 +1,4 @@
-
-"""web3.py v6 connection to Sepolia + a loaded ConsentRegistry contract object."""
+"""web3.py v6 connection to Sepolia (or a local Hardhat chain) + a loaded ConsentRegistry contract object."""
 
 from __future__ import annotations
 
@@ -10,39 +9,41 @@ from pathlib import Path
 from dotenv import load_dotenv
 from web3 import Web3
 
-# Project root: ConsentLedge/
+# Project root: ConsentLedger/
 ROOT = Path(__file__).resolve().parents[3]
 
-# Load environment variables from the project root.
-load_dotenv(ROOT / ".env.local", override=True)
+# One settings file for the whole project (see .env.example). Variables already set - e.g. a hosting
+# platform's secrets - win over the file.
+load_dotenv(ROOT / ".env")
+
+SEPOLIA, LOCAL = 11155111, 31337
+EXPLORER = {SEPOLIA: "https://sepolia.etherscan.io/tx/"}
+
 
 def get_web3() -> Web3:
-    """Connect to the Sepolia Ethereum test network."""
+    """Connect to the configured test network. Any other chain (mainnet!) is refused: test funds only."""
     rpc_url = os.environ.get("SEPOLIA_RPC_URL")
 
     if not rpc_url:
-        raise RuntimeError(
-            "SEPOLIA_RPC_URL is missing. Configure it in the project .env file."
-        )
+        raise RuntimeError("SEPOLIA_RPC_URL is missing. Set it in the project's .env file.")
 
     w3 = Web3(Web3.HTTPProvider(rpc_url))
 
     if not w3.is_connected():
-        raise ConnectionError(
-            "Cannot reach Sepolia RPC. Check SEPOLIA_RPC_URL."
-        )
+        raise ConnectionError("Cannot reach the RPC. Check SEPOLIA_RPC_URL.")
+
+    if w3.eth.chain_id not in (SEPOLIA, LOCAL):
+        raise RuntimeError(f"Chain {w3.eth.chain_id} refused: only Sepolia ({SEPOLIA}) or local Hardhat ({LOCAL}).")
 
     return w3
 
 
 def get_account(w3: Web3):
     """Load the dedicated test wallet account."""
-    private_key = os.environ.get("TEST_WALLET_PRIVATE_KEY")
+    private_key = os.environ.get("SEPOLIA_PRIVATE_KEY")
 
     if not private_key:
-        raise RuntimeError(
-            "TEST_WALLET_PRIVATE_KEY is missing from the project .env file."
-        )
+        raise RuntimeError("SEPOLIA_PRIVATE_KEY is missing. Set it in the project's .env file.")
 
     return w3.eth.account.from_key(private_key)
 
@@ -52,9 +53,7 @@ def get_contract(w3: Web3):
     address = os.environ.get("CONSENT_REGISTRY_ADDRESS")
 
     if not address:
-        raise RuntimeError(
-            "CONSENT_REGISTRY_ADDRESS is missing from the project .env file."
-        )
+        raise RuntimeError("CONSENT_REGISTRY_ADDRESS is missing. Set it in the project's .env file.")
 
     abi_path = ROOT / "contracts" / "ConsentRegistry.abi.json"
 
@@ -68,6 +67,11 @@ def get_contract(w3: Web3):
         abi=abi,
     )
 
+
+def explorer_link(w3: Web3, tx_hash) -> str | None:
+    """Public audit link for a transaction (None on a local chain)."""
+    base = EXPLORER.get(w3.eth.chain_id)
+    return base + (tx_hash if isinstance(tx_hash, str) else Web3.to_hex(tx_hash)) if base else None
 
 
 def send(w3: Web3, acct, fn):

@@ -1,0 +1,17 @@
+{
+  "_note": "SYNTHETIC demo artefact (canonical ReBIT nesting, fake ids) with a far-future expiry, so it can be registered on a test chain. The two real examples have expired and are refused.",
+  "ConsentDetail": {
+    "consentStart": "2026-10-01T10:00:00.000Z",
+    "consentExpiry": "2030-12-31T23:59:59.000Z",
+    "consentMode": "STORE",
+    "fetchType": "PERIODIC",
+    "consentTypes": ["PROFILE", "SUMMARY", "TRANSACTIONS"],
+    "DataConsumer": {"id": "DC1", "type": "FIU"},
+    "DataProvider": {"id": "DP1", "type": "FIP"},
+    "Customer": {"id": "demo_customer@demo_aa"},
+    "Purpose": {"code": "103", "text": "To process borrower's loan application"},
+    "FIDataRange": {"from": "2026-04-01T00:00:00.000Z", "to": "2026-10-01T00:00:00.000Z"},
+    "DataLife": {"unit": "MONTH", "value": 3},
+    "Frequency": {"unit": "MONTH", "value": 1}
+  }
+}

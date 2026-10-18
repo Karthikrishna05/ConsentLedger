@@ -9,7 +9,7 @@ describe("ConsentRegistry", async function () {
   const publicClient = await viem.getPublicClient();
 
   async function createConsent(
-    registry: Awaited<ReturnType<typeof viem.deployContract>>,
+    registry: Awaited<ReturnType<typeof viem.deployContract<"ConsentRegistry">>>,
     artefactHash: `0x${string}`,
     nonce: bigint,
   ): Promise<`0x${string}`> {

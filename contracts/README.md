@@ -1,57 +1,41 @@
-# Sample Hardhat 3 Project (`node:test` and `viem`)
+# ConsentRegistry — the on-chain consent record (P3)
 
-This project showcases a Hardhat 3 project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+`contracts/ConsentRegistry.sol` stores a **fingerprint** (Keccak-256 hash) of each consent artefact — never
+the artefact or any personal data — with its owner, expiry and status (CREATED → GRANTED → REVOKED).
+Anyone can check a document against it; `recordAccess` leaves an audit entry saying who checked and whether
+the document was valid. The consent id is computed by the contract from the owner's address, the hash and
+a nonce, so nobody can take someone else's id. Sepolia testnet only.
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Settings
+One file for the whole project: copy `../.env.example` to `../.env` (project root, git-ignored) and fill in
+`SEPOLIA_RPC_URL`, `SEPOLIA_PRIVATE_KEY` (a throwaway test wallet), `ETHERSCAN_API_KEY`, and after deploying
+`CONSENT_REGISTRY_ADDRESS`. Hardhat and the Python both read it.
 
-## Project Overview
-
-This example project includes:
-
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
-
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
+## Test
 ```shell
-npx hardhat test
+npm ci
+npx hardhat test                                         # 10 contract tests
+python -m pytest test/test_registry.py                   # the Python helpers (from the project root: contracts/test/...)
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
-
+## Deploy to Sepolia and verify
 ```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+npx hardhat ignition deploy ignition/modules/ConsentRegistry.ts --network sepolia
+npx hardhat verify --network sepolia <DEPLOYED_ADDRESS>
 ```
+Put the printed address into `../.env` as `CONSENT_REGISTRY_ADDRESS` and commit
+`ignition/deployments/chain-11155111/` (addresses and ABI only — never the key).
 
-### Make a deployment to Sepolia
-
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
-
-To run the deployment to a local chain:
-
+## Use from Python (project root, venv active)
 ```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+python -m consentledger.chain.register_consent                       # registers data/aa/consent_artefacts/demo_consent.json
+python -m consentledger.chain.read_consent --consent-id <id> --file <json> [--record]
+python -m consentledger.chain.revoke_consent --consent-id <id> [--yes]
 ```
+`register()`, `check()`, `record_access()` and `revoke()` are the functions the pipeline calls.
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
+## Try it on a local practice chain first
+In one terminal `npx hardhat node`; in another `npx hardhat ignition deploy ignition/modules/ConsentRegistry.ts
+--network localhost`, then run the Python with `SEPOLIA_RPC_URL=http://127.0.0.1:8545`,
+`SEPOLIA_PRIVATE_KEY` = account #0's key from the node's output, and the printed address. Only Sepolia and the
+local chain (31337) are accepted; any other network is refused.

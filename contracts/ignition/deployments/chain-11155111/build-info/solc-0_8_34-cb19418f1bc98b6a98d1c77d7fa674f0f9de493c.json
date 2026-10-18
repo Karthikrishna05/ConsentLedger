@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_34-cb19418f1bc98b6a98d1c77d7fa674f0f9de493c",
+  "solcVersion": "0.8.34",
+  "solcLongVersion": "0.8.34+commit.80d5c536",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.19.0"
+  },
+  "userSourceNameMap": {
+    "contracts/ConsentRegistry.sol": "project/contracts/ConsentRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "osaka",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/ConsentRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.20;\n\n/// @title ConsentRegistry\n/// @notice Stores consent fingerprints, not personal data.\ncontract ConsentRegistry {\n    enum Status {\n        NONE,\n        CREATED,\n        GRANTED,\n        REVOKED\n    }\n\n    struct Consent {\n        bytes32 artefactHash;\n        address owner;\n        uint64 expiry;\n        uint256 nonce;\n        Status status;\n    }\n\n    mapping(bytes32 => Consent) public consents;\n\n    event ConsentCreated(\n        bytes32 indexed consentId,\n        address indexed owner,\n        bytes32 artefactHash,\n        uint64 expiry,\n        uint256 nonce\n    );\n\n    event ConsentGranted(bytes32 indexed consentId);\n    event ConsentRevoked(bytes32 indexed consentId);\n\n    event AccessRecorded(\n        bytes32 indexed consentId,\n        address indexed accessor,\n        bytes32 presentedHash,\n        bool valid\n    );\n\n    /// The id a given owner gets for a given fingerprint and nonce. Nobody else can obtain it.\n    function consentIdFor(\n        address owner,\n        bytes32 artefactHash,\n        uint256 nonce\n    ) public pure returns (bytes32) {\n        return keccak256(abi.encode(owner, artefactHash, nonce));\n    }\n\n    /// Create a consent record. The id is computed here, from the caller's own address.\n    function createConsent(\n        bytes32 artefactHash,\n        uint64 expiry,\n        uint256 nonce\n    ) external returns (bytes32 consentId) {\n        require(expiry > block.timestamp, \"expiry in past\");\n\n        consentId = consentIdFor(msg.sender, artefactHash, nonce);\n\n        require(\n            consents[consentId].status == Status.NONE,\n            \"consent exists\"\n        );\n\n        consents[consentId] = Consent({\n            artefactHash: artefactHash,\n            owner: msg.sender,\n            expiry: expiry,\n            nonce: nonce,\n            status: Status.CREATED\n        });\n\n        emit ConsentCreated(consentId, msg.sender, artefactHash, expiry, nonce);\n    }\n\n    /// Grant consent. Only its owner can grant it.\n    function grantConsent(bytes32 consentId) external {\n        Consent storage c = consents[consentId];\n\n        require(c.status == Status.CREATED, \"not in created state\");\n        require(c.owner == msg.sender, \"not owner\");\n\n        c.status = Status.GRANTED;\n\n        emit ConsentGranted(consentId);\n    }\n\n    /// Revoke a consent that was created or granted. Only its owner can.\n    function revokeConsent(bytes32 consentId) external {\n        Consent storage c = consents[consentId];\n\n        require(\n            c.status == Status.CREATED || c.status == Status.GRANTED,\n            \"not active\"\n        );\n        require(c.owner == msg.sender, \"not owner\");\n\n        c.status = Status.REVOKED;\n\n        emit ConsentRevoked(consentId);\n    }\n\n    /// Verify access and record the result, and who asked, on-chain.\n    function recordAccess(\n        bytes32 consentId,\n        bytes32 presentedHash\n    ) external returns (bool valid) {\n        valid = isValid(consentId, presentedHash);\n\n        emit AccessRecorded(consentId, msg.sender, presentedHash, valid);\n    }\n\n    /// Read-only consent verification.\n    function isValid(\n        bytes32 consentId,\n        bytes32 presentedHash\n    ) public view returns (bool) {\n        Consent storage c = consents[consentId];\n\n        return (\n            c.status == Status.GRANTED &&\n            block.timestamp <= c.expiry &&\n            c.artefactHash == presentedHash\n        );\n    }\n}\n"
+      }
+    }
+  }
+}
