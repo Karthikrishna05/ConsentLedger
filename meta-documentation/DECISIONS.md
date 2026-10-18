@@ -1994,3 +1994,21 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
   `results/ner/llm_<run>/test_metrics.json` (numbers only). Raw replies stay in `artifacts_out/llm/`
   (git-ignored — they quote the policies).
 - **Status:** ✅ Done. The test set has now been opened for 31 pre-specified runs and for nothing else.
+
+## P3: Consent Registry Design and Limitations
+
+### On-chain data and privacy
+
+The ConsentRegistry stores consent-related hashes and metadata on-chain rather than the full consent artefact or personal data. The original consent JSON remains off-chain. A matching hash helps verify that the artefact has not changed, but it does not prove that the original information was truthful.
+
+### Malicious Account Aggregator (AA)
+
+The smart contract cannot independently verify whether an Account Aggregator supplied genuine consent information or whether the information was collected honestly. A malicious or compromised AA could supply false information. Hash verification only checks consistency with the registered artefact; it does not establish the authenticity or truthfulness of that artefact.
+
+### Lazy expiry
+
+Consent expiry is evaluated when the system checks validity or records an access event. Therefore, a consent's stored status may remain `GRANTED` after its expiry timestamp until a subsequent check evaluates it. The consent should nevertheless be treated as invalid when the expiry time has passed.
+
+### Revocation and access auditing
+
+Revocation changes the consent status so subsequent validity checks reject the consent. Access auditing records access-related events on-chain, but the contract cannot guarantee how an off-chain recipient handles, copies, or uses data after access is granted.

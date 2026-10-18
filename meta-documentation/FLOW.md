@@ -151,8 +151,8 @@ practice help?*
                         developed on all 23 documents incl. the test ones -> upper estimate for the LLM.
 [par]  P2 summarizer   P2's track; dataset builder + plan handed over by Drive (D33, D34): text ->
                         summary, reference-free test against gold facts. Needs P1's gold export.
-[par]  P3 contract     P3's track; see P3.md. Reference implementation (not a novelty claim, D28).
-[later] 13. Rest        summarizer + faithfulness (P2 — see P2.md), smart contract (P3 — see P3.md),
+[done] P3 contract — ConsentRegistry.sol compiled, tested, and deployed to Sepolia. ABI and deployment records saved in the repository. Python registration, read, and revocation scripts implemented and tested. Consent registration, access audit, and revocation transactions verified on Etherscan. See P3.md.
+[later] 13. Rest        summarizer + faithfulness (P2 — see P2.md), 
                         end-to-end pipeline, user study, paper.
 ```
 
