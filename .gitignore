@@ -69,6 +69,11 @@ Thumbs.db
 # automatic adjudication (D50): item lists and sample sheets quote document text; decisions.tsv (ids + codes) is committed
 results/annotation/adjudication/items*.txt
 results/annotation/adjudication/sample_check_P*
+results/annotation/adjudication/negation_check*
+# faithfulness gate (D74): the blind label sheet quotes passages and model summaries
+results/summ/gate_label_check*
+# pipeline reports (end_to_end.py) quote the policy and its summaries
+results/pipeline/*.json
 results/annotation/adjudication/decisions.tsv
 results/annotation/adjudication/rules_to_ratify.md
 results/annotation/adjudication/gold_audit.md

@@ -48,6 +48,9 @@ python-dotenv==1.0.1
 matplotlib==3.9.2
 tqdm==4.66.5
 
+# --- demo app (app.py, D80); installed against the pins above, changes none of them ---
+gradio==6.17.3
+
 # --- dev tooling ---
 ruff==0.6.9
 black==24.10.0

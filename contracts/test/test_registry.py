@@ -140,6 +140,24 @@ class ConsentRegistryTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, "refused"):
                         wc.get_web3()
 
+    def test_contract_address_defaults_to_the_recorded_deployment(self):
+        """Without CONSENT_REGISTRY_ADDRESS, the address Ignition recorded for that chain is used."""
+        from unittest.mock import patch
+        from consentledger.chain.web3_client import SEPOLIA, get_contract
+
+        rec = json.loads((ROOT / "contracts" / "ignition" / "deployments" / f"chain-{SEPOLIA}" /
+                          "deployed_addresses.json").read_text(encoding="utf-8"))["ConsentRegistryModule#ConsentRegistry"]
+        w3 = Mock()
+        w3.eth.chain_id = SEPOLIA
+        with patch.dict("os.environ", {}, clear=False):
+            import os
+            os.environ.pop("CONSENT_REGISTRY_ADDRESS", None)
+            get_contract(w3)
+        self.assertEqual(w3.eth.contract.call_args.kwargs["address"], to_checksum_address(rec))
+        w3.eth.chain_id = 999
+        with self.assertRaisesRegex(RuntimeError, "No ConsentRegistry address"):
+            get_contract(w3)
+
     def test_audit_link_and_consent_id(self):
         """Etherscan link on Sepolia, none locally; a consent id must be 32 bytes."""
         from consentledger.chain.revoke_consent import parse_consent_id

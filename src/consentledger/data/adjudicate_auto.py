@@ -292,8 +292,17 @@ def cmd_apply(args):
                 keep.append(sp)
         final[d] = sorted(keep)
     gold_path = PROJECT_ROOT / "data" / "aa" / "annotated" / "gold.json"
+    # `negated` (D66): the passage says this practice is NOT done ("we shall not access your credentials"). The
+    # label and the span are unchanged - Rule 18 marks a denied practice like an affirmed one - so the BIO files
+    # and every score are unaffected; the flag is for the summariser and the ledger. Positions come from
+    # negated.tsv (doc, start, end, label), written by the `negation` command from the checked sheet.
+    neg_path = args.out / "negated.tsv"
+    neg = {tuple(ln.split("\t")) for ln in neg_path.read_text(encoding="utf-8").splitlines() if ln.strip()} if neg_path.exists() else set()
+    spans_all = {(d, str(s), str(e), lab[0]) for d in final for s, e, lab in final[d]}
+    assert neg <= spans_all, f"negated.tsv names spans that are not in the gold: {sorted(neg - spans_all)[:5]}"
     gold_path.write_text(json.dumps(
-        [{"doc_id": d, "text": corpus[d], "spans": [{"start": s, "end": e, "label": lab, "text": corpus[d][s:e]}
+        [{"doc_id": d, "text": corpus[d], "spans": [{"start": s, "end": e, "label": lab, "text": corpus[d][s:e],
+                                                     **({"negated": True} if (d, str(s), str(e), lab[0]) in neg else {})}
                                                     for s, e, lab in final[d]]} for d in final],
         ensure_ascii=False, indent=1), encoding="utf-8")
 
@@ -347,9 +356,9 @@ def cmd_apply(args):
                                   if sample else " (sample sheets left as they are)"))
 
 
-def _sheet(out: Path, name: str) -> list[dict]:
+def _sheet(out: Path, name: str, stem: str = "sample_check") -> list[dict]:
     """A filled sheet however the spreadsheet program saved it (CSV, tab-separated, UTF-16); '<name>_filled*' wins."""
-    p = (sorted(out.glob(f"sample_check_{name}_filled*")) + [out / f"sample_check_{name}.csv"])[0]
+    p = (sorted(out.glob(f"{stem}_{name}_filled*")) + [out / f"{stem}_{name}.csv"])[0]
     raw = p.read_bytes()
     try:
         txt = raw.decode("utf-16" if raw[:2] in (codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE) else "utf-8-sig")
@@ -359,6 +368,20 @@ def _sheet(out: Path, name: str) -> list[dict]:
     tab = chr(9)
     print(f"{name}: reading {p.name}")
     return list(csv.DictReader(io.StringIO(txt, newline=""), delimiter=tab if head.count(tab) > head.count(",") else ","))
+
+
+def cmd_negation(args):
+    """The checked negation sheet -> negated.tsv (positions only). Then run `apply --sample 0`."""
+    rows = _sheet(args.out, "P1", "negation_check")
+    col = next(c for c in rows[0] if c and c.startswith("DENIED?"))
+    ans = [r[col].strip().lower()[:1] for r in rows]
+    assert all(a in ("y", "n") for a in ans), f"{sum(a not in ('y', 'n') for a in ans)} rows have no y/n answer"
+    yes = [r for r, a in zip(rows, ans) if a == "y"]
+    (args.out / "negated.tsv").write_text(
+        "".join(f"{r['doc']}\t{r['start']}\t{r['end']}\t{r['label'][0]}\n" for r in yes), encoding="utf-8")
+    changed = sum((a == "y") != r["PROPOSED"].startswith("DENIED") for r, a in zip(rows, ans))
+    print(f"{len(yes)} of {len(rows)} checked highlights are negated ({changed} answers differ from the proposal) "
+          f"-> {args.out / 'negated.tsv'}")
 
 
 def cmd_score(args):
@@ -402,7 +425,7 @@ def _selfcheck():
 
 def main():
     ap = argparse.ArgumentParser(description="Automatic adjudication with a human sample check.")
-    ap.add_argument("cmd", choices=("items", "apply", "score", "selfcheck"))
+    ap.add_argument("cmd", choices=("items", "apply", "score", "negation", "selfcheck"))
     D = PROJECT_ROOT / "data" / "aa" / "annotated"
     ap.add_argument("--corpus", type=Path, default=D / "ls_import_tasks.json")
     ap.add_argument("--a", type=Path, default=D / "Export5A.json")
@@ -413,7 +436,8 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
     args.out = args.out.resolve()
-    {"items": cmd_items, "apply": cmd_apply, "score": cmd_score, "selfcheck": lambda a: _selfcheck()}[args.cmd](args)
+    {"items": cmd_items, "apply": cmd_apply, "score": cmd_score, "negation": cmd_negation,
+     "selfcheck": lambda a: _selfcheck()}[args.cmd](args)
 
 
 if __name__ == "__main__":

@@ -49,11 +49,16 @@ def get_account(w3: Web3):
 
 
 def get_contract(w3: Web3):
-    """Load the ABI and connect to the deployed ConsentRegistry."""
+    """Load the ABI and connect to the deployed ConsentRegistry: CONSENT_REGISTRY_ADDRESS if set, else the
+    address Hardhat Ignition recorded when it deployed to this chain (committed in contracts/ignition/)."""
     address = os.environ.get("CONSENT_REGISTRY_ADDRESS")
+    record = ROOT / "contracts" / "ignition" / "deployments" / f"chain-{w3.eth.chain_id}" / "deployed_addresses.json"
+
+    if not address and record.is_file():
+        address = json.loads(record.read_text(encoding="utf-8")).get("ConsentRegistryModule#ConsentRegistry")
 
     if not address:
-        raise RuntimeError("CONSENT_REGISTRY_ADDRESS is missing. Set it in the project's .env file.")
+        raise RuntimeError("No ConsentRegistry address: set CONSENT_REGISTRY_ADDRESS in the project's .env file.")
 
     abi_path = ROOT / "contracts" / "ConsentRegistry.abi.json"
 

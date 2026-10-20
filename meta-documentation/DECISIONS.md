@@ -1995,6 +1995,460 @@ Format per entry: **What** we decided · **Why** (plain) · **Validated by** · 
   (git-ignored — they quote the policies).
 - **Status:** ✅ Done. The test set has now been opened for 31 pre-specified runs and for nothing else.
 
+### D66 — A `negated` flag on gold highlights (two values); proposals made, waiting for P1's check
+- **Why:** Rule 18 marks a denied practice exactly like an affirmed one — "we shall **not** access your user
+  authentication credentials" yields the same DATA_TYPE highlight as "we collect your email address". That is
+  right for entity recognition, and wrong for anything built on the entities: a summary would say the company
+  takes what it promises not to take (D58, the user's and the auditor's finding).
+- **Decision (P1's):** add a flag with **two values** — denied or not. A third value for conditional practices
+  ("only with your consent", "unless required by law") was considered and left out: it would need rules of its
+  own.
+- **Definition used:** a highlight is `negated` when its sentence says the practice it takes part in is **not
+  done** — the data is not collected / accessed / stored / shared, the data does not go to that third party,
+  the data is not used for that purpose. Per mention, not per document: `Gmail` is negated in "we do not use
+  Gmail data to train AI models" and not negated where the policy says the mailbox is read.
+  - *Denied with a legal carve-out* ("shall not access contact lists, except as expressly permitted under
+    Applicable Law") -> negated: the sentence's stance is a prohibition.
+  - *The exception inside a denial* ("will not be shared, except as required for fraud verification") -> the
+    exception is **not** negated: sharing does happen for it.
+  - *Not denials:* "including but not limited to", "does not guarantee the accuracy of their services",
+    "this Policy does not apply to…", a "NOT stored" in brackets that belongs to a neighbouring item.
+- **Method:** a program listed every gold highlight near a negation word — 411 of 1,266, in three tiers
+  (negation before the highlight in its sentence, after it, or only in the lead-in before a list). All tier-one
+  candidates and every candidate with a strong denial were read; the list-mates of each denied highlight were
+  checked as well. **Proposed: 67 negated** — DATA_TYPE 59, THIRD_PARTY 5, PURPOSE 3, across 17 documents
+  (mostly credentials, device content such as contact lists and galleries, biometric data, Gmail).
+- **P1's check:** `results/annotation/adjudication/negation_check_P1.csv` (git-ignored, it quotes the policies)
+  — 124 rows: the 67 proposals, then 57 highlights that sit beside a negation and are proposed *not* negated,
+  so that a wrong "no" can be caught too. 56 rows carry a note saying why they deserve a second look.
+- **Mechanics:** `adjudicate_auto negation` turns the checked sheet into `negated.tsv` (document, start, end,
+  label — positions only); `apply` writes `"negated": true` on those spans in `gold.json` and refuses a
+  position that is not a gold span. Dry-run done: 67 flags written, every span and label identical to before;
+  then the gold file was restored (same checksum) so that nothing is applied before the check.
+- **What it cannot change:** the labels, the spans, the CoNLL files and every reported score (D63, D65) — the
+  models never see the flag.
+- **Status:** ⏳ Waiting for P1's sheet.
+
+### D67 — The 130 training summaries for P2's summariser were written by Claude Opus 5.5 (`refs_train.jsonl`)
+- **Request (P2's):** one reference summary for each of the 130 prompts in `data/summ/prompts_train.jsonl`,
+  as `{"id", "summary"}` lines in `data/summ/refs_train.jsonl`. Rules: plain English, 1-3 sentences, at most
+  60 words and at most the prompt's own word cap, keep the checklist facts that are in the passage, add
+  nothing that is not in the passage.
+- **Who wrote them (P1's decision):** Claude Opus 5.5, reading each passage. A first attempt with the local
+  qwen2.5:14b model was stopped by P1 after 8 summaries and thrown away; the `refs` command added to
+  `build_dataset.py` for it was removed again, so P2's script is unchanged.
+- **Which prompts (P1's decision):** P2's 130 prompts **as they are**. They were built on 30 Sep from the
+  *provisional* highlights (`facts_kind: silver`), before the gold file was final. Known and accepted:
+  - 126 of the 130 checklists would differ if rebuilt from the final gold, and 38 passages have no gold
+    fact left. The summaries were written from the passage itself, so they stay true to the text; only the
+    automatic "did it keep the facts?" count is measured against the older list.
+  - `16_oms_aa_privacy` (training) shares 75% of its wording with `09_saafe_terms` (summariser test) —
+    the same template problem as D52. P2 should report summariser results with and without that document.
+  - 9 of the 10 summariser test documents are NER *adaptation* documents, so the NER model used in the
+    faithfulness check has already studied them. To be stated when the end-to-end numbers are reported.
+- **Result:** 130 of 130 written, 0 rejected by `build_dataset validate`; 19-60 words each (median 55), never
+  over the prompt's cap, never more than 3 sentences; 23% of the passage length on average; checklist
+  coverage 100% on average (lowest 89%). Split by the script: 117 training / 13 mock-test pairs.
+- **A second check the script does not do:** every word and every name in a summary was compared with its
+  passage, and the pairs that stood out were read. Ten summaries were corrected — they had borrowed a detail
+  from the *neighbouring* passage (a passage that starts mid-sentence), named the company where the passage
+  only says "we", or spelled out an abbreviation the passage never spells out (`KFS`, `AA`, `DND`).
+  *Analogy: a summary of page 7 must not quote page 6, even if page 6 is true.*
+- **To disclose in the paper:** the training references are **machine-written** (the summariser learns from a
+  larger model's summaries — "distillation"), not human-written. The test stays reference-free (D34), so no
+  machine-written text is used as the answer key.
+- **Files:** `refs_train.jsonl`, `train.jsonl`, `dev.jsonl` — all git-ignored (they quote the policies); they
+  reach P2 by Drive.
+
+### D68 — P2's first summariser (t5-small, 11 Oct) checked: trained, but too lightly to do the job
+- **What arrived:** `consentledger_t5_summarizer.zip` — a t5-small (60 million weights) with its tokenizer.
+  No scores, no note of the prefix or generation settings. The training settings were read out of the zip
+  without running it: Kaggle, **3 passes** over the data, step size **2e-5**, batch 4 — about 90 small steps.
+- **Is it trained?** Yes, but barely. Compared with the original t5-small, every layer has changed and none
+  by more than 0.44%. *Analogy: a new employee who attended a 20-minute induction — technically trained, but
+  still working exactly as before.*
+- **Does it do what we need?** No. Scored with P2's own acceptance check (length cap, at least 80% of the
+  checklist kept) on the 117 training and 13 mock-test passages — the sealed summariser test set was not
+  touched:
+
+  | | P2's model | original t5-small |
+  |---|---|---|
+  | accepted, training passages | 18 of 117 | 14 of 117 |
+  | accepted, mock-test passages | 1 of 13 | 0 of 13 |
+  | checklist facts kept (mock-test) | 25% | 28% |
+  | wording copied straight from the passage | 78% | 81% |
+
+  Best case shown (prefix `summarize: `, plain decoding); wider search and the other prefixes were worse.
+  It copies the first sentences of the passage instead of covering the whole passage, which is what the
+  untouched t5-small already does. Rejections: 90 for dropped facts, 28 for length.
+- **Why:** the step size is the one used for BERT-style models; T5 needs roughly 5-15 times more
+  (`configs/summ_t5small.yaml` says 3e-4, `summ_flant5base.yaml` 1e-4), and 3 passes over 117 examples is far
+  too few (the configs say 20).
+- **Asked of P2:** retrain both models with the repo's config values, using the retrain pack below, and send
+  the models back with the settings file and the scores.
+- **Retrain pack (sent to P2 by Drive, not in git):** `train_summ.py` — one self-contained file, a plain
+  training loop with the acceptance check built in (its copy of the check was compared with
+  `build_dataset.check` on 1,690 summaries: identical) — plus the two config files, `train.jsonl`,
+  `dev.jsonl` and P1's reference scores.
+- **What correct training gives (P1's test run of the pack, t5-small, 20 passes, 3e-4):** training loss
+  2.17 -> 0.59; wording copied from the passage 92% -> 42%; checklist facts kept 22% -> 66%; acceptable
+  summaries 1 -> 5 of 13. Flan-T5-base (1e-4, one run before trimming was added): loss 0.45, copying 29%,
+  facts kept 61%, 9 of 13 over the word cap. So the model now really learns, but **neither model comes
+  close to passing every summary** — with 117 training examples that is the ceiling, and the models still
+  make mistakes of meaning (a denial turned into a statement), which is what the faithfulness audit is for.
+- **Two design choices made in the pack:**
+  - *Trim to the cap.* About half of the raw summaries run past the word cap, and no decoding setting tried
+    changed that much. Each summary is therefore cut back to the whole sentences that fit; the pipeline must
+    apply the same step. *Analogy: an editor who cuts the last sentence instead of asking for a rewrite.*
+  - *Keep the model from the last pass.* With 13 mock-test passages the score moves by one or two from pass
+    to pass by chance (the first Flan run "peaked" at pass 2, while still half-trained), so picking a best
+    pass would be picking noise. The mock-test set only reports.
+- **Still limiting:** the amount of training data. Whether to move the summariser to the NER split and write
+  about 165 more reference summaries is P1's open decision.
+
+- **Checked safely:** the zip was unpacked in its own empty folder, only the `safetensors` weights were
+  loaded, and `training_args.bin` (a file that can run code when opened) was read as text, never loaded.
+
+### D69 — P2's retrained t5-small (12 Oct) checked: properly trained now, still not good enough on new text
+- **What arrived:** `summariser_models.zip` with one folder, `t5small/` (weights, tokenizer, `summ_meta.json`,
+  `dev_predictions.jsonl`), and loose copies of the last two files — identical to the ones in the zip.
+  **Flan-T5-base was not sent.** P2 ran the pack unchanged (same settings as P1's reference run; Kaggle,
+  transformers 5.16.1).
+- **Measured on P1's machine, all four models the same way** (beam search, trimmed to the cap):
+
+  | Model | Most-changed layer | Acceptable, 117 training passages | Acceptable, 13 mock-test passages | Facts kept (mock test) | Wording copied (mock test) |
+  |---|---|---|---|---|---|
+  | original t5-small | 0% | 19 | 1 | 22% | 92% |
+  | P2's first model (11 Oct) | 0.44% | 21 | 1 | 36% | 90% |
+  | **P2's retrained model (12 Oct)** | 12% | **84** | **3** | 47% | 44% |
+  | P1's reference run | 12% | 78 | 5 | 66% | 42% |
+
+  P2's 13 saved mock-test summaries were reproduced word for word here, so the files are consistent.
+- **Reading it:** the training fault of D68 is fixed — the model is really trained and matches P1's
+  reference run (84 vs 78; the 3-vs-5 difference on 13 passages is chance). But it passes 72% of the passages
+  it has studied and 23% of the ones it has not: it has largely **memorised**. *Analogy: a student who
+  learned the practice paper by heart and meets new questions in the exam.* More passes will not fix that;
+  more training examples and a larger model might.
+- **A fault the scores do not show:** reading the 13 summaries, four have the meaning wrong, two of them
+  reversed — "you must interrupt, destroy or limit the functionality of any computer resource" (the policy
+  says must *not*), and "NADL ... are liable for losses" (the policy says the customer covers NADL's
+  losses). The first of these **passed** the acceptance check, which only counts words and facts.
+- **Correction to D68 and to the bible:** it was written there that the faithfulness check "exists to
+  catch" such errors. As designed (D34) it compares *which facts* appear, so it catches dropped and invented
+  facts, **not a reversed meaning**. Catching a "must" that became a "must not" needs an extra check; the
+  `negated` flag (D66) is the natural starting point. Not designed yet.
+- **A flaw in P1's script:** when the first sentence alone is longer than the cap, `trim_to_cap` cuts it in
+  mid-sentence (2 of the 13 summaries end unfinished). To be fixed before the pipeline uses it.
+- **Next:** ask P2 for the Flan-T5-base run; P1 to decide the split (bible 7.2), which sets the amount of
+  training data; decide how reversed meanings will be detected.
+
+### D70 — One split for the whole system: the summariser moves to the NER split; 193 training summaries
+- **Decision (P1's, 12 Oct):** the summariser trains on the NER *adaptation* documents and is tested on the
+  9 NER *test* documents. Before this, the two splits crossed and only `08_pennydrop_terms` was unseen by
+  both models (bible 7.2).
+- **How the dataset was rebuilt** (`summ/build_dataset.py`, two small options added):
+  - `--gold data/aa/annotated/gold.json` — the final answer key's highlights are the checklists, as they are.
+    (Passing the gold file as both annotators, as the old note suggested, would have re-applied the old
+    automatic rules to it and changed it.)
+  - `--test-docs` = the 9 test documents of `data/splits/aa_split.json`.
+  - `--skip-docs 02_digio_terms 10_perfios_terms` — the two glued-text documents are left out (29
+    passages): their words are stuck together, so the passage lengths and word caps are wrong.
+  - `--min-facts 0` — every passage of 60+ words is a training passage, not only those with a checklist. At
+    run time the model must summarise *every* passage, and with gold checklists only 82 of the 193 passages
+    contain a highlight at all.
+- **Result:** 193 training passages from 12 documents -> **174 training / 19 mock-test pairs**. Test: 154
+  passages from 9 documents, 84 of them with gold facts. All 193 summaries were written by Claude Opus 5.5:
+  156 new, 37 kept from D67 (10 of those revised, because the gold checklists ask for facts the old ones did
+  not). All pass `validate`; 18-59 words, median 54; every name and number in a summary was checked against
+  its passage.
+- **Correction of P1's assistant's estimate:** "about 165 more summaries, about 200 examples" was said
+  before the rebuild; the real figures are 156 and 193.
+- **Passages that begin in the middle of a list:** where the passage itself does not say whether the listed
+  acts are allowed or forbidden, the summary says "the list covers ..." instead of "you must not ...".
+  *Analogy: if you are handed page 2 of a list without its heading, you report what is on the page; you do
+  not guess the heading.* This is deliberate — a model that guesses the heading is how "you must not"
+  became "you must" in D69.
+- **The 93 older summaries** (D67) now sit on *test* documents. They are kept as
+  `data/summ/refs_test_silver.jsonl` for the optional overlap scores (D34) and must never be trained on.
+- **P2's two earlier models are void for testing:** they were trained on passages that are now test
+  passages. They must not be scored on the new test set.
+- **Reference run of the pack (t5-small, 20 passes, P1's laptop):** training loss 0.40; 13 of the 19
+  mock-test summaries accepted. That number flatters: 10 of the 19 passages have no checklist and pass on
+  length alone. On the 9 that have one: **3 accepted, 62% of facts kept** — about where it was. One summary
+  again reversed a meaning ("is liable" for "shall not be liable"). So more data made the writing more
+  fluent (copied wording down to 28%) but did not cure the reversals. The mock test is also easier than the
+  real test, because the training documents share templates with it.
+- **Script changes (`train_summ.py`):** the mock-test report now gives passages with and without a checklist
+  separately; and a summary that is one over-long sentence is cut at its last comma inside the cap and
+  closed with a full stop, instead of being cut mid-phrase (the flaw noted in D69).
+- **Reproduce:** `python -m consentledger.summ.build_dataset chunks --gold data/aa/annotated/gold.json
+  --test-docs <the 9 test ids> --skip-docs 02_digio_terms 10_perfios_terms --min-facts 0`, then `validate`.
+
+### D71 — P3's first contract commit reviewed (13 Oct): the contract is sound as built, the Python around it breaks on first use
+- **What was pulled:** two commits by P3 (12 Oct) — `contracts/contracts/ConsentRegistry.sol`, its ABI, a
+  Hardhat 3 project, three TypeScript tests, a Python test file, and the three `chain/*.py` files filled in.
+  No key, RPC address or `.env` was committed.
+- **What was run:** the Node packages were installed from P3's lock file (with P1's permission), the contract
+  compiled (solc 0.8.34), and P3's tests run on a local simulated chain — all pass. The committed ABI is
+  identical to the compiled one. A temporary probe test (not committed) then tried the weak points below.
+- **Works as intended:** only the owner can grant or revoke; a second record with the same id is refused; a
+  revoked consent cannot be granted again; a tampered hash is rejected; expiry is enforced when checked.
+- **Bugs in the Python (confirmed by running them offline):**
+  1. `send()` reads `signed.raw_transaction`. With the project's pinned web3 6.20.3 that attribute is called
+     `rawTransaction`, so **no transaction can be sent at all**. P3's test uses a stand-in object that has
+     the wrong name too, so it passes.
+  2. The consent id is printed as `0x0x…` (a doubled prefix), and `read_consent` cannot read that back.
+  3. The file's note fields (`_source`, `_note`) are hashed together with the consent, so editing a comment
+     changes the fingerprint. The guide said to leave them out.
+  4. Expiry comes from `--expiry-days` (default 30), not from the consent's own `consentExpiry`. The two
+     real examples in the repo expired in 2019 and 2022 and would be recorded as valid for 30 days.
+  5. `.env.example` names the key `DEPLOYER_PRIVATE_KEY`; the code reads `TEST_WALLET_PRIVATE_KEY` and
+     `CONSENT_REGISTRY_ADDRESS`; Hardhat reads `SEPOLIA_PRIVATE_KEY`. Three names for one key.
+- **Missing against the guide's definition of done:** the contract is not deployed (no address, no deploy
+  module for it — only for the template's `Counter`); **`recordAccess`, the path the security test is meant
+  to attack, is never called by any test or script**; expiry, wrong-owner and duplicate cases are untested;
+  the Python "test" only searches the source file for function names; no `--selfcheck`; and
+  `register_consent` stops for a key-press and offers no function the pipeline could call.
+- **Weak points in the contract's design — these come from our own guide (`P3.md`), which P3 followed
+  line for line, not from P3:**
+  - *Anyone can take an id first.* The id is supplied by the caller and never checked. In the probe a second
+    account registered the id before the real owner: the owner's transaction was refused, the stranger's
+    record verified as valid, and the owner could not revoke it. *Analogy: a cloakroom where you choose your
+    own ticket number — someone who sees your number can hang their coat on it first.* Fix: compute the id
+    inside the contract from the caller's address, the hash and the nonce.
+  - *Anyone can write audit entries, and an entry does not say who wrote it.* In the probe a stranger
+    recorded four accesses on someone else's consent. Fix: put the caller's address in `AccessRecorded`.
+  - *Smaller:* an expiry in the past is accepted; a created-but-never-granted consent cannot be cancelled.
+  - *For the paper:* a consent with guessable contents can be confirmed from its hash by trying guesses, so
+    "only a hash is on-chain" limits exposure but is not secrecy.
+- **Housekeeping:** the Hardhat starter files are still there (`Counter.sol` and its tests, a deploy module,
+  an unrelated script, the sample README), and so are `AGENTS.md`, `CLAUDE.md` and two copies of the
+  starter's assistant "skills". They were read: standard Hardhat material, nothing harmful — but any coding
+  assistant opened in `contracts/` will load them as instructions.
+- **Status:** findings reported to P1, to be passed to P3. Nothing in P3's files was changed.
+- **Proposed fix, tested (13 Oct):** a revised `ConsentRegistry.sol` — the id is computed in the contract from
+  the caller's address, hash and nonce; `AccessRecorded` and `ConsentCreated` carry the address; an expiry in
+  the past is refused; a created consent can be cancelled — with a 7-case security test (`recordAccess`,
+  wrong owner, id-taking, duplicate, expiry). All 7 pass on the local chain. Sent to P3 as a pack with its
+  new ABI; P3's committed files were restored unchanged after the test run. Whether to adopt it is P1's and
+  P3's call, and it must be settled before deployment, because a deployed contract cannot be edited.
+
+### D72 — P2's t5-small and Flan-T5-base (13 Oct) checked: no model reaches the bar, and retraining alone will not get there
+- **What arrived:** `summariser_models (1).zip` (t5-small) and `flant5base.zip` (Flan-T5-base), each with
+  weights, tokenizer, `summ_meta.json` and `dev_predictions.jsonl`. Both load; no damaged weights.
+- **Two errors in the delivery:**
+  1. **Flan-T5-base was trained on the OLD data** — 117/13 pairs, the first pack; its zip predates pack v2.
+     It has therefore studied 8 of the 9 test documents and **cannot be used for the final test**. The
+     t5-small is correct: 174/19, the new split.
+  2. **Flan-T5-base writes gibberish when loaded on P1's machine as delivered.** Kaggle saved it with
+     transformers 5.16.1, where the model's config uses the flag `tie_word_embeddings` differently from our
+     pinned 4.46.3; our version then overwrites the trained output layer. The weights are fine. Loading with
+     the flag taken from the new `scale_decoder_outputs` field fixes it, after which all 13 of P2's saved
+     summaries are reproduced word for word. *Analogy: the same recipe read with "tsp" taken to mean
+     tablespoon.* The pipeline's loader must do this, or Kaggle must be pinned to `transformers==4.46.3`.
+- **What "the bar" is:** the project never fixed a pass-rate. The only countable rule is per summary:
+  within the word cap and at least 80% of the passage's checklist facts kept — plus the unwritten one that
+  matters most in a consent system, that the summary must not say something the passage does not.
+- **Measured** (mock-test numbers are for the 9 passages that have a checklist; the sealed test is untouched):
+
+  | Model | Trained on | Mock test: accepted | Mock test: facts kept |
+  |---|---|---|---|
+  | t5-small (P2) | new, 174 | 2 of 9 | 50% |
+  | t5-small (P1's reference) | new, 174 | 3 of 9 | 62% |
+  | Flan-T5-base (P1's reference) | new, 174 | 3 of 9 | 65% |
+
+  Nine passages are too few to rank models, so a larger like-for-like comparison was made: the two models
+  that were both trained on the *old* 117 pairs, scored on 136 passages neither had seen (50 with a
+  checklist):
+
+  | Model (old data) | Accepted | Facts kept | Summaries with a wrong meaning, of 12 read |
+  |---|---|---|---|
+  | t5-small | 22 of 50 (44%) | 55% | 7 |
+  | Flan-T5-base | 29 of 50 (58%) | 67% | 4 |
+
+  Wrong meanings include plain reversals: "the company retrieves your financial information without your
+  explicit consent" (the passage says it will *not*), and "you may suspend or terminate your profile" (the
+  company may).
+- **Reading it:**
+  - The larger model is clearly better — about 14 points on acceptance, 12 on facts, fewer wrong meanings.
+    Flan-T5-base is the main model; t5-small is the small-model comparison.
+  - More data did not move the needle (117 -> 174 pairs: facts kept on the mock test stayed in the 60s), and
+    more passes will not either: Flan keeps 90% of the facts on passages it trained on and 65% on new ones.
+    *Analogy: a student who scores 90 on the practice paper and 65 on a fresh one does not need to re-read
+    the practice paper.*
+  - Even the better model gets the meaning wrong in roughly one summary in three. No amount of retraining at
+    this model size and data size will take that to zero.
+- **Conclusion (recommendation to P1):** do not look for the threshold in the model. Retrain only what is
+  wrong (Flan-T5-base on pack v2), then put the bar on the *system*: a summary is shown only if it passes the
+  faithfulness check and a reversed-meaning check; otherwise the system falls back to the plain list of
+  facts found in the passage. The paper then reports how often summaries pass. A larger model
+  (Flan-T5-large) or an LLM summariser can be tried as a comparison, not as a requirement.
+- **Kept:** P1's two reference models (t5-small and Flan-T5-base on pack v2) are in
+  `artifacts_out/summ/reference_p1/` (git-ignored) so the work is not lost if P2's rerun is delayed.
+
+### D73 — P2's final Flan-T5-base (14 Oct) checked: correct this time; training is finished, the bar moves to the system
+- **What arrived:** `flant5base (1).zip` — Flan-T5-base retrained per pack v2 and the guide. Saved with
+  transformers 4.46.3 (the version pin worked, so it loads as-is; no loader fix needed), trained on 174/19,
+  every setting identical to P1's reference run, and its pass-by-pass loss matches that run to within 0.01.
+  All 19 of its mock-test summaries were reproduced word for word on P1's machine. **No errors.**
+- **The two final models side by side** (mock test; "with facts" = the 9 passages that have a checklist):
+
+  | Model | Accepted, with facts | Facts kept | Wrong meaning, all 19 read | Facts kept on its own training passages |
+  |---|---|---|---|---|
+  | t5-small (P2, 13 Oct) | 2 of 9 | 50% | 4 (two reversals, one misattribution, one garbled) | 78% |
+  | Flan-T5-base (P2, 14 Oct) | 3 of 9 | 57% | 3 (one reversal, two factual slips) | 88% |
+
+  P1's own Flan-T5-base reference scored 3 of 9 and 65% on the same passages; the difference to P2's is chance.
+  The reversals: t5-small wrote "failure to enforce a provision is a waiver" (the policy says it is *not*) and
+  "it is liable for loss caused by incorrect information" (it is *not*); Flan-T5-base wrote that Agya "shares
+  your information without your explicit consent" (it *shall not*) — a summary that the acceptance check passed.
+- **Reading it:** both models are trained correctly and the training work is finished. Flan-T5-base stays the
+  main model. Neither is reliable enough to show unchecked: on this easy, template-heavy mock test 3 or 4
+  summaries in 19 misstate the policy, and the earlier like-for-like test on unseen documents put Flan's rate
+  near 1 in 3. The gap between seen and unseen passages (88% vs 57% of facts) says more passes or more of the
+  same data will not close it.
+- **Decision proposed to P1:** no further retraining of either model. Freeze both. Put the bar on the system:
+  a summary is shown only if it passes the acceptance check (word cap, at least 80% of the passage's facts)
+  and a reversed-meaning check; otherwise the user sees the plain list of facts. A larger model
+  (Flan-T5-large) or an LLM summariser is optional, as a comparison only.
+- **For the pipeline's loader:** the t5-small was saved with transformers 5.16.1 and still needs the loading
+  fix of D72; the Flan-T5-base does not.
+
+### D74 — The faithfulness gate is built: every summary is checked before it is shown; on fresh documents it caught both reversals and blocked 1 good summary in 38
+- **What it is:** `src/consentledger/summ/faithfulness.py`, pipeline step 4b, in the file P2.md §7 planned
+  for it. `gate(passage, summary, facts, context)` checks four things:
+  - **kept facts** — each fact (gold highlights when evaluating, NER predictions in the pipeline) must be
+    recognisable in the summary, by the word-overlap rule that accepted the reference summaries;
+  - **invented** — numbers, names or acronyms in the summary that the passage never mentions;
+  - **reversed** — each summary clause is matched to the passage clause it restates (at least two shared
+    content words, and at least half of the clause's) and the two stances are compared. "Will not share
+    without consent" affirms (it shares, with consent); "shares without consent" denies. A condition the
+    summary leaves out is not held against it. A "not" inside an "if" part, a relative clause, a heading or
+    boilerplate ("not limited to") is not the clause's stance. A list's items inherit a denying lead-in
+    ("you shall not:"), also when the lead-in is at the end of the previous passage (`context`);
+  - **swapped** — the same stance, the other party acting ("you may assign" for "we may assign");
+    "we shall require you to upload" names both parties.
+  Verdict: **reject** (anything invented, reversed or swapped) -> the user sees the passage's facts instead;
+  **add** (under 80% of the facts kept) -> the summary plus the missing facts; **show**.
+- **The denied flag on facts** (`fact_denied`, D66's definition) goes next to every listed fact. Against the
+  124 D66 proposals it agrees on 116: all 67 denials and 49 of the 57 non-denials. The 8 left are
+  over-denials in text without sentence breaks (a bullet list with no full stops: 5; a run-on sentence: 2)
+  and one "does not, in any manner, impact X", where X is in fact affirmed.
+- **Development (the gate was tuned on these):** 118 summaries read against their passages. Set A is the
+  old-data models on 40 passages neither had seen; Set B is the final models on the 19 mock-test passages.
+  Reversals caught 9 of 10, other errors 6 of 30, correct summaries blocked 0 of 78; 25 of the 103 shown are
+  wrong. Optimistic by construction.
+- **Held-out:** the two glued-text documents (`02_digio_terms`, `10_perfios_terms`), left out of summariser
+  training (D70) and never used while tuning. 29 passages x the two final models = 58 summaries, labelled
+  before the gate was run on them. **First run:** reversals caught **2 of 2**; other errors 7 of 18, 5 of
+  them for the right reason (4 party swaps, 1 invented address) and 2 by accident (glued words looked
+  invented); correct summaries blocked **4 of 38** (2 by glued words, 2 by loose matching); 11 of the 45
+  shown are wrong. Three general fixes followed: "though" starts a new claim; one shared word is not a match;
+  a glued word still counts as present. **After them:** blocked 1 of 38 (the glued "willnotbeheldliable");
+  wrong among shown 13 of 50 — Flan-T5-base 4 of 27, t5-small 9 of 23. After-fix numbers are no longer
+  independent.
+- **With the main model (Flan-T5-base, held-out):** 6 of its 29 summaries are wrong. The gate blocks 2 (a
+  reversal, an invented address) and shows 27, of which 4 are wrong (about 15%) — garbled definitions and a
+  wrong party it did not see.
+- **What it does not catch:** garbled lists and definitions, wrong references ("It is a person who ..."), a
+  dropped condition that matters ("you must not use the services" for "if you do not accept, do not use
+  them"), and changed modality ("may" for "shall"). These are most of the remaining errors. It checks for
+  reversed meaning and the wrong party; it is not a full fact checker.
+- **A bug found on the way:** reading the previous passage as context dropped the current passage's first
+  sentence in 152 of 326 passages — whenever the context ended in a section number ("17.3") or a heading,
+  the sentence ran on from it. Fixed: that clause is cut at the passage start.
+- **Labels need a person:** every label above was written by Claude. `results/summ/gate_label_check_P1.csv`
+  (git-ignored: it quotes policies) holds the 58 held-out summaries without labels or verdicts. P1 labels
+  them alone; then agreement and the scores on P1's labels are computed. The evaluation files (summaries,
+  labels, scripts) are kept in `artifacts_out/summ/gate_eval/` (git-ignored).
+- **Owner:** P2.md §7 planned this file for P2; P1 decides whether to commit it or hand it over (it is not in
+  `.git/info/exclude`).
+- **In the pipeline:** call `gate(passage, summary, facts, context=<previous passage>)` with the facts from
+  `ner/predict.py` (still a stub). The glued-text fix in `clean.py` (still open) would remove the last false
+  block seen.
+
+### D75 — P3's second contract commit (21a62df, 15 Oct) reviewed: it works end to end on a local chain; not yet usable on Sepolia
+- **What arrived:** the contract with the D71 fixes (the id is computed on-chain from owner + hash + nonce;
+  each audit entry records who asked), a deploy module, seven security tests, the Python `send()` fixed for
+  web3 6.20.3, `register_consent.py` (create + grant), `read_consent.py` (verify + audit link) and
+  `revoke_consent.py`. The Hardhat sample files (Counter) are removed.
+- **Checked:** all 10 contract tests and 4 Python tests pass; the committed ABI matches the compiled one.
+  On a local Hardhat chain P1 deployed it and ran the Python scripts: register -> verify (valid) -> a
+  comment-only change still valid (comments are not hashed, by design) -> changed expiry rejected -> revoke
+  -> invalid. A real AA artefact's own `consentExpiry` is now used. Cost: about 144,000 gas per consent
+  (create 114k + grant 30k), free on Sepolia. All five D71 bugs are fixed.
+- **Still open:**
+  1. **Not deployed on Sepolia**, and the settings cannot be filled in consistently: the one test-wallet key
+     has three names (`.env.example`: `DEPLOYER_PRIVATE_KEY`; Hardhat: `SEPOLIA_PRIVATE_KEY`; Python:
+     `TEST_WALLET_PRIVATE_KEY`); `CONSENT_REGISTRY_ADDRESS` is missing from `.env.example`; the Python reads
+     `.env.local` while its messages say `.env`; Hardhat 3 reads neither file (environment variable or
+     `npx hardhat keystore set`).
+  2. **`revoke_consent.py` is a demo, not a tool:** a hard-coded consent id, refuses any chain but the local
+     one, and asks for "YES" on the keyboard, so the pipeline cannot call it.
+  3. **Nothing in Python calls `recordAccess`,** so the "who checked this consent" audit entry is never
+     written by the system.
+  4. `register()` returns transaction hashes but no audit link; the Etherscan link is built only in
+     `read_consent.py`.
+  5. Tidying: `contracts/README.md` is still Hardhat's sample text (it names the deleted `Counter.ts`);
+     `scripts/send-op-tx.ts` is a sample leftover; `sample_consent.json` sits at the repo root, is not in the
+     AA format, and starts with a byte-order mark.
+- **For the project:** relevant and the right shape. `register(artefact_dict)` takes any JSON object, so the
+  pipeline's step 5 can pass the assembled consent artefact directly. The two real example artefacts have
+  expired, so a demo needs an artefact with a future `consentExpiry` (or `expiry_days`). It remains a
+  reference implementation, not a novelty claim (D28), and the hash limit noted under D71 still applies.
+
+### D76 — Stage 2 of the finishing plan: the three run-time readers are built, and each reproduces training exactly
+- **`ner/predict.py`** — policy text in, highlights out (`start`, `end`, `label`, `text`). The text is cut with
+  `aa_to_conll.segment` and split into words with `bio_tagging.tokenize_with_offsets`, as the AA training
+  data was; a word's tag is its first sub-word piece's, as in training. **Model: Legal-BERT E2-sequential,
+  seed 44**, the best seed on the adaptation mock test (dev F1 0.736; seeds 42/43: 0.667/0.658). It is not
+  the best seed on the test set (0.453 vs 0.506 for seed 42), but choosing by the test set would be selecting
+  on it (D4); the paper reports the mean over seeds. Check: on the 4 mock-test documents, read as raw text,
+  exact-match F1 **0.733** — the trainer's 0.736 on the same documents, the small gap being where segments
+  are cut.
+- **`summ/predict.py`** — `passages(text)` cuts a document as the summariser's data was cut;
+  `summarise(texts, *load(name))` applies the model's own `summ_meta.json` settings and the trim step.
+  `chunk`, `cap_for` and `trim_to_cap` are **copied** into this file from `build_dataset.py` and P2's
+  `train_summ.py`, which are not in the repo; this was chosen over committing P2's files without P2's say.
+  The copies are checked against the originals: the cutter is identical on all 23 documents, and the
+  passage texts are identical to all 347 in `chunks_train/test.jsonl`. Both final models reproduce **19 of 19**
+  of P2's delivered mock-test summaries word for word. `load` carries the t5-small config fix (D72).
+- **`consent_artefact/parse.py`** — the five structured facts (RECIPIENT, DURATION, FREQUENCY, DATA_RANGE,
+  DATA_LIFE) plus fetch type, mode, consent types, purpose and provider. Keys are found anywhere in the
+  object, because the two real examples nest the blocks differently; both parse correctly, as do 30
+  synthetic artefacts. A missing block is None. RECIPIENT stays a coded id ("DC1").
+- **Models load from the local folders, else from the private Hub.** The NER models are already there; the
+  summarisers must be uploaded to `Karthikrishna05/consentledger-summ` (`flant5base/`, `t5small/`, without
+  `dev_predictions.jsonl`, which quotes policies). The Hub path is not yet exercised.
+- Each file has a `--selfcheck`; on a fresh clone (no git-ignored data) it only checks that the model loads
+  and runs.
+
+### D77 — P3 fix pack v2 sent; P2 hands the summariser over to P1 (16 Oct)
+- **P3 fix pack v2** (`ConsentLedger_P3_fix_pack_v2.zip`: a patch, the changed files, a message) closes D75's
+  open items. It was tested on a local Hardhat chain and the patch applies cleanly to `main` (21a62df); P1's
+  working tree was left untouched, so P3 applies and commits it.
+  - One settings file, the project-root `.env`, now read by both Hardhat (Node's `process.loadEnvFile`, no
+    new package) and the Python; the wallet key is `SEPOLIA_PRIVATE_KEY` everywhere; `.env.example` lists all
+    four settings.
+  - The Python refuses any chain but Sepolia (11155111) and local Hardhat (31337), so test funds only.
+  - `revoke_consent.py --consent-id [--yes]`; `read_consent.py --record` writes the access audit entry;
+    `register()` returns the Etherscan `audit_link`. Pipeline functions: `register`, `check`,
+    `record_access`, `revoke`.
+  - Etherscan verify settings in `hardhat.config.ts`; Hardhat sample files removed; a real
+    `contracts/README.md`; `data/aa/consent_artefacts/demo_consent.json` (synthetic, expires 2030) replaces
+    `sample_consent.json`. A type error in P3's TypeScript test was fixed.
+  - Checks: 10 contract tests, 6 Python tests, a clean `tsc --noEmit`, and the local round trip (Hardhat
+    deploys from `.env` -> register -> check + record -> revoke -> invalid; a malformed id is refused).
+  - P3's remaining part is human-only: a throwaway wallet, faucet ETH, an RPC URL, an Etherscan key, the
+    Sepolia deployment and verification.
+- **P2's handover.** P2's training is finished and the summariser is now P1's. Consequences:
+  - `summ/build_dataset.py` is no longer excluded locally (the `.git/info/exclude` rule is removed) and can be
+    committed; it holds no policy text.
+  - P2's training script (pack v2, identical configs) replaces the `summ/train.py` stub, unchanged except for
+    a usage note, as the record of how the two final models were trained.
+  - `faithfulness.py` (D74) is P1's.
+  - `data/summ/*.jsonl` stays git-ignored (it quotes policies).
+
 ## P3: Consent Registry Design and Limitations
 
 ### On-chain data and privacy
@@ -2007,8 +2461,188 @@ The smart contract cannot independently verify whether an Account Aggregator sup
 
 ### Lazy expiry
 
-Consent expiry is evaluated when the system checks validity or records an access event. Therefore, a consent's stored status may remain `GRANTED` after its expiry timestamp until a subsequent check evaluates it. The consent should nevertheless be treated as invalid when the expiry time has passed.
+Consent expiry is evaluated when the system checks validity or records an access event. No transaction ever changes the stored status on expiry: a consent's stored status stays `GRANTED` after its expiry timestamp, but `isValid` (and so `recordAccess`) returns false from that moment on. The consent should therefore be treated as invalid when the expiry time has passed. *(Wording corrected by P1 in D78: the earlier text suggested a later check updates the status; none does.)*
 
 ### Revocation and access auditing
 
 Revocation changes the consent status so subsequent validity checks reject the consent. Access auditing records access-related events on-chain, but the contract cannot guarantee how an off-chain recipient handles, copies, or uses data after access is granted.
+
+### D78 — P3's Sepolia deployment (31348e5, 45e001d; 18 Oct) reviewed: correct and ready to integrate, two loose ends
+- **What arrived:** fix pack v2 applied unchanged (every file identical to the tested pack), the contract
+  deployed on Sepolia at `0x2De2051bAb111580a0F0C850E7C8318b94aAA4bF` (deployment record and ABI committed),
+  four live transactions — create, grant, recordAccess, revoke — and a section of design notes (above).
+- **Checked:** no key, `.env` or RPC token in either commit (the long hex strings are the contract bytecode and
+  transaction hashes); 10 contract tests and the Python tests pass; `tsc --noEmit` is clean; the deployed ABI
+  equals the committed one; the deployed bytecode equals a **production-profile build of this source** (the
+  optimiser is on for deployment, which is why it differs from the test build). All four Sepolia transactions
+  succeeded, and `check()` reading the live chain through a public RPC reports the demo consent's hash as
+  matching and the consent as REVOKED and invalid, as it should be after P3's revoke.
+- **Gas on Sepolia:** create 459,911 · grant 31,603 · recordAccess 25,051 · revoke 31,734. Creating a consent costs
+  about 4x the local figure (114,031); the other calls match. The cause is most likely Sepolia's newer pricing of
+  new storage slots (EIP-8037), which the local simulator does not apply; it is test ETH, but **the paper
+  quotes the Sepolia numbers**.
+- **Loose ends:**
+  1. **The source is not verified on Etherscan** (the contract page still offers "Verify and Publish"; FLOW's
+     "verified on Etherscan" meant the transactions are visible). P3 runs
+     `npx hardhat verify --network sepolia 0x2De2051bAb111580a0F0C850E7C8318b94aAA4bF`.
+  2. The lazy-expiry note said a later check would update the stored status; no function does. Corrected above.
+- **Small integration change by P1:** `get_contract` falls back to the address in
+  `contracts/ignition/deployments/chain-<id>/deployed_addresses.json`, so the pipeline and the app need only an RPC
+  URL for read-only checks, plus the test-wallet key to write; `CONSENT_REGISTRY_ADDRESS` becomes an optional
+  override (`.env.example`, `contracts/README.md` updated; one test added).
+- **Verdict:** valid for integration. `register()`, `check()`, `record_access()` and `revoke()` are the functions
+  `pipeline/end_to_end.py` will call.
+
+### D79 — `pipeline/end_to_end.py`: the whole system in one command
+- **What it does:** policy document (.html / .pdf / .txt) + optional consent artefact in; one report out:
+  clean -> NER facts -> consent fields -> passages -> summaries -> faithfulness gate per passage (with the
+  previous passage as context) -> the assembled record and its Keccak-256 fingerprint -> with `--chain`,
+  registration on Sepolia. `run(text, artefact, models, chain)` is the function the demo app will call, with
+  the models loaded once by `load_models()`.
+- **What a user is shown per passage:** `show` -> the summary; `add` -> the summary plus the missing facts,
+  each with its denied mark; `reject` -> the passage's facts instead. A rejected summary is kept in the report
+  (`rejected_summary`, `why_rejected`) for the record but is never displayed.
+- **What is fingerprinted (the "assembled artefact" of P3.md):** the consent artefact as given, plus
+  `PolicyTerms` = the document's SHA-256 and its facts per label, lower-cased, deduplicated and sorted. A fact
+  is marked denied only if **every** mention of it denies it ("we collect your bank statements" + "we will not
+  share your bank statements" -> not denied). `ConsentDetail` stays at the top, so the chain enforces the
+  consent's own expiry. One fingerprint covers what the user was told and what they agreed to; verifying needs
+  the saved `record` from the report, not a re-run of the models (results could differ slightly between CPU and
+  GPU). `--chain` refuses to run without a consent artefact.
+- **Checked:**
+  - `--selfcheck`: facts found; a denial flagged; the fingerprint reproducible, changed when a fact is
+    removed, unchanged by a repeated mention; the consent's expiry preserved.
+  - A real run on `06_setu_aa_privacy.html` (an adaptation document; the summariser's test documents stay
+    sealed): the cleaned text is identical to the annotated text; 75 facts; 14 passages; 26 s including model
+    loading. The record was registered on a local Hardhat chain; `check()` with the report's record says
+    valid, and with one fact removed says no match.
+- **A gate fix found by this run:** "IT rules" for "Information Technology ... Rules" was rejected as an
+  invented acronym. An acronym is now accepted when the passage spells out its words (`invented()`; two tests).
+  The scores on the tuning set and the held-out set are unchanged by it.
+- Reports quote the policy -> `results/pipeline/*.json` is git-ignored.
+
+### D80 — The demo app (`app.py`, Gradio 6.17.3), and a denied-flag bug it exposed
+- **What it is:** a web page over the same `pipeline.end_to_end.run()` as the experiments, so the demo and the
+  numbers cannot drift apart. Two tabs:
+  - **Analyse a policy:** paste or upload a policy (.txt / .html / .pdf) and optionally the consent JSON.
+    The results come in four views: the policy with facts coloured (your data / purpose / shared with /
+    promised NOT done); passage by passage (the checked summary, the summary plus what it leaves out, or —
+    if the check rejected it — the facts instead, with the passage one click away); the consent terms in plain
+    words; and the fingerprint with the report to download. Recording on Sepolia is an option shown only when
+    a test wallet is configured.
+  - **Check a recorded consent:** the consent id and the saved report are re-fingerprinted and compared with the
+    chain. Read-only: it needs only `SEPOLIA_RPC_URL`.
+- **Limits built in:** 300,000 characters, 10 MB uploads, one analysis at a time, at most 20 chain writes per
+  server run (a per-user limit if it goes public), errors shown as plain messages, a research-use notice, and a
+  synthetic example (no scraped document ships with the app).
+- **Install:** `gradio==6.17.3` was installed against the existing pins; nothing already installed changed and
+  `pip check` is clean. Added to `requirements.txt`; `requirements.lock` gained only the 19 new packages.
+- **Checked in the browser:** the example run, every view, the phone-width layout, a real HTML upload
+  (`06_setu_aa_privacy`, 14 passages) and the five error paths. The check tab was tested against P3's live
+  Sepolia consent: the genuine record matches (not valid only because P3 revoked it); one changed field says
+  "NO - it was changed".
+- **Bug found and fixed in `end_to_end.py`:** the gate located each fact by its words, so a policy that says
+  "we collect your mobile number" and later "we will not sell your mobile number" gave both mentions the first
+  one's flag. Each fact's exact position in its passage is now passed to the gate (`_offset_in_passage`; 132 of
+  132 facts on three real documents located exactly). The self-check now asserts that two mentions of one fact
+  get different flags; the earlier version passed by accident. The gate's evaluation (D74) used facts without
+  positions and is unaffected.
+
+### D81 — P1's two checks are in: the `negated` flag is applied; the summary labels agree only moderately
+- **Negation (D66):** P1 answered all 124 highlights and accepted every proposal (67 denied, 57 not). It was
+  applied with `adjudicate_auto negation` + `apply --sample 0` after a backup. **The only change to
+  `gold.json` is the 67 `negated` marks:** same 23 texts, same 1,266 highlights. The CoNLL files rebuilt from
+  it are byte-identical to the ones every model was trained and tested on, so no score changes.
+  `results/annotation/adjudication/negated.tsv` (positions only) is the committed record.
+- **Summary labels (D74):** P1 labelled the 58 held-out summaries blind (no model names, no Claude labels, no
+  verdicts): OK 40 / ERR 12 / REV 6, against Claude's 38 / 18 / 2. Agreement on all three labels: 67%
+  (39 of 58), **Cohen's kappa 0.32**; on OK vs not-OK: 76%, **kappa 0.45**. The disagreements go both ways:
+  - P1 is stricter on some Flan summaries Claude passed: a fee clause, a misattached "keep confidential", and
+    two merged conditions.
+  - P1 calls REV four summaries Claude called ERR (wrong party or garbled liability).
+  - P1 passes several Claude marked ERR: the copied address footer with "Bangkok", "the company may revoke
+    any consent" (the passage says *you* may), the FIU's duties given to Perfios, and garbled definitions.
+- **The gate on P1's labels:** blocked 3 of 40 OK summaries (all three among the disputed ones); caught 2 of 6
+  REV and 3 of 12 ERR; 13 of the 50 shown are wrong (Flan-T5-base: 5 of 27). On Claude's labels the
+  same run gives 1 of 38 blocked and 13 of 50 wrong among shown (Flan: 4 of 27).
+- **Next:** settle the 19 disagreements together, as the annotation was settled (D50), and report both: the raw
+  kappa before settling and the gate's numbers on the settled labels. Script:
+  `artifacts_out/summ/gate_eval/agree_P1.py --show` (git-ignored with the labels).
+
+### D82 — The 19 disagreements are settled; the gate's honest numbers on the final labels
+- **Settling:** P1 went through the 19 disputed summaries with both labels and Claude's reasons shown, and chose
+  the final label: Claude's in 14, P1's own in 5. The rule chosen along the way: a wrong party is ERR, unless it
+  flips who is liable, which is REV ([55]). P1 kept OK on [31] ("its liability is not limited to force majeure
+  events"), reading it as an omission. Claude reads it as a reversal; the summary stands as P1 settled it.
+  Raw agreement before settling stays the reported figure (D81: 67%, kappa 0.32).
+- **Final labels, 58 held-out summaries:** OK 36, ERR 20, REV 2. Unchecked, 8 of 29 Flan-T5-base summaries and
+  14 of 29 t5-small summaries are wrong.
+- **The gate on the final labels:**
+  - **Reversals:** caught 1 of 2. Flan's "you may modify, rent, lease or sell..." is caught. t5-small's
+    "Perfios-AA ... are liable for all claims arising from your breach" is missed: the gate does not know
+    "Perfios" (or "Digio") as a company name, so it cannot see who is acting.
+  - **Good summaries blocked:** 2 of 36. One is [31]; the other is the glued "willnotbeheldliable".
+  - **Other errors caught:** 5 of 20.
+  - **Wrong among what is shown:** 16 of 50. Flan-T5-base 6 of 27 (22%, against 28% unchecked); t5-small
+    10 of 23.
+  - These are after-fix numbers on documents the gate was partly tuned on after its first run (D74), so they
+    are, if anything, optimistic.
+- **Correction:** the earlier "caught both reversals" (D74, bible, FLOW) was on Claude's labels; on the settled
+  labels it is 1 of 2. **For the paper:** the gate removes the most dangerous error some of the time, lowers the
+  share of wrong summaries a user sees only modestly (28% -> 22% for the main model), and rarely blocks a good
+  one. The facts list under every summary that drops facts is the real safety net. The company-name gap is noted
+  and deliberately not patched: these documents are the evaluation set.
+
+### D83 — The Hub path works: a fresh machine gets exactly the same models and the same results
+- **Uploaded:** the summarisers are in the private repo `Karthikrishna05/consentledger-summ` (`flant5base/`,
+  `t5small/`, weights, tokenizers and `summ_meta.json`; no `dev_predictions.jsonl`). The first upload's final
+  "save" step was cut by a dropped connection; re-running it finished.
+- **Tested** by loading all three models from the Hub with the local copies hidden, into the default cache, where
+  they had never been. All three weight files are byte-identical to the local ones. The NER model scores 0.733 on
+  the mock-test documents, as locally. Both summarisers reproduce all 19 of P2's summaries word for word. The whole
+  pipeline on a real policy gives the same facts, summaries and fingerprint as with the local models.
+- **Learned on the way:**
+  - The repos are private, so a fresh machine or the Space needs a Hub token (`HF_TOKEN`, or `hf auth login`).
+  - The connection here drops on long transfers. Downloads resume, but the library then quietly returned an
+    incomplete snapshot; both loaders now say plainly that the download did not finish.
+  - Very long cache paths hit Windows' 260-character limit. The default cache is fine.
+  - Without Developer Mode, Windows stores cache copies instead of links: more disk, same result.
+  - First download here: about 8 min (NER), 23 min (Flan-T5-base), 6 min (t5-small); afterwards they load from
+    the cache in seconds.
+
+### D84 — The README is rewritten, and the Hugging Face Space is packaged and tested
+- **README.md** now matches the finished system:
+  - a "run the demo" quick start (Hub login -> `python app.py`);
+  - the setup steps and the results at a glance (each row points to its D-entry);
+  - the exact commands to reproduce the data, NER, summariser and self-checks, with the test-set rule restated;
+  - Space deployment, what is and is not in git, layout, secrets and team.
+  Every command that can run safely on this machine was run and passed: the verify step (CUDA, transformers
+  4.46.3, `pip check`, `pytest` 7 passed), all six self-checks, the pipeline on a real HTML policy, and the
+  Space build. Not run here: the clone / venv / install steps — that is P4's fresh-clone test after the push —
+  and training or data regeneration, which would overwrite existing files.
+- **`space/`** (committed):
+  - `README.md` — the Space card: Gradio 6.17.3, Python 3.11, research-use notice, the three secrets;
+  - `requirements.txt` — only what the app needs, CPU torch, the project's own pins;
+  - `build.py` — assembles `artifacts_out/space/` from the app, the package, the demo consent and the contract's
+    ABI and Sepolia address. It refuses any git-ignored file and any `.env`. Result: 51 files, 366 KB, nothing
+    key-like.
+- **Tested as the Space runs it:** from its own folder, with its own copy of the package, models from the Hub (no
+  local folder), the contract address found in the bundled deployment record, and the web server answering.
+- **One cleanup for it:** `ner/predict.py` no longer imports the training/evaluation code (which pulled in the
+  large `datasets` library). Label names come from the model's own config, and BIO tags are read with `seqeval`
+  as the evaluation does. Self-check unchanged (F1 0.733).
+- **Left to people:** create the Space (`hf repo create ... --repo-type space --space_sdk gradio --private`),
+  upload the bundle, and add `HF_TOKEN`, `SEPOLIA_RPC_URL` and optionally `SEPOLIA_PRIVATE_KEY` as Space secrets.
+  Whether it stays private or goes public (non-commercial) is P1's call.
+
+### D85 — Hugging Face now charges for Gradio Spaces: the demo runs on the laptop, with an optional public link
+- **What happened:** creating the Space failed with `402 Payment Required`: "hosting Gradio and Docker Spaces
+  on free cpu-basic requires a PRO subscription" (about $9/month); only static Spaces stay free. No Space was
+  created.
+- **Decision (P1 to confirm):** the demo runs on P1's laptop, as planned for the viva (bible 7.4): fast on the
+  GPU and independent of the internet. When someone needs to try it remotely, `python app.py --share` opens a
+  temporary public `https://….gradio.live` link to the laptop, free and valid while the app runs. Setting
+  `DEMO_PASSWORD` makes visitors log in as `demo`; checked: no login gives 401, a wrong password 400, the right
+  one 200. The `space/` package stays ready if a PRO month is ever bought.
+- **Care with a public link:** it serves from this laptop. Keep `SEPOLIA_PRIVATE_KEY` out of `.env` while
+  sharing, unless recording on-chain is wanted; the app's own cap is 20 writes per run. Use a password.

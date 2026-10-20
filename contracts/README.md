@@ -8,8 +8,9 @@ a nonce, so nobody can take someone else's id. Sepolia testnet only.
 
 ## Settings
 One file for the whole project: copy `../.env.example` to `../.env` (project root, git-ignored) and fill in
-`SEPOLIA_RPC_URL`, `SEPOLIA_PRIVATE_KEY` (a throwaway test wallet), `ETHERSCAN_API_KEY`, and after deploying
-`CONSENT_REGISTRY_ADDRESS`. Hardhat and the Python both read it.
+`SEPOLIA_RPC_URL`, `SEPOLIA_PRIVATE_KEY` (a throwaway test wallet) and `ETHERSCAN_API_KEY`. Hardhat and the
+Python both read it. The Python finds the contract address in `ignition/deployments/chain-<id>/` by itself;
+`CONSENT_REGISTRY_ADDRESS` overrides it. Read-only checks (`check()`) need only the RPC URL, no key.
 
 ## Test
 ```shell
@@ -23,8 +24,11 @@ python -m pytest test/test_registry.py                   # the Python helpers (f
 npx hardhat ignition deploy ignition/modules/ConsentRegistry.ts --network sepolia
 npx hardhat verify --network sepolia <DEPLOYED_ADDRESS>
 ```
-Put the printed address into `../.env` as `CONSENT_REGISTRY_ADDRESS` and commit
-`ignition/deployments/chain-11155111/` (addresses and ABI only — never the key).
+Commit `ignition/deployments/chain-11155111/` (addresses and ABI only — never the key); the Python reads the
+address from there. **Deployed:** `0x2De2051bAb111580a0F0C850E7C8318b94aAA4bF` on Sepolia (18 Oct 2026).
+Gas measured on Sepolia: create 459,911 · grant 31,603 · recordAccess 25,051 · revoke 31,734. Creating a
+consent costs about 4x the local simulator's figure, most likely because Sepolia now prices new storage
+higher (EIP-8037); quote Sepolia's numbers.
 
 ## Use from Python (project root, venv active)
 ```shell

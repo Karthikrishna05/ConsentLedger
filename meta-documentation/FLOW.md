@@ -29,10 +29,12 @@ One AA consent document goes in; a plain summary + a tamper-proof on-chain recor
                          │
              ┌───────────┴───────────┐
              ▼                        ▼
-   [4a] Summarizer (T5)      [4b] Faithfulness check:
-        rewrites it in            run NER over the summary and
-        plain English             compare — did the summary drop
-                                   or invent any fact?
+   [4a] Summarizer (T5)      [4b] Faithfulness check (D74):
+        rewrites it in            compare with the passage — did it
+        plain English             drop a fact, invent a name, reverse
+                                   a meaning or swap the party?
+                                   Reversed/swapped/invented -> show
+                                   the facts list instead
              │                        │
              └───────────┬────────────┘
                          ▼
@@ -48,10 +50,11 @@ One AA consent document goes in; a plain summary + a tamper-proof on-chain recor
 > **Why two boxes at step 2:** see the "split by source" decision (`DECISIONS.md` D2). Wordy facts are
 > *highlighted* by AI; the exact values (how long / how often / who) are *read from labelled JSON boxes*.
 
-**The research experiment lives inside step 2a.** The NER model is trained two ways and both are scored
-on the same sealed 25-document AA test set:
-- **E1:** trained only on outside data (OPP-115 + MAPP-English).
-- **E2:** trained on that outside data **plus** 15 AA documents.
+**The research experiment lives inside step 2a.** The NER model is trained in different ways and all are
+scored once on the same sealed AA test set of 9 documents (D54, D63):
+- **E1:** trained only on outside data (OPP-115).
+- **E2:** that outside data **plus** the 14 AA adaptation documents (10 to practise on, 4 as a mock test),
+  either mixed in together (E2-joint) or as a second, AA-only round of training (E2-sequential).
 Comparing E1 vs E2 answers: *how far does outside learning transfer, and how much does a little AA
 practice help?*
 
@@ -151,17 +154,66 @@ practice help?*
                         developed on all 23 documents incl. the test ones -> upper estimate for the LLM.
 [par]  P2 summarizer   P2's track; dataset builder + plan handed over by Drive (D33, D34): text ->
                         summary, reference-free test against gold facts. Needs P1's gold export.
-[done] P3 contract — ConsentRegistry.sol compiled, tested, and deployed to Sepolia. ABI and deployment records saved in the repository. Python registration, read, and revocation scripts implemented and tested. Consent registration, access audit, and revocation transactions verified on Etherscan. See P3.md.
-[later] 13. Rest        summarizer + faithfulness (P2 — see P2.md), 
+                        130 training summaries written by Claude Opus 5.5 and validated (D67):
+                        refs_train.jsonl -> 117 train / 13 mock-test pairs. P2 can train.
+                        P2's first t5-small (11 Oct) checked (D68): barely moved from the original,
+                        18 of 117 summaries acceptable -> P2 to retrain with the repo config values.
+                        Retrain pack sent (train_summ.py + configs + data); P1's test run:
+                        t5-small facts kept 22% -> 66%, 5 of 13 acceptable.
+                        P2's retrained t5-small checked (D69): really trained (84 of 117 seen
+                        passages pass) but 3 of 13 unseen, and 2 summaries reverse the meaning.
+                        A reversed-meaning check is needed.
+                        ONE SPLIT (D70, P1's decision 12 Oct): summariser dataset rebuilt on the
+                        NER split with gold checklists; 193 summaries -> 174 train / 19 mock-test;
+                        test = the 9 NER test docs (154 passages). New pack sent; WAITING for P2
+                        to retrain t5-small and Flan-T5-base on it (old models void for testing).
+                        13 Oct delivery checked (D72): t5-small OK on new data; Flan-T5-base was
+                        trained on the OLD data (redo) and needs a loader fix for our library
+                        version. Like-for-like on 136 unseen passages: Flan 58% accepted / 67%
+                        facts, t5-small 44% / 55%; meaning wrong in 4 and 7 of 12 read.
+                        -> bar goes on the SYSTEM: check each summary, fall back to bare facts.
+                        DONE 14 Oct (D73): Flan-T5-base redone correctly (v2 data, 4.46.3).
+                        Both models final and frozen. Next: faithfulness + reversed-meaning check.
+                        DONE 14 Oct (D74): faithfulness gate built (summ/faithfulness.py): kept
+                        facts, invented names/numbers, reversed meaning, swapped party ->
+                        reject (show facts) / add (list missing facts) / show. Fresh test on the
+                        two glued docs (58 summaries): both reversals caught; good summaries
+                        blocked 4 of 38 on the first run, 1 of 38 after three general fixes;
+                        Flan: 4 of 27 shown still wrong (garbled / other). Labels by Claude ->
+                        P1 to label the 58 alone (results/summ/gate_label_check_P1.csv).
+                        SETTLED with P1 (D82): kappa 0.32 before settling; on the final labels the gate
+                        caught 1 of 2 reversals, blocked 2 of 36 good; Flan wrong shown 22% (28% unchecked).
+                        16 Oct (D77): P2 handed the summariser over to P1 (build_dataset + train in the repo).
+[done] P3 contract     P3's track; see P3.md. Reference implementation (not a novelty claim, D28).
+                        First commit reviewed (D71): contract compiles and passes its local tests;
+                        NOT deployed; send() cannot send with the pinned web3; recordAccess is never
+                        tested; two design gaps (id can be taken first; audit entries by anyone).
+                        Second commit reviewed (D75): all D71 bugs fixed; full round trip works on a
+                        local chain. Open: deploy on Sepolia; one key name; revoke as a real CLI;
+                        a Python call for recordAccess; audit link from register().
+                        Fix pack v2 sent 16 Oct (D77): all of the above done and tested locally; P3 applies
+                        it, then wallet + faucet + RPC + Etherscan key -> deploy + verify on Sepolia.
+                        P3 (18 Oct): ConsentRegistry.sol compiled, tested, and deployed to Sepolia. ABI and deployment records saved in the repository. Python registration, read, and revocation scripts implemented and tested. Consent registration, access audit, and revocation transactions verified on Etherscan. See P3.md.
+                        Reviewed (D78): deployed bytecode = this source; live check() agrees; gas on
+                        Sepolia create 460k / grant 32k / record 25k / revoke 32k. OPEN: source not yet
+                        verified on Etherscan -> P3 runs `npx hardhat verify` (one command).
+[later] 13. Rest        summarizer + faithfulness (P2 — see P2.md),
                         end-to-end pipeline, user study, paper.
 ```
 
 **Open decision:** none blocking. Gold final after the audit (D59), rules ratified (D55), split fixed (D54).
-Optional, undecided: a `negated` flag per highlight (D58). E1/E2 (D63) and the LLM baseline (D65) are complete.
+`negated` flag (D66): checked by P1 and APPLIED (D81) — 67 marks, gold otherwise unchanged. P1's summary labels in:
+kappa 0.32 with Claude's; 19 disagreements to settle together. E1/E2 (D63) and the LLM baseline (D65) are complete.
 **Open decision for P1: the paper's framing** now that a rule-prompted LLM ties fine-tuning (D65). Then: the
-results section, uploading the 18 E2 models to the Hub, P2's summariser and the end-to-end pipeline.
-P2 can be sent the final gold.
-A new session should read this block, then `DECISIONS.md` D55-D65.
+results section, P2's summariser and the end-to-end pipeline. All 27 NER models (9 E1 + 18 E2) are on the
+Hub, private repo `Karthikrishna05/consentledger-ner`, verified 2026-10-11 (weights match the local files).
+Run-time readers built and checked (D76); pipeline/end_to_end.py done (D79): one command, policy (+ consent)
+-> checked summaries + facts + fingerprint (+ Sepolia). Demo app built (D80): `python app.py`. All models on the Hub and
+verified from a fresh cache (D83). README rewritten and Space packaged + tested (D84). Gradio Spaces now need HF PRO (D85):
+demo runs on the laptop, `python app.py --share` for a temporary link. Next: fresh-clone test (P4), the final evaluation.
+Summariser: both models final (D73); the faithfulness gate is built and tested (D74); **P1 to label the 58
+fresh summaries alone in `results/summ/gate_label_check_P1.csv`**, then the labels' agreement is computed.
+A new session should read this block, then `DECISIONS.md` D55-D85.
 
 ---
 
