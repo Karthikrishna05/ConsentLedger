@@ -54,11 +54,13 @@ Full detail / troubleshooting: [`meta-documentation/SETUP.md`](meta-documentatio
 **Prerequisites:** Python **3.11**; `git`. For training: an NVIDIA GPU (built on an RTX A4500, CUDA 12.1) — the
 demo and the pipeline run on CPU too. Node.js 20 only for the contract (`contracts/`).
 
-**Step 1 — Clone and enter the project**
+**Step 1 — Clone and enter the project** (the first line lets Windows handle the contract's long file names):
 ```bash
+git config --global core.longpaths true
 git clone <your-private-repo-url> ConsentLedger
 cd ConsentLedger
 ```
+> Clone into a short folder such as `C:\Users\<you>\ConsentLedger`, not a deeply nested one.
 
 **Step 2 — Create and activate the venv (Python 3.11).** PowerShell:
 ```powershell
