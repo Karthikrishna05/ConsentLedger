@@ -203,17 +203,21 @@ practice help?*
 
 **Open decision:** none blocking. Gold final after the audit (D59), rules ratified (D55), split fixed (D54).
 `negated` flag (D66): checked by P1 and APPLIED (D81) — 67 marks, gold otherwise unchanged. P1's summary labels in:
-kappa 0.32 with Claude's; 19 disagreements to settle together. E1/E2 (D63) and the LLM baseline (D65) are complete.
-**Open decision for P1: the paper's framing** now that a rule-prompted LLM ties fine-tuning (D65). Then: the
-results section, P2's summariser and the end-to-end pipeline. All 27 NER models (9 E1 + 18 E2) are on the
+kappa 0.32 with Claude's before settling; the 19 disagreements were settled (D82). E1/E2 (D63) and the LLM baseline (D65) are complete.
+**Open decision for P1: the paper's framing** now that a rule-prompted LLM ties fine-tuning (D65). All 27 NER models (9 E1 + 18 E2) are on the
 Hub, private repo `Karthikrishna05/consentledger-ner`, verified 2026-10-11 (weights match the local files).
 Run-time readers built and checked (D76); pipeline/end_to_end.py done (D79): one command, policy (+ consent)
 -> checked summaries + facts + fingerprint (+ Sepolia). Demo app built (D80): `python app.py`. All models on the Hub and
 verified from a fresh cache (D83). README rewritten and Space packaged + tested (D84). Gradio Spaces now need HF PRO (D85):
 demo runs on the laptop, `python app.py --share` for a temporary link. Next: fresh-clone test (P4), the final evaluation.
-Summariser: both models final (D73); the faithfulness gate is built and tested (D74); **P1 to label the 58
-fresh summaries alone in `results/summ/gate_label_check_P1.csv`**, then the labels' agreement is computed.
-A new session should read this block, then `DECISIONS.md` D55-D85.
+Summariser: both models final (D73), handed over to P1 (D77); the faithfulness gate is built, and scored on the
+settled labels (D82). **P3, 21 Oct:** Sepolia connection, wallet (0.05 test ETH) and all 10 contract tests fine on
+P3's machine, but the source is still **not verified on Etherscan**; P3 also needs to `git pull` (ran 6 Python
+tests, the repo has 7) and uses Python 3.12 instead of 3.11.
+**Live demo, 21 Oct (D88):** the app ran end to end; on a real policy it marked 8 collected items "NOT done" — a
+sentence-splitting bug ("etc." never ended a sentence). Fixed, plus a passive-voice false swap the fix exposed;
+every reported number re-run and unchanged. Known limitation: a bullet list without full stops can still run on.
+A new session should read this block, then `DECISIONS.md` D55-D88.
 
 ---
 

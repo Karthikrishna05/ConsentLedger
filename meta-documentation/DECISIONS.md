@@ -2646,3 +2646,37 @@ Revocation changes the consent status so subsequent validity checks reject the c
   one 200. The `space/` package stays ready if a PRO month is ever bought.
 - **Care with a public link:** it serves from this laptop. Keep `SEPOLIA_PRIVATE_KEY` out of `.env` while
   sharing, unless recording on-chain is wanted; the app's own cap is 20 writes per run. Use a password.
+
+### D88 — A live demo exposed a sentence-splitting bug in the "denied" marks; fixed, no reported number changes
+- **Found (21 Oct, live run of `app.py`):** on `17_pb_fintech_aa_privacy` (a training document) all 8 facts marked
+  "the policy says this is NOT done" were wrong. The policy reads "…first name, last name, … Bank Account
+  Information etc. Once you register … you are not anonymous to us." `faithfulness.sentences()` never ended a
+  sentence at "etc.", so the two sentences were read as one, and the second one's "not" denied the whole list.
+- **Fix 1:** "etc." followed by a capital letter now ends the sentence; "etc." followed by a lower-case word still
+  joins ("PAN, Aadhaar etc. and we use them").
+- **Fix 2, needed because of fix 1:** with the sentence now clean, the party-swap check matched it closely and
+  wrongly blocked a correct summary ("PB Financial asks for your first name…" for "you are asked for … first
+  name…"). The existing control-verb rule ("we shall require you to" — both parties act) now also covers the
+  passive "you are asked / required / requested / expected / advised / encouraged". Not "allowed" or "entitled":
+  those give the user a right, and a summary handing that right to the company must still count as a swap.
+- **Guards:** four new self-check asserts — both "etc." cases, the passive case, and a right that must still swap.
+- **Effect, measured before vs after:**
+  - all 1,266 gold highlights: "denied" marks 132 → 124 — exactly the 8 wrong ones went; all 67 verified kept;
+  - the reported gate numbers do not move: D82 (settled labels), D74 (held-out) and the D66 comparison (116/124)
+    print identical output;
+  - 231 non-sealed summaries (all 193 train/dev references and both models' 38 dev summaries): one verdict
+    changed — the reference for that same passage, wrongly rejected before (7 false denials), now shown;
+  - the real policy through the pipeline: 59 facts, 0 marked denied (was 8, all wrong); the passage verdicts are
+    the same as before the fix (6 shown, 4 with facts added, none withheld). Self-checks and the 7 tests pass.
+- **Why it may be fixed now:** found in normal use on a training document; no test set was opened or scored (the
+  summariser's sealed test and the whole-system test have not been run). `run_gate.py` was not re-run because it
+  reads the sealed `chunks_test.jsonl`.
+- **Known limitation, left as is:** a list without full stops can still run into the next sentence. In
+  `19_saafe_privacy`, "including for: Regulatory inspections / Dispute resolution / Fraud monitoring" runs into a
+  heading and "no further data flows are enabled", so three purposes are marked denied. Splitting at line breaks
+  would cut the many mid-sentence line wraps in these documents, so this goes in the paper's limitations. The other
+  unconfirmed marks sit in test documents (`25_the_financiali` 44, `29_icici` 8, `28_indifi` 1): counted, but
+  deliberately not read, so the checker is not tuned on test documents.
+- **Also seen in the demo, unchanged:** 2 of the 10 summaries shown for that policy were imperfect (the party in
+  "your personal data … will not be liable"; "persistent cookies … expire after closing your browser") — in line
+  with the 22% of D82. A term broken across a line becomes two facts ("PAN" + "cards").

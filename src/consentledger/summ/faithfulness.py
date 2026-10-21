@@ -79,6 +79,7 @@ MODALS = set(MODAL.split("|"))
 CONTROL = {"require", "requires", "ask", "asks", "request", "requests", "allow", "allows", "permit", "permits",
            "enable", "enables", "authorise", "authorises", "authorize", "authorizes", "entitle", "entitles",
            "need", "needs", "expect", "expects", "advise", "advises", "encourage", "encourages"}
+PASSIVE_ASK = {"asked", "required", "requested", "expected", "advised", "encouraged"}   # not "allowed", "entitled": a right
 SUBJ_BEFORE = {None, ",", "the", "a", "an", "and", "that", "hereby"}
 USER_SUBJ = {"you", "user", "users", "customer", "customers"}
 COMPANY_SUBJ = {"we", "company", "agya", "it", "omsaa", "onemoney", "finsec", "saafe", "scoremeaa", "setu", "nadl", "pb"}
@@ -113,10 +114,12 @@ def _stems(toks: list[str]) -> set[str]:
 
 
 def sentences(text: str) -> list[tuple[int, int]]:
-    """Sentence spans; an enumerator or abbreviation ("f.", "Ltd.") does not end a sentence."""
+    """Sentence spans; an enumerator or abbreviation ("f.", "Ltd.") does not end a sentence - except a list's
+    closing "etc." before a capital letter ("... Bank Account Information etc. Once you register", D88)."""
     spans, start = [], 0
     for m in SENT_END.finditer(text):
-        if ENUM_END.search(text[start:m.start()].rstrip()):
+        before = text[start:m.start()].rstrip()
+        if ENUM_END.search(before) and not (before.lower().endswith("etc.") and text[m.end():m.end() + 1].isupper()):
             continue
         spans.append((start, m.start()))
         start = m.end()
@@ -147,6 +150,9 @@ def _subject_of(toks: list[str], ignore: set) -> frozenset | None:
             k = i + 2 if toks[i + 1] == "the" else i + 1
             if k + 1 < len(toks) and toks[k + 1] == "to" and (toks[k] in USER_SUBJ or toks[k] in COMPANY_SUBJ | {"us"}):
                 found.add("user" if toks[k] in USER_SUBJ else "company")
+    if any(w in PASSIVE_ASK and toks[i - 1] in ("are", "is", "be", "been") for i, w in enumerate(toks[1:10], 1)
+           if i not in ignore):
+        found |= {"user", "company"}                 # "you are asked for your name": the company asks (D88)
     return frozenset(found)
 
 
@@ -501,6 +507,13 @@ def _selfcheck() -> None:
     assert not fact_denied(ids, None, "Voter ID") and fact_denied(ids, None, "full number")
     assert not fact_denied("This Policy does not apply to information collected by merchants.", None, "merchants")
     assert not fact_denied("Submission of your Aadhaar number is not mandatory for KYC.", None, "Aadhaar number")
+    etc = "We ask for your name, mobile number etc. Once you sign in you are not anonymous to us."
+    assert len(sentences(etc)) == 2 and not fact_denied(etc, None, "mobile number")   # D88: "etc." ended the list
+    assert len(sentences("We collect PAN, Aadhaar etc. and we use them.")) == 1         # mid-sentence "etc." still joins
+    asked = "When you register with PB Financial, you are asked for your name and mobile number."
+    assert not compare(asked, "PB Financial asks for your name and mobile number.")["swapped"]   # passive: no swap
+    right = "You are allowed to download your consent records at any time."
+    assert compare(right, "The company may download your consent records at any time.")["swapped"]  # a right still swaps
     g = gate(share, "Agya shares your information without your explicit consent.", [("information", "DATA_TYPE", None)])
     assert g["verdict"] == "reject" and g["reversed"]
     names = "We collect information including but not limited to your name and email address."

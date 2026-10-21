@@ -13,7 +13,7 @@ Give it an AA policy (and, optionally, the consent artefact a user is asked to g
 
 > **New here?** Read [`meta-documentation/OVERVIEW.md`](meta-documentation/OVERVIEW.md) (plain-language tour), then
 > the project "bible" [`DETAILED_EXPLANATION.md`](meta-documentation/DETAILED_EXPLANATION.md). Every decision and
-> its reasoning: [`DECISIONS.md`](meta-documentation/DECISIONS.md) (D1–D85). Live status:
+> its reasoning: [`DECISIONS.md`](meta-documentation/DECISIONS.md) (D1–D88). Live status:
 > [`FLOW.md`](meta-documentation/FLOW.md).
 
 **Research prototype, research use only** — the NER models were trained partly on OPP-115 (CC BY-NC 4.0).

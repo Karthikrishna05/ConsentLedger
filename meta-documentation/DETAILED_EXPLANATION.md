@@ -5,7 +5,7 @@ decision was made, and how every line of code works — well enough to explain i
 re-implement it yourself, no AI needed. Language is deliberately simple, with analogies. **Keep this file
 updated whenever anything new is built** (it is part of the audit trail).
 
-> Companions: `OVERVIEW.md` (short plain-language tour), `DECISIONS.md` (why each choice, D1–D85),
+> Companions: `OVERVIEW.md` (short plain-language tour), `DECISIONS.md` (why each choice, D1–D88),
 > `FLOW.md` (progress), `NER_LABEL_MAPPING.md`, `TEAM.md`, `SETUP.md`, `DEADLINE_PLAN.md`,
 > `ANNOTATION_GUIDELINE.md`. This file is the deep version of all of them combined.
 
@@ -1479,6 +1479,18 @@ up: giving the gate the previous passage as context made it drop the current pas
 152 of 326 passages (the sentence seemed to run on from a section number like "17.3" at the end of the
 previous one). It is fixed, and a self-test now guards it.
 
+**A third bug, found in the live demo (D88).** Running the demo on a real privacy policy, every fact the check
+marked "NOT done" was wrong. The policy lists "first name, last name, … Bank Account Information etc." and the next
+sentence says "you are not anonymous to us". The sentence splitter treated every "etc." like "Ltd.", an abbreviation
+that never ends a sentence, so it read the two sentences as one, and the "not" of the second cancelled the whole list
+of the first. *Analogy: reading two lines of a contract with the full stop rubbed out — "we collect your name etc.
+once you sign in you are not anonymous" starts to sound like a promise not to collect.* Now an "etc." before a
+capital letter ends the sentence. That fix uncovered a smaller one: the cleaner sentence let the party check compare
+"you are asked for your name" with "PB Financial asks for your name" and call it a swap, so a passive "you are asked
+/ required" now counts both parties, as "we require you to" already did. Every reported number was re-run and is
+unchanged; across all 1,266 gold highlights exactly the 8 wrong marks went. Still open: a bullet list without full
+stops can run into a following "no …" sentence (three marks in one Saafe policy), a known limitation.
+
 ---
 
 ## 6. NER model pipeline — file by file
@@ -1781,15 +1793,15 @@ file is the small training add-on for E2.
 
 The diagram above ends at the NER scores. The full system has six steps, and this is where each stands:
 
-| Step | What it does | Owner | State (14 Oct 2026) |
+| Step | What it does | Owner | State (21 Oct 2026) |
 |---|---|---|---|
 | 1. Clean | web page -> plain text | P1 | done |
 | 2a. NER | highlights data types, purposes, third parties | P1 | done: `ner/predict.py` (Legal-BERT E2-sequential, seed 44) reproduces the trainer's mock-test F1 (D76) |
 | 2b. Parser | reads duration, frequency, recipient from the consent JSON | P1 | done: `consent_artefact/parse.py`, checked on both real examples and 30 synthetic ones (D76) |
-| 4a. Summariser | passage -> short plain summary | P2 | done: both models frozen, Flan-T5-base the main one (D73); `summ/predict.py` reproduces P2's summaries word for word (D76); on the Hub and checked from a fresh cache (D83) |
-| 4b. Faithfulness check | did the summary drop or invent a fact, reverse a meaning, swap the party? | P2 | built (`summ/faithfulness.py`, D74); on fresh documents and the final labels (D82) it caught 1 of 2 reversals and blocked 2 of 36 good summaries; falls back to the facts list |
-| 5. Blockchain | hash the facts, record on Sepolia | P3 | done: deployed on Sepolia, all four calls checked on the live chain (D78); source verification on Etherscan still to do |
-| 6. Glue | one command, one report per document (`pipeline/end_to_end.py`) | P1 | done (D79): checked on a real policy page and a local chain; next the demo app |
+| 4a. Summariser | passage -> short plain summary | P2 -> P1 (D77) | done: both models frozen, Flan-T5-base the main one (D73); `summ/predict.py` reproduces P2's summaries word for word (D76); on the Hub and checked from a fresh cache (D83) |
+| 4b. Faithfulness check | did the summary drop or invent a fact, reverse a meaning, swap the party? | P1 | built (`summ/faithfulness.py`, D74); on fresh documents and the final labels (D82) it caught 1 of 2 reversals and blocked 2 of 36 good summaries; falls back to the facts list |
+| 5. Blockchain | hash the facts, record on Sepolia | P3 | done: deployed on Sepolia, all four calls checked on the live chain (D78); source verification on Etherscan still to do (not done as of 21 Oct) |
+| 6. Glue | one command, one report per document (`pipeline/end_to_end.py`) | P1 | done (D79): checked on a real policy page and a local chain; demo app on top of it (D80) |
 
 **The three readers (D76).** `ner/predict.py`, `summ/predict.py` and `consent_artefact/parse.py` are the
 parts that turn raw input into facts and summaries. Each was checked by making it redo something training
@@ -1911,10 +1923,12 @@ Tools: `kappa.py` (`--docs`, rejects labels outside the scheme), `agreement_repo
 `aa_to_conll.py`, `ner/evaluate.py`, `ner/collect.py`, `ner/llm_baseline.py`.
 
 **Models on the Hub:** all 27 NER models (9 E1 + 18 E2) are in the private repo
-`Karthikrishna05/consentledger-ner`; every weight file was checked against the local copy (11 Oct 2026).
+`Karthikrishna05/consentledger-ner`; every weight file was checked against the local copy (11 Oct 2026). The two
+final summarisers are in `Karthikrishna05/consentledger-summ` (D83); downloaded into an empty cache, all models are
+byte-identical to the originals and give the same results.
 
-**Summarizer (P2's track):** dataset builder and plan delivered to P2 via Drive (D33, D34); not in P1's
-commits. The 130 training summaries are written and validated (D67, `data/summ/refs_train.jsonl`, sent by
+**Summarizer (P2's track, handed over to P1 on 16 Oct — D77; the builder and the training script are now in the
+repo):** dataset builder and plan delivered to P2 via Drive (D33, D34). The 130 training summaries are written and validated (D67, `data/summ/refs_train.jsonl`, sent by
 Drive). P2's first t5-small was barely changed from the original (D68); after the retrain pack, P2's second
 t5-small is properly trained (84 of 117 training passages acceptable) but weak on new text (3 of 13) and
 sometimes reverses the meaning (D69). The dataset has since been rebuilt on the NER split with gold
@@ -1928,6 +1942,13 @@ built (D74, section 5.13):** on two fresh documents, scored on the labels P1 and
 1 of the 2 reversed meanings and blocked 2 of 36 correct summaries. About 22% of the Flan-T5-base summaries it lets
 through are still wrong in other ways (28% without it), which is why the facts list goes with every summary that
 drops facts.
+
+**The whole system — built and checked (D74-D85):** the three run-time readers (`ner/predict`, `summ/predict`,
+`consent_artefact/parse`, D76); the faithfulness check (D74, D82); the contract live on Sepolia (D78); the pipeline in
+one command (D79); the demo app (D80); the models on the Hub (D83); the README and a Space package, tested (D84).
+Hugging Face now charges for Gradio Spaces, so the demo runs on P1's laptop, with `--share` for a temporary public
+link (D85). A live demo run (21 Oct) found a
+sentence-splitting bug that marked collected data as "NOT done"; it is fixed, with no reported number changed (D88).
 
 **Audit of the final gold (D58, D59):** before correction, about 98% of highlights correct, about 93% of
 markable entities present, 92% consistency on identical text. The 49 verified defects are now corrected;
@@ -1951,16 +1972,18 @@ gold's stated error rate.
    rules scores 0.479 — a tie with the best fine-tuned model on exact F1, behind it on relaxed F1.** The
    test set is spent — no re-scoring after changes. Open: how the paper is framed now (D65).
 6. ~~Decide the split for the whole system~~ **done — one split, summariser dataset rebuilt (D70).**
-   ~~Open: how reversed meanings will be detected (D69)~~ **done — the faithfulness gate (D74).** Open: P1
-   labels the 58 fresh summaries alone (`gate_label_check_P1.csv`) so the labels' agreement can be reported.
-   Then: P3's contract; P1's glue code
-   (`ner/predict.py`, the JSON parser, `pipeline/end_to_end.py`); the demo app (sections 7.1-7.4).
+   ~~Open: how reversed meanings will be detected (D69)~~ **done — the faithfulness gate (D74).** ~~P1 labels
+   the 58 fresh summaries~~ **done and settled (D81, D82).** ~~P3's contract; P1's glue code; the demo app~~
+   **done (D76-D80).**
+   **Still to do:** P3 publishes the contract's source on Etherscan (not done as of 21 Oct); P4's fresh-clone test
+   of the README; the final sealed evaluation (summariser test set + whole-system test, once, with P1); the paper
+   and the report; viva rehearsal; `git tag v1.0` and submission.
 7. Glued-text documents (`02_digio_terms`, `10_perfios_terms`): fixing `clean.py` is still open; they are
    adaptation-only until then (D36, D52).
 8. Paper: Related Work and the annotation-methodology section can be written now (the agreement story is
    complete: 0.28 -> 0.37 -> 0.28 -> 0.52 -> 0.43, with the diagnosis at each step).
 
-See `FLOW.md` for live status and `DECISIONS.md` (D1-D85) for the reasoning behind every choice.
+See `FLOW.md` for live status and `DECISIONS.md` (D1-D88) for the reasoning behind every choice.
 
 ---
 
