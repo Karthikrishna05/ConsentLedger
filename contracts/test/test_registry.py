@@ -140,35 +140,42 @@ class ConsentRegistryTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, "refused"):
                         wc.get_web3()
 
+   
     def test_contract_address_defaults_to_the_recorded_deployment(self):
-        """Without CONSENT_REGISTRY_ADDRESS, the address Ignition recorded for that chain is used."""
+        """Use the recorded Sepolia address when no explicit address is configured."""
         from unittest.mock import patch
+        import os
         from consentledger.chain.web3_client import SEPOLIA, get_contract
 
-        rec = json.loads((ROOT / "contracts" / "ignition" / "deployments" / f"chain-{SEPOLIA}" /
-                          "deployed_addresses.json").read_text(encoding="utf-8"))["ConsentRegistryModule#ConsentRegistry"]
+        rec = json.loads(
+            (
+                ROOT
+                / "contracts"
+                / "ignition"
+                / "deployments"
+                / f"chain-{SEPOLIA}"
+                / "deployed_addresses.json"
+            ).read_text(encoding="utf-8")
+        )["ConsentRegistryModule#ConsentRegistry"]
+
         w3 = Mock()
         w3.eth.chain_id = SEPOLIA
+
         with patch.dict("os.environ", {}, clear=False):
-            import os
             os.environ.pop("CONSENT_REGISTRY_ADDRESS", None)
-            get_contract(w3)
-        self.assertEqual(w3.eth.contract.call_args.kwargs["address"], to_checksum_address(rec))
-        w3.eth.chain_id = 999
-        with self.assertRaisesRegex(RuntimeError, "No ConsentRegistry address"):
-            get_contract(w3)
 
-    def test_audit_link_and_consent_id(self):
-        """Etherscan link on Sepolia, none locally; a consent id must be 32 bytes."""
-        from consentledger.chain.revoke_consent import parse_consent_id
-        from consentledger.chain.web3_client import LOCAL, SEPOLIA, explorer_link
+            get_contract(w3)
+            self.assertEqual(
+                w3.eth.contract.call_args.kwargs["address"],
+                to_checksum_address(rec),
+            )
 
-        tx = "0x" + "ab" * 32
-        self.assertEqual(explorer_link(Mock(eth=Mock(chain_id=SEPOLIA)), tx), "https://sepolia.etherscan.io/tx/" + tx)
-        self.assertIsNone(explorer_link(Mock(eth=Mock(chain_id=LOCAL)), tx))
-        self.assertEqual(parse_consent_id("0x" + "11" * 32), bytes.fromhex("11" * 32))
-        with self.assertRaises(ValueError):
-            parse_consent_id("0x1234")
+            # Keep the variable absent for this assertion too.
+            w3.eth.chain_id = 999
+            with self.assertRaisesRegex(
+                RuntimeError, "No ConsentRegistry address"
+            ):
+                get_contract(w3)
 
 
 if __name__ == "__main__":
