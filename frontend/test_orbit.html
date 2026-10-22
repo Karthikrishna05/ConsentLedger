@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body { background: #000; color: #fff; display: flex; gap: 40px; padding: 50px; font-family: sans-serif; }
+  .card {
+    position: relative;
+    width: 280px;
+    height: 180px;
+    background: #111;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* Test 1: SVG rect with pathLength="100" */
+  .svg-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+  .orbit-track {
+    fill: none;
+    stroke: rgba(255,255,255,0.05);
+    stroke-width: 1.5px;
+  }
+  .orbit-dot-svg {
+    fill: none;
+    stroke: #ffffff;
+    stroke-width: 3px;
+    stroke-linecap: round;
+    stroke-dasharray: 2 98;
+    filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff);
+    animation: orbitSvg 3s linear infinite;
+  }
+  @keyframes orbitSvg {
+    0% { stroke-dashoffset: 100; }
+    100% { stroke-dashoffset: 0; }
+  }
+
+  /* Test 2: CSS offset-path */
+  .card-2 {
+    position: relative;
+  }
+  .orbit-dot-css {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #ffffff, 0 0 12px #ffffff, 0 0 18px rgba(255,255,255,0.9);
+    offset-path: rect(0 100% 100% 0 round 20px);
+    offset-anchor: 50% 50%;
+    animation: orbitCss 3s linear infinite;
+  }
+  @keyframes orbitCss {
+    0% { offset-distance: 0%; }
+    100% { offset-distance: 100%; }
+  }
+</style>
+</head>
+<body>
+  <div class="card" id="c1">
+    <span>SVG Rect Test</span>
+    <svg class="svg-overlay" xmlns="http://www.w3.org/2000/svg">
+      <rect class="orbit-track" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20"/>
+      <rect class="orbit-dot-svg" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" pathLength="100"/>
+    </svg>
+  </div>
+
+  <div class="card card-2" id="c2">
+    <span>CSS Offset-Path Test</span>
+    <div class="orbit-dot-css"></div>
+  </div>
+</body>
+</html>
