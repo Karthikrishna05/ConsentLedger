@@ -106,8 +106,8 @@ HTML = """\
       font-size:22px;
       font-weight:700;
       letter-spacing:.12em;
-      fill:#98989f;
-      opacity:.75;
+      fill:#a1a1a6;
+      opacity:.82;
       transition:fill .25s,opacity .25s,filter .25s;
       user-select:none;
       pointer-events:none;
@@ -124,7 +124,7 @@ HTML = """\
     .wp-node.passed .wp-core{fill:#d1d1d6}
     .wp-node.passed .wp-outer{stroke:rgba(255,255,255,.5)}
     .wp-node.passed .wp-lead{stroke:rgba(255,255,255,.3)}
-    .wp-node.passed .wp-label{fill:#d1d1d6;opacity:.85}
+    .wp-node.passed .wp-label{fill:#d1d1d6;opacity:.88}
 
     /* NAV */
     nav{position:fixed;top:0;left:0;right:0;z-index:900;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 2.5rem;background:rgba(0,0,0,.75);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:1px solid rgba(255,255,255,.04);transition:border-color .3s}
@@ -192,7 +192,7 @@ HTML = """\
       opacity:0;
       transition:opacity .5s cubic-bezier(.2,0,0,1);
     }
-    .feat-card:hover .card-beam,.feat-card.in-view .card-beam,.glass.in-view .card-beam{
+    .feat-card:hover .card-beam,.feat-card.hovered .card-beam,.feat-card.in-view .card-beam,.glass.in-view .card-beam{
       opacity:1;
     }
 
@@ -210,31 +210,27 @@ HTML = """\
       transition:opacity .35s ease;
     }
     .feat-card:hover .card-orbit-svg,
-    .glass:hover .card-orbit-svg{
+    .feat-card.hovered .card-orbit-svg,
+    .glass:hover .card-orbit-svg,
+    .glass.hovered .card-orbit-svg{
       opacity:1;
     }
     .orbit-halo{
       fill:none;
       stroke:rgba(255,255,255,0.45);
-      stroke-width:5px;
+      stroke-width:5.5px;
       stroke-linecap:round;
-      stroke-dasharray:3.5 96.5;
-      filter:blur(3px);
-      stroke-dashoffset:100;
+      stroke-dasharray:3 97;
+      filter:blur(3.5px);
+      animation:cardOrbitRun 3.2s linear infinite;
     }
     .orbit-spark{
       fill:none;
       stroke:#ffffff;
-      stroke-width:2.8px;
+      stroke-width:3px;
       stroke-linecap:round;
-      stroke-dasharray:1.6 98.4;
-      filter:drop-shadow(0 0 5px #ffffff) drop-shadow(0 0 12px rgba(255,255,255,.95));
-      stroke-dashoffset:100;
-    }
-    .feat-card:hover .orbit-halo,
-    .feat-card:hover .orbit-spark,
-    .glass:hover .orbit-halo,
-    .glass:hover .orbit-spark{
+      stroke-dasharray:1.8 98.2;
+      filter:drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 14px rgba(255,255,255,.95));
       animation:cardOrbitRun 3.2s linear infinite;
     }
     @keyframes cardOrbitRun{
@@ -816,10 +812,11 @@ HTML = """\
 const rObs=new IntersectionObserver(entries=>entries.forEach((e,i)=>{if(e.isIntersecting)setTimeout(()=>e.target.classList.add('go'),i*55);}),{threshold:.08});
 document.querySelectorAll('.rv').forEach(el=>rObs.observe(el));
 
-/* 3D TILT */
-document.querySelectorAll('.feat-card').forEach(c=>{
+/* 3D TILT & CARD HOVER */
+document.querySelectorAll('.feat-card, .glass').forEach(c=>{
+  c.addEventListener('mouseenter',()=>{c.classList.add('hovered');});
+  c.addEventListener('mouseleave',()=>{c.classList.remove('hovered');c.style.transform='';});
   c.addEventListener('mousemove',e=>{const r=c.getBoundingClientRect(),x=(e.clientX-r.left)/r.width-.5,y=(e.clientY-r.top)/r.height-.5;c.style.transform=`perspective(700px) rotateX(${-y*7}deg) rotateY(${x*7}deg) translateZ(6px)`;});
-  c.addEventListener('mouseleave',()=>{c.style.transform='';});
 });
 
 /* TOAST */
