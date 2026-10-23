@@ -21,6 +21,69 @@ Summaries are machine-written and only partly checked; this is not legal advice.
 
 ---
 
+## Architecture
+
+```mermaid
+flowchart LR
+    subgraph IN["Inputs"]
+        DOC["AA policy or terms<br/>.txt / .html / .pdf"]
+        CON["Consent artefact<br/>ReBIT JSON"]
+    end
+    HUB[("Hugging Face Hub<br/>private model repos")]
+    WEB["Web app<br/>frontend/ via /api<br/>Gradio backup at /gradio"]
+    WEB --> DOC
+    WEB --> CON
+
+    DOC --> CLEAN["Clean and split<br/>into passages"]
+    CLEAN --> NER["NER: Legal-BERT, E2-sequential<br/>DATA_TYPE / PURPOSE / THIRD_PARTY"]
+    NER --> NEG["Negation flag<br/>promised NOT done"]
+    CLEAN --> SUM["Summariser<br/>Flan-T5-base"]
+    SUM --> GATE{"Faithfulness check<br/>reversal / party swap /<br/>invented name / coverage"}
+    NEG --> GATE
+    GATE -->|passes| SHOW["Show the summary"]
+    GATE -->|drops facts| ADD["Show the summary<br/>plus the missing facts"]
+    GATE -->|fails| HOLD["Withhold the summary<br/>show the facts instead"]
+
+    CON --> PARSE["Consent parser<br/>recipient / purpose / duration /<br/>frequency / data range / data life"]
+    NEG --> REC["Assembled record<br/>consent + policy facts"]
+    PARSE --> REC
+    REC --> HASH["Keccak-256 fingerprint"]
+    HASH --> REG[("ConsentRegistry<br/>Ethereum Sepolia")]
+    REG --> CHECK["check: status / expiry /<br/>fingerprint match"]
+
+    HUB -. models downloaded once .-> NER
+    HUB -.-> SUM
+```
+
+The on-chain part stores only a fingerprint, never the document or any personal data:
+
+```mermaid
+sequenceDiagram
+    participant U as User or FIU
+    participant P as Pipeline (app.py)
+    participant R as ConsentRegistry on Sepolia
+    U->>P: policy + consent artefact
+    P->>P: facts, checked summaries, assembled record
+    P->>R: createConsent(fingerprint, expiry, nonce)
+    P->>R: grantConsent(consent id)
+    Note over R: stores fingerprint, owner, expiry and status
+    U->>R: check(consent id, saved record): re-hash and compare
+    R-->>U: VALID, or NOT VALID if changed, revoked or expired
+    U->>R: revokeConsent(consent id)
+```
+
+| Part | Where | What it is |
+|---|---|---|
+| NER | `src/consentledger/ner/` | Legal-BERT fine-tuned on OPP-115, then on a little AA data (E2-sequential) |
+| Summariser + check | `src/consentledger/summ/` | Flan-T5-base summaries; rule-based faithfulness gate (`faithfulness.py`) |
+| Consent parser | `src/consentledger/consent_artefact/` | reads the ReBIT consent artefact's terms |
+| Pipeline | `src/consentledger/pipeline/end_to_end.py` | one command, one report per document |
+| Smart contract | `contracts/` | `ConsentRegistry.sol` (Hardhat), verified on Sepolia Etherscan |
+| Chain client | `src/consentledger/chain/` | register, check, record access, revoke (web3.py) |
+| Web app | `frontend/` + `app.py` | the main page, over a JSON API; the Gradio page at `/gradio` is the backup |
+
+---
+
 ## Quick start — run the demo (no training needed)
 
 1. Do the **Setup** below (clone, venv, libraries).
@@ -36,13 +99,24 @@ Summaries are machine-written and only partly checked; this is not legal advice.
    ```powershell
    python app.py
    ```
+   One server, one address:
+
+   | Address | What it is |
+   |---|---|
+   | http://127.0.0.1:7860/ | the web app (`frontend/`): analyse, record on Sepolia, check a recorded consent, download the report |
+   | http://127.0.0.1:7860/gradio | the original Gradio page, kept as a **backup** in case the web app misbehaves |
+   | http://127.0.0.1:7860/api/docs | the JSON API the web app uses (`/api/analyse`, `/api/analyse-file`, `/api/check`, `/api/report/…`) |
+
+   `python app.py --gradio-only` runs the Gradio page on its own, exactly as before. `python app.py --selfcheck`
+   tests the routes without loading any model.
    Or run the whole pipeline on a file and get a JSON report in `results/pipeline/`:
    ```powershell
    python -m consentledger.pipeline.end_to_end --doc policy.html --consent data/aa/consent_artefacts/demo_consent.json
    ```
    Add `--chain` to record the fingerprint on Sepolia (needs `.env`).
-5. *(Optional)* share it while it runs: `python app.py --share` prints a temporary public `https://….gradio.live`
-   link. Set a password first with `$env:DEMO_PASSWORD="…"` (visitors log in as `demo`).
+5. *(Optional)* share it while it runs: `python app.py --gradio-only --share` prints a temporary public
+   `https://….gradio.live` link to the Gradio page. Set a password first with `$env:DEMO_PASSWORD="…"` (visitors
+   log in as `demo`).
 
 ---
 
@@ -168,7 +242,7 @@ pytest -q
 ## Deploy the demo to Hugging Face Spaces
 
 > Hosting a Gradio Space now needs a Hugging Face **PRO** subscription (D85). Without it, run the demo on your
-> laptop and use `python app.py --share` for a temporary public link.
+> laptop and use `python app.py --gradio-only --share` for a temporary public link.
 
 
 ```powershell
@@ -196,7 +270,8 @@ Details: [`space/README.md`](space/README.md).
 
 ## Project layout
 ```
-app.py               the demo web page (Gradio) over pipeline/end_to_end.run
+app.py               the demo server over pipeline/end_to_end.run: web app at /, JSON API at /api, Gradio backup at /gradio
+frontend/            the web app (HTML, CSS, JavaScript; P4's design), which shows only what the backend returns
 src/consentledger/   data/ (corpus, annotation, adjudication, splits), ner/ (train, evaluate, predict, LLM baseline),
                      summ/ (dataset, train, predict, faithfulness), consent_artefact/ (parse), chain/ (web3 client,
                      register / read / revoke), pipeline/ (end_to_end)
