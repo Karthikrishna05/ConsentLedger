@@ -1,4 +1,43 @@
-/* THREE.JS HERO - ULTRA-LIGHTWEIGHT 3D OBSIDIAN PRISM & MERIDIAN RING */
+/* ── THEME TOGGLE ────────────────────────────────────────────── */
+(function(){
+  const html=document.documentElement;
+  const btn=document.getElementById('theme-toggle');
+  const label=document.getElementById('toggle-label');
+  const iconMoon=document.getElementById('icon-moon');
+  const iconSun=document.getElementById('icon-sun');
+
+  const LIGHT='light';
+  const stored=localStorage.getItem('cl-theme');
+  const prefersLight=window.matchMedia('(prefers-color-scheme: light)').matches;
+  let isLight=stored?stored===LIGHT:prefersLight;
+
+  function applyTheme(light){
+    if(light){
+      html.setAttribute('data-theme',LIGHT);
+      if(label)label.textContent='Dark';
+      if(iconMoon)iconMoon.style.display='none';
+      if(iconSun)iconSun.style.display='';
+    }else{
+      html.removeAttribute('data-theme');
+      if(label)label.textContent='Light';
+      if(iconMoon)iconMoon.style.display='';
+      if(iconSun)iconSun.style.display='none';
+    }
+    window.dispatchEvent(new CustomEvent('cl-theme-changed', {detail:{isLight:light}}));
+  }
+
+  applyTheme(isLight);
+
+  if(btn){
+    btn.addEventListener('click',()=>{
+      const nextLight = html.getAttribute('data-theme') !== LIGHT;
+      localStorage.setItem('cl-theme',nextLight?LIGHT:'dark');
+      applyTheme(nextLight);
+    });
+  }
+})();
+
+/* THREE.JS HERO - 3D OBSIDIAN / SILVERY GOLDISH WHITE CRYSTAL & MERIDIAN RING */
 (function(){
   const canvas=document.getElementById('hero-canvas');
   if(!canvas||typeof THREE==='undefined')return;   // offline (no CDN): no 3D background, the page still works
@@ -28,7 +67,7 @@
   const group=new THREE.Group();
   scene.add(group);
 
-  // 1. Faceted Obsidian Diamond Crystal (Only 12 vertices / 20 clean facets)
+  // 1. Faceted Diamond Crystal (Icosahedron)
   const crystalGeo=new THREE.IcosahedronGeometry(1.22,0);
   const crystalMat=new THREE.MeshPhongMaterial({
     color:0x08080a,
@@ -40,7 +79,7 @@
   const crystal=new THREE.Mesh(crystalGeo,crystalMat);
   group.add(crystal);
 
-  // 2. Ultra-fine Geometric Wireframe Cage (Only 12 vertices)
+  // 2. Geometric Wireframe Cage
   const cageGeo=new THREE.IcosahedronGeometry(1.48,0);
   const cageMat=new THREE.MeshBasicMaterial({
     color:0xffffff,
@@ -51,7 +90,7 @@
   const cage=new THREE.Mesh(cageGeo,cageMat);
   group.add(cage);
 
-  // 3. Floating Minimalist Silver Meridian Ring (Only 48 segments)
+  // 3. Floating Minimalist Meridian Ring
   const ringGeo=new THREE.TorusGeometry(1.82,0.003,4,48);
   const ringMat=new THREE.MeshBasicMaterial({
     color:0xffffff,
@@ -63,14 +102,84 @@
   ring.rotation.y=0.25;
   group.add(ring);
 
-  // Clean, efficient lighting
-  scene.add(new THREE.AmbientLight(0xffffff,0.12));
+  // Lighting
+  const ambLight=new THREE.AmbientLight(0xffffff,0.12);
+  scene.add(ambLight);
   const L1=new THREE.PointLight(0xffffff,2.5,14);
   L1.position.set(3.2,3,3.5);
   scene.add(L1);
   const L2=new THREE.PointLight(0x8e92bc,0.7,10);
   L2.position.set(-3,-2.5,-3);
   scene.add(L2);
+
+  // THEME SWITCHING LOGIC: Obsidian in dark mode, Silvery Goldish White in light mode
+  function applyThemeMaterials(isLight){
+    if(isLight){
+      // Silvery Goldish White Lustrous Diamond
+      crystalMat.color.setHex(0xf7f4ec);
+      crystalMat.emissive.setHex(0x322b20);
+      crystalMat.specular.setHex(0xffffff);
+      crystalMat.shininess=95;
+      crystalMat.needsUpdate=true;
+
+      // Champagne Gold Cage
+      cageMat.color.setHex(0xc9a96e);
+      cageMat.opacity=0.40;
+      cageMat.needsUpdate=true;
+
+      // Golden Meridian Ring
+      ringMat.color.setHex(0xd4af37);
+      ringMat.opacity=0.55;
+      ringMat.needsUpdate=true;
+
+      // Bright warm luxury lighting
+      ambLight.color.setHex(0xfffbf2);
+      ambLight.intensity=1.15;
+
+      L1.color.setHex(0xfffaee);
+      L1.intensity=2.6;
+
+      L2.color.setHex(0xdfd3be);
+      L2.intensity=1.5;
+    }else{
+      // Obsidian Dark Crystal
+      crystalMat.color.setHex(0x08080a);
+      crystalMat.emissive.setHex(0x020203);
+      crystalMat.specular.setHex(0xd5d5db);
+      crystalMat.shininess=110;
+      crystalMat.needsUpdate=true;
+
+      cageMat.color.setHex(0xffffff);
+      cageMat.opacity=0.075;
+      cageMat.needsUpdate=true;
+
+      ringMat.color.setHex(0xffffff);
+      ringMat.opacity=0.12;
+      ringMat.needsUpdate=true;
+
+      ambLight.color.setHex(0xffffff);
+      ambLight.intensity=0.12;
+
+      L1.color.setHex(0xffffff);
+      L1.intensity=2.5;
+
+      L2.color.setHex(0x8e92bc);
+      L2.intensity=0.7;
+    }
+  }
+
+  // Apply immediately based on current state
+  const isLightNow=document.documentElement.getAttribute('data-theme')==='light';
+  applyThemeMaterials(isLightNow);
+
+  // React to theme changes
+  window.addEventListener('cl-theme-changed',e=>applyThemeMaterials(e.detail&&e.detail.isLight));
+  if('MutationObserver' in window){
+    const mo=new MutationObserver(()=>{
+      applyThemeMaterials(document.documentElement.getAttribute('data-theme')==='light');
+    });
+    mo.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  }
 
   // Mouse tilt
   let mx=0,my=0;
