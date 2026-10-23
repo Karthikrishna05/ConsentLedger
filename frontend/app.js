@@ -153,67 +153,22 @@ async function computeSha256(str){
   return '0x'+Array.from(new Uint8Array(hashBuf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-function runClientSideAnalysis(policy, consentRaw){
-  const nerPatterns=[
-    {re:/(shall not access [^\.\n,]+|will not sell [^\.\n,]+|never disclose [^\.\n,]+|will not share [^\.\n,]+without explicit consent)/gi, label:'Promised NOT done'},
-    {re:/\b(bank statements|pan|mobile number|financial information|transaction history|credit history|account credentials|user authentication credentials)\b/gi, label:'Your data'},
-    {re:/\b(assess your eligibility for a loan|eligibility for a loan|creditworthiness|underwriting|loan application)\b/gi, label:'Purpose'},
-    {re:/\b(licensed credit bureaus|credit bureaus|lending partners|lenders|advertisers)\b/gi, label:'Shared with'}
-  ];
-
-  const spans=[];
-  nerPatterns.forEach(p=>{
-    let m;
-    const rx=new RegExp(p.re);
-    while((m=rx.exec(policy))!==null){
-      spans.push({start:m.index,end:m.index+m[0].length,text:m[0],label:p.label});
-    }
-  });
-  spans.sort((a,b)=>a.start-b.start);
-  const cleanSpans=[];
-  let lastEnd=0;
-  for(const s of spans){
-    if(s.start>=lastEnd){
-      cleanSpans.push(s);
-      lastEnd=s.end;
-    }
+/**
+ * Convert the backend highlight list to [[text, label|null], ...] pairs.
+ * The backend (Gradio HighlightedText) returns either:
+ *   - old format: [[text, label], ...]  (plain arrays)
+ *   - new format: [{token:str, class_or_confidence:str|null}, ...]
+ * We normalise both into [[text, label|null], ...].
+ */
+function normaliseHighlights(raw){
+  if(!Array.isArray(raw)||!raw.length) return [];
+  const first=raw[0];
+  if(Array.isArray(first)){
+    // Already [[text, label], ...]
+    return raw;
   }
-
-  const hlArr=[];
-  let cur=0;
-  for(const s of cleanSpans){
-    if(s.start>cur) hlArr.push([policy.slice(cur, s.start), null]);
-    hlArr.push([s.text, s.label]);
-    cur=s.end;
-  }
-  if(cur<policy.length) hlArr.push([policy.slice(cur), null]);
-
-  const rawPassages=policy.split(/\n\s*\n|\n(?=\d+\.\s+)/).map(p=>p.trim()).filter(p=>p.length>10);
-  const passagesHtml=rawPassages.map((p,idx)=>`
-    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:1.4rem;margin-bottom:1rem">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;color:var(--t3);margin-bottom:.7rem">
-        <span>Clause ${idx+1}</span>
-        <span style="display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:.72rem;font-weight:600;letter-spacing:.03em"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> FAITHFUL 1.00</span>
-      </div>
-      <div style="font-size:.9rem;line-height:1.75;color:var(--t2)">${esc(p)}</div>
-    </div>
-  `).join('');
-
-  let termsMd='_No consent artefact provided._';
-  if(consentRaw){
-    try{
-      const cj=JSON.parse(consentRaw);
-      const cd=cj.ConsentDetail||cj;
-      termsMd=`| | |\n|---|---|\n| Consent Mode | ${cd.consentMode||'STORE'} |\n| Fetch Type | ${cd.fetchType||'PERIODIC'} |\n| Purpose | ${cd.Purpose?.text||'Loan eligibility'} |\n| Customer | ${cd.Customer?.id||'-'} |\n| Data Life | ${cd.DataLife?cd.DataLife.value+' '+cd.DataLife.unit:'-'} |\n| Frequency | ${cd.Frequency?cd.Frequency.value+' per '+cd.Frequency.unit:'-'} |\n| Start Date | ${cd.consentStart||'-'} |\n| Expiry Date | ${cd.consentExpiry||'-'} |`;
-    }catch(e){}
-  }
-
-  return {
-    headline: `Audited ${rawPassages.length} clauses with 100% faithfulness. Identified key data, sharing & protective negative covenants.`,
-    highlights: hlArr,
-    passagesHtml: passagesHtml,
-    termsMd: termsMd
-  };
+  // {token, class_or_confidence} objects
+  return raw.map(obj=>[obj.token||'', obj.class_or_confidence||null]);
 }
 
 document.getElementById('btn-analyse').addEventListener('click',async()=>{
@@ -225,48 +180,51 @@ document.getElementById('btn-analyse').addEventListener('click',async()=>{
   const btn=document.getElementById('btn-analyse');
   btn.innerHTML='<span class="spinner"></span>Analysing&hellip;';btn.disabled=true;
 
+  // Timeout generous enough for model inference (~3 min).
+  const PING_MS=5000;
+  const SSE_MS=180000;
+
   try{
     let resData=null;
+    let backendReachable=false;
+
     try{
       const ping=await Promise.race([
         fetch('http://127.0.0.1:7860/config',{mode:'cors'}).catch(()=>null),
-        new Promise(r=>setTimeout(()=>r(null),1500))
+        new Promise(r=>setTimeout(()=>r(null),PING_MS))
       ]);
-      if(ping&&ping.ok){
-        const callRes=await fetch('http://127.0.0.1:7860/gradio_api/call/analyse',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({data:[policy,null,consent,false]})
-        });
-        if(callRes.ok){
-          const ev=await callRes.json();
-          if(ev.event_id){
-            resData=await new Promise((res,rej)=>{
-              const es=new EventSource(`http://127.0.0.1:7860/gradio_api/call/analyse/${ev.event_id}`);
-              const to=setTimeout(()=>{es.close();rej(new Error('timeout'));},2500);
-              es.addEventListener('complete',e=>{clearTimeout(to);es.close();try{res(JSON.parse(e.data));}catch(err){rej(err);}});
-              es.addEventListener('error',e=>{clearTimeout(to);es.close();rej(new Error('err'));});
-              es.onerror=()=>{clearTimeout(to);es.close();rej(new Error('err'));};
-            });
-          }
-        }
-      }
-    }catch(backErr){}
+      if(ping&&ping.ok) backendReachable=true;
+    }catch(_){}
 
-    if(!resData){
-      await new Promise(r=>setTimeout(r,400));
-      const hash=await computeSha256(policy+(consent||''));
-      const sim=runClientSideAnalysis(policy,consent);
-      resData=[
-        sim.headline,
-        sim.highlights,
-        sim.passagesHtml,
-        sim.termsMd,
-        `Fingerprint of this policy + consent: ${hash}
-
-Client verified. Ready for Sepolia on-chain anchoring.`
-      ];
+    if(!backendReachable){
+      throw new Error(
+        'Backend not running. Start it with: python app.py  (then refresh and try again)'
+      );
     }
+
+    const callRes=await fetch('http://127.0.0.1:7860/gradio_api/call/analyse',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({data:[policy,null,consent,false]})
+    });
+    if(!callRes.ok) throw new Error(`Backend error ${callRes.status}`);
+    const ev=await callRes.json();
+    if(!ev.event_id) throw new Error('Backend did not return an event_id');
+
+    resData=await new Promise((res,rej)=>{
+      const es=new EventSource(`http://127.0.0.1:7860/gradio_api/call/analyse/${ev.event_id}`);
+      const to=setTimeout(()=>{
+        es.close();
+        rej(new Error('Analysis timed out after 3 minutes. The model may still be loading — try again.'));
+      },SSE_MS);
+      es.addEventListener('complete',e=>{
+        clearTimeout(to);es.close();
+        try{res(JSON.parse(e.data));}catch(parseErr){rej(parseErr);}
+      });
+      es.addEventListener('error',e=>{clearTimeout(to);es.close();rej(new Error('Stream error from backend'));});
+      es.onerror=()=>{clearTimeout(to);es.close();rej(new Error('Stream error from backend'));};
+    });
+
     renderResults(resData);
   }catch(e){
     err.textContent=e.message;err.classList.add('on');
@@ -279,7 +237,8 @@ function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 
 function renderResults(data){
   if(!data||data.length<5)return;
-  const[headline,highlighted,passagesHtml,termsRaw,sealRaw]=data;
+  const[headline,highlightedRaw,passagesHtml,termsRaw,sealRaw]=data;
+  const highlighted=normaliseHighlights(highlightedRaw);
   document.getElementById('headline').textContent=(headline||'').replace(/\*\*/g,'');
   const lm={'Your data':'hl-data','Purpose':'hl-purpose','Shared with':'hl-shared','Promised NOT done':'hl-denied'};
   document.getElementById('hl-content').innerHTML=Array.isArray(highlighted)?highlighted.map(([t,l])=>l?`<span class="${lm[l]||''}" title="${l}">${esc(t)}</span>`:esc(t)).join(''):'No highlights.';

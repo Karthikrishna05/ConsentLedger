@@ -204,7 +204,7 @@ with gr.Blocks(title="ConsentLedger") as demo:
         gr.Button("Check", variant="primary").click(verify, [cid, rep], gr.Markdown())
 
 if __name__ == "__main__":
-    # _models()  # skipped: models not yet trained/uploaded; UI still loads for demo purposes
+    _models()  # pre-load models so the first request is fast
     # --share: a temporary public https://....gradio.live link to this laptop (free; works while the app runs).
     # Set DEMO_PASSWORD to make visitors log in as "demo" with that password.
     password = os.environ.get("DEMO_PASSWORD")
