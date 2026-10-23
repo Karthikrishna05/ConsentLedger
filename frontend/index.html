@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>ConsentLedger — Privacy Intelligence</title>
+  <meta name="description" content="Understand what Account Aggregator policies really say. AI-powered NER, faithfulness-gated summaries, and on-chain fingerprinting."/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://unpkg.com/lenis@1.1.18/dist/lenis.min.js"></script>
+  <link rel="stylesheet" href="style.css?v=4"/>
+</head>
+<body>
+
+<!-- LEFT-SIDE CRYPTOGRAPHIC LEDGER SPAN (FULL-HEIGHT HIGH-TECH BUS) -->
+<div id="ledger-thread-wrap" aria-label="Interactive Navigation Ledger Bus">
+  <div class="ledger-hud">
+    <div class="hud-tag"><span class="hud-dot"></span>LEDGER BUS</div>
+    <div class="hud-pct" id="hud-pct">000%</div>
+  </div>
+  <svg id="ledger-svg" viewBox="0 0 290 1000" preserveAspectRatio="xMinYMid meet" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="threadGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
+        <stop offset="50%" stop-color="#e4e4e7" stop-opacity="0.9"/>
+        <stop offset="100%" stop-color="#8e8e93" stop-opacity="0.75"/>
+      </linearGradient>
+      <filter id="ledgerGlow" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge>
+          <feMergeNode in="blur"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <filter id="tracerBloom" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="glow"/>
+        <feMerge>
+          <feMergeNode in="glow"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+    </defs>
+
+    <!-- ARCHITECTURAL GHOST RAIL -->
+    <path id="ghost-path" 
+          d="M 14 40 L 14 70 L 14 210 L 34 230 L 34 330 L 14 350 L 14 380 L 14 520 L 34 540 L 34 640 L 14 660 L 14 690 L 14 820 L 34 840 L 34 930 L 14 950 L 14 960 L 14 985" 
+          stroke="rgba(255,255,255,0.08)" 
+          stroke-width="1.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+
+    <!-- CIRCUIT VIAS (PCB micro solder pads at each 45-degree angle) -->
+    <g class="circuit-vias" opacity="0.6">
+      <circle cx="14" cy="210" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="34" cy="230" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="34" cy="330" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="14" cy="350" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+
+      <circle cx="14" cy="520" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="34" cy="540" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="34" cy="640" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="14" cy="660" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+
+      <circle cx="14" cy="820" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="34" cy="840" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="34" cy="930" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+      <circle cx="14" cy="950" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+    </g>
+
+    <!-- ACTIVE PROGRESS AMBIENT HALO -->
+    <path id="active-halo-path" 
+          d="M 14 40 L 14 70 L 14 210 L 34 230 L 34 330 L 14 350 L 14 380 L 14 520 L 34 540 L 34 640 L 14 660 L 14 690 L 14 820 L 34 840 L 34 930 L 14 950 L 14 960 L 14 985" 
+          stroke="rgba(255,255,255,0.2)" 
+          stroke-width="5.5" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"
+          filter="url(#ledgerGlow)"/>
+
+    <!-- ACTIVE GLOWING PROGRESS PATH -->
+    <path id="active-path" 
+          d="M 14 40 L 14 70 L 14 210 L 34 230 L 34 330 L 14 350 L 14 380 L 14 520 L 34 540 L 34 640 L 14 660 L 14 690 L 14 820 L 34 840 L 34 930 L 14 950 L 14 960 L 14 985" 
+          stroke="url(#threadGrad)" 
+          stroke-width="2.4" 
+          stroke-linecap="round" 
+          stroke-linejoin="round"/>
+
+    <!-- KINETIC TRACER BEACON -->
+    <g id="tracer-group">
+      <circle id="tracer-glow" cx="14" cy="40" r="10" fill="rgba(255,255,255,0.38)" filter="url(#tracerBloom)"/>
+      <circle id="tracer-reticle" cx="14" cy="40" r="13" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="0.8" stroke-dasharray="2 2"/>
+      <circle id="tracer-core" cx="14" cy="40" r="3.4" fill="#ffffff"/>
+    </g>
+
+    <!-- MILESTONE WAYPOINT NODES WITH LEADER LINES -->
+    <g class="wp-node" id="wp-0" data-target="#hero" transform="translate(14, 70)">
+      <circle class="wp-hit" r="18" fill="transparent"/>
+      <circle class="wp-outer" r="7.5" fill="#050505" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
+      <circle class="wp-core" r="3.2" fill="rgba(255,255,255,0.5)"/>
+      <line class="wp-lead" x1="11" y1="0" x2="34" y2="0" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <text class="wp-label" x="42" y="1" dominant-baseline="central">01 // ORIGIN</text>
+    </g>
+
+    <g class="wp-node" id="wp-1" data-target="#features" transform="translate(14, 380)">
+      <circle class="wp-hit" r="18" fill="transparent"/>
+      <circle class="wp-outer" r="7.5" fill="#050505" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
+      <circle class="wp-core" r="3.2" fill="rgba(255,255,255,0.5)"/>
+      <line class="wp-lead" x1="11" y1="0" x2="34" y2="0" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <text class="wp-label" x="42" y="1" dominant-baseline="central">02 // ARCHITECTURE</text>
+    </g>
+
+    <g class="wp-node" id="wp-2" data-target="#analyse" transform="translate(14, 690)">
+      <circle class="wp-hit" r="18" fill="transparent"/>
+      <circle class="wp-outer" r="7.5" fill="#050505" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
+      <circle class="wp-core" r="3.2" fill="rgba(255,255,255,0.5)"/>
+      <line class="wp-lead" x1="11" y1="0" x2="34" y2="0" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <text class="wp-label" x="42" y="1" dominant-baseline="central">03 // STUDIO</text>
+    </g>
+
+    <g class="wp-node" id="wp-3" data-target="#results" transform="translate(14, 960)">
+      <circle class="wp-hit" r="18" fill="transparent"/>
+      <circle class="wp-outer" r="7.5" fill="#050505" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>
+      <circle class="wp-core" r="3.2" fill="rgba(255,255,255,0.5)"/>
+      <line class="wp-lead" x1="11" y1="0" x2="34" y2="0" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+      <text class="wp-label" x="42" y="1" dominant-baseline="central">04 // AUDIT SEAL</text>
+    </g>
+  </svg>
+</div>
+
+<nav id="nav">
+  <a href="#" class="nav-logo">
+    <span class="nav-logo-icon">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </span>
+    <span>ConsentLedger</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Architecture</a></li>
+    <li><a href="#analyse">Analyse</a></li>
+    <li><a href="#verify">Verify</a></li>
+    <li><a href="/gradio/" title="The original Gradio page, kept as a backup">Classic view</a></li>
+    <li><a href="#analyse" class="nav-pill">Launch &rarr;</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-chip rv"><span class="chip-dot"></span>Account Aggregator Intelligence</div>
+    <h1 class="hero-h1 rv">Privacy,<br>Understood.</h1>
+    <p class="hero-sub rv">Read an Account Aggregator policy as plain facts: what data it collects, why, and who receives it. Every summary is checked against its passage before it is shown, and the consent can be fingerprinted on the Sepolia test network.</p>
+    <div class="hero-ctas rv">
+      <a href="#analyse" class="btn-solid">Analyse a policy &rarr;</a>
+      <a href="#features" class="btn-outline">Architecture</a>
+    </div>
+  </div>
+  <div class="scroll-hint">scroll</div>
+</section>
+
+<div class="stats-strip">
+  <div class="stat rv"><div class="stat-val cipher-text" data-cipher="Legal-BERT">Legal-BERT</div><div class="stat-lbl">Entity recognition</div></div>
+  <div class="stat rv"><div class="stat-val cipher-text" data-cipher="Checked">Checked</div><div class="stat-lbl">Every summary, before it is shown</div></div>
+  <div class="stat rv"><div class="stat-val cipher-text" data-cipher="Keccak-256">Keccak-256</div><div class="stat-lbl">Consent fingerprint</div></div>
+  <div class="stat rv"><div class="stat-val cipher-text" data-cipher="Sepolia">Sepolia</div><div class="stat-lbl">Ethereum test network</div></div>
+</div>
+
+<section id="features">
+<div class="sec">
+  <div class="feat-head rv">
+    <div class="sec-eyebrow cipher-text" data-cipher="ARCHITECTURE">Architecture</div>
+    <h2 class="sec-h2">Every clause,<br>decoded.</h2>
+    <p class="sec-p scrub-text">ConsentLedger turns dense legal fine print into structured facts that you can check against the text.</p>
+  </div>
+  <div class="feat-grid">
+    <div class="feat-card rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="feat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><path d="M11 8v6M8 11h6"/></svg>
+      </div>
+      <div class="feat-title">Named Entity Recognition</div>
+      <div class="feat-desc">Legal-BERT, fine-tuned on privacy policies and then on AA documents, marks the data a policy collects, the purposes it states and the third parties it names.</div>
+    </div>
+    <div class="feat-card rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="feat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+      </div>
+      <div class="feat-title">Faithfulness Gate</div>
+      <div class="feat-desc">Each machine-written summary is checked against its passage. A summary that reverses a meaning, names the wrong party or invents a name is withheld, and the facts are shown instead.</div>
+    </div>
+    <div class="feat-card rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="feat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="feat-title">Cryptographic Fingerprint</div>
+      <div class="feat-desc">A Keccak-256 fingerprint binds the policy's facts to the consent artefact. Recorded on the Sepolia test network, it lets anyone check later that neither was changed.</div>
+    </div>
+    <div class="feat-card rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="feat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </div>
+      <div class="feat-title">ReBIT Consent Parser</div>
+      <div class="feat-desc">Reads the ReBIT consent artefact: who receives the data, why, for how long, how often it may be fetched and how long it may be kept.</div>
+    </div>
+    <div class="feat-card rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="feat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+      </div>
+      <div class="feat-title">Denial &amp; Covenant Detection</div>
+      <div class="feat-desc">Marks what a policy promises not to do, such as never accessing your login credentials or never selling your number, apart from what it does collect.</div>
+    </div>
+    <div class="feat-card rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="feat-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+      </div>
+      <div class="feat-title">Text, HTML and PDF</div>
+      <div class="feat-desc">Accepts plain text, HTML and PDF. Documents are cleaned and split into passages before analysis.</div>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="analyse">
+<div class="sec">
+  <div class="rv">
+    <div class="sec-eyebrow cipher-text" data-cipher="STUDIO">Studio</div>
+    <h2 class="sec-h2">Drop a policy.<br>See what it says.</h2>
+    <p class="sec-p scrub-text">Fact extraction, a checked summary for every passage, and a fingerprint you can verify later. Do not paste personal data.</p>
+  </div>
+  <div class="analyse-grid">
+    <div class="glass rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="card-lbl">Input</div>
+      <div class="card-title">Policy Document Text</div>
+      <textarea class="inp" id="pol" rows="10" placeholder="Paste the terms of service or privacy policy here&hellip;"></textarea>
+      <div class="row-btns">
+        <button class="btn-ghost" id="btn-eg" style="display:inline-flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span>Load sample</span>
+        </button>
+        <label class="upload-lbl" for="file-up" style="display:inline-flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+          <span>Upload file</span>
+        </label>
+        <input type="file" id="file-up" accept=".txt,.html,.htm,.pdf"/>
+      </div>
+    </div>
+    <div class="glass rv">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div class="card-lbl">Optional</div>
+      <div class="card-title">Consent Artefact (ReBIT JSON)</div>
+      <textarea class="inp" id="con" rows="10" placeholder="Paste the ReBIT consent artefact JSON here&hellip;"></textarea>
+      <div class="row-btns">
+        <button class="btn-ghost" id="btn-consent" style="display:inline-flex;align-items:center;gap:6px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>Load demo schema</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  <div class="opt-row">
+    <label class="rec-toggle" id="rec-wrap" title="Needs the consent artefact and a configured test wallet">
+      <input type="checkbox" id="rec" disabled/>
+      <span>Record the fingerprint on the Sepolia test network</span>
+    </label>
+    <span class="api-status" id="api-status">Checking the backend&hellip;</span>
+  </div>
+  <div class="err-box" id="err"></div>
+  <div class="cta-row">
+    <button class="btn-analyse" id="btn-analyse">Analyse Policy</button>
+  </div>
+</div>
+</section>
+
+<section id="results">
+<div class="sec">
+  <div class="results-top rv">
+    <div>
+      <div class="sec-eyebrow">Audit Report</div>
+      <h2 class="sec-h2" style="font-size:2rem">Analysis Complete</h2>
+    </div>
+    <button class="btn-ghost" id="btn-reset">&larr; New analysis</button>
+  </div>
+  <div class="headline-box rv" id="headline"></div>
+  <div class="tabs rv">
+    <button class="tab active" data-pane="hl">Highlights</button>
+    <button class="tab" data-pane="ps">Passages &amp; Checks</button>
+    <button class="tab" data-pane="ct">Consent Terms</button>
+    <button class="tab" data-pane="fp">Fingerprint &amp; Report</button>
+  </div>
+  <div class="tab-pane on" id="pane-hl">
+    <div class="hl-legend">
+      <div class="hl-item"><div class="hl-dot" style="background:#b9d7ff33;border:1px solid #b9d7ff55"></div>Your data</div>
+      <div class="hl-item"><div class="hl-dot" style="background:#c8f0c833;border:1px solid #c8f0c855"></div>Purpose</div>
+      <div class="hl-item"><div class="hl-dot" style="background:#ffd9a833;border:1px solid #ffd9a855"></div>Shared with</div>
+      <div class="hl-item"><div class="hl-dot" style="background:#f4b6b633;border:1px solid #f4b6b655"></div>Promised NOT done</div>
+    </div>
+    <div class="hl-text" id="hl-content"></div>
+  </div>
+  <div class="tab-pane" id="pane-ps"><div id="passage-wrap"></div></div>
+  <div class="tab-pane" id="pane-ct">
+    <div class="glass">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <table class="terms-table"><tbody id="terms-body"></tbody></table>
+      <p id="terms-none" style="color:var(--t3);font-size:.9rem;padding-top:.5rem;display:none">No consent artefact provided.</p>
+    </div>
+  </div>
+  <div class="tab-pane" id="pane-fp">
+    <div class="glass">
+      <div class="card-beam"></div>
+      <svg class="card-orbit-svg" aria-hidden="true">
+        <rect class="orbit-halo" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+        <rect class="orbit-spark" x="1" y="1" width="calc(100% - 2px)" height="calc(100% - 2px)" rx="20" ry="20" pathLength="100"/>
+      </svg>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.85rem;flex-wrap:wrap;gap:8px">
+        <div class="card-lbl" style="margin-bottom:0">Keccak-256 fingerprint of the policy facts + consent</div>
+        <button class="btn-ghost" id="btn-copy-fp" style="padding:4px 12px;font-size:.74rem;display:inline-flex;align-items:center;gap:6px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          <span>Copy hash</span>
+        </button>
+      </div>
+      <div class="fp-box" id="fp-content"></div>
+      <div class="chain-info" id="chain-info"></div>
+      <div class="row-btns">
+        <a class="btn-ghost" id="btn-download" href="#" download="consentledger_report.json">Download report (JSON)</a>
+        <button class="btn-ghost" id="btn-check-this" style="display:none">Check this consent on Sepolia &rarr;</button>
+      </div>
+      <p class="fp-note">Keep the report: checking a recorded consent later needs the record inside it.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+<section id="verify">
+<div class="sec">
+  <div class="rv">
+    <div class="sec-eyebrow">Verify</div>
+    <h2 class="sec-h2">Check a recorded consent.</h2>
+    <p class="sec-p">Give the consent id and the report it came from. The record is fingerprinted again and compared with the contract on Sepolia: change one word in the report and the check fails.</p>
+  </div>
+  <div class="glass rv">
+    <div class="card-lbl">Consent id</div>
+    <input class="inp" id="v-cid" placeholder="0x&hellip; (64 hex characters)" spellcheck="false" autocomplete="off"/>
+    <div class="card-lbl" style="margin-top:1.2rem">Report (JSON)</div>
+    <div class="row-btns">
+      <label class="upload-lbl" for="v-file"><span>Choose report file</span></label>
+      <input type="file" id="v-file" accept=".json,application/json"/>
+      <button class="btn-ghost" id="v-last" style="display:none">Use the report from this session</button>
+      <span class="api-status" id="v-file-name">No report chosen</span>
+    </div>
+  </div>
+  <div class="err-box" id="v-err"></div>
+  <div class="cta-row"><button class="btn-analyse" id="btn-verify">Check on Sepolia</button></div>
+  <div class="glass v-result" id="v-result">
+    <div class="v-verdict" id="v-verdict"></div>
+    <table class="terms-table"><tbody id="v-body"></tbody></table>
+  </div>
+</div>
+</section>
+
+<footer class="rv">
+  <span class="footer-logo">ConsentLedger</span>
+  <span class="footer-copy">Research prototype &middot; Legal-BERT NER &middot; Flan-T5 summaries, checked automatically: read the passage when it matters &middot; Sepolia testnet &middot; Not legal advice</span>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script src="app.js?v=4"></script>
+</body>
+</html>
