@@ -1,23 +1,8 @@
-"""Per-document agreement report: file-wise Cohen's kappa + a categorised diff of the annotations.
+"""Per-document agreement report: file-wise Cohen's kappa + entity P/R/F1, and every span sorted into
+EXACT / BOUNDARY (same label, other edges) / LABEL (other label) / A_ONLY / B_ONLY.
 
-Answers two questions kappa.py only summarises:
-  1. WHICH documents disagree (file-wise kappa + entity P/R/F1, ranked worst-first);
-  2. WHY they disagree, by sorting every span into one of five buckets:
-
-     EXACT     - both annotators marked the same offsets AND the same label (agreement)
-     BOUNDARY  - overlapping spans, same label, different edges (e.g. "loan facility" vs
-                 "applying for loan facility") -> a span-rule / guideline issue
-     LABEL     - overlapping spans, DIFFERENT label -> an ontology confusion
-     A_ONLY    - A marked it, B saw nothing there -> a miss / coverage gap
-     B_ONLY    - B marked it, A saw nothing there -> a miss / coverage gap
-
-The bucket mix tells you the fix: mostly BOUNDARY -> tighten span rules; mostly A_ONLY/B_ONLY ->
-one annotator is skipping content (density problem); mostly LABEL -> fix the ontology examples.
-
-Outputs (default results/annotation/agreement/):
-    summary.csv      one row per doc: kappa, P/R/F1, span counts, bucket counts (numbers only)
-    report.md        overall + worst-first ranking + dominant failure mode per doc
-    docs/<id>.md     the actual disagreeing spans with their text, grouped by bucket
+Mostly BOUNDARY -> tighten span rules; mostly A_ONLY/B_ONLY -> coverage gaps; mostly LABEL -> ontology fix.
+Writes summary.csv, report.md and docs/<id>.md under --out.
 
 Usage:
     python -m consentledger.data.agreement_report --a ExportA.json --b ExportB.json

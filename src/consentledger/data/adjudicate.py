@@ -1,29 +1,8 @@
 """Turn the A/B disagreements into a per-document adjudication worklist + a proposed gold corpus.
 
-Most of the round-1 gap is now MECHANICALLY decidable under guideline v4 (Rules 7, 8, 8b), so it should
-not cost human time. This applies every rule that can be applied automatically, and leaves humans only
-the genuinely ambiguous cases.
-
-Decision procedure, per document (start from the union of A and B spans):
-
-  1. DELETE (Rule 8 / 8b)  - span text is a stoplist umbrella term, or an AA-framework role/regulator.
-                             Auto, no review.
-  2. ACCEPT (agreement)    - both annotators marked the same offsets and label. Auto.
-  3. ACCEPT (consensus)    - only one annotator marked it here, BUT the phrase+label is in the corpus
-                             consensus lexicon (both endorsed it somewhere else). The other simply
-                             missed it. Auto.
-  4. REVIEW (label)        - overlapping spans, different labels. Human must choose. (Rare: ~7 total.)
-  5. REVIEW (boundary)     - overlapping, same label, different edges. Proposes the SHORTER span per
-                             Rule 1, flagged for a quick human yes/no.
-  6. REVIEW (one-sided)    - only one annotator ever uses this phrase anywhere. Human must judge.
-  7. ADD (Rule 7)          - once a phrase is accepted for a document, every other occurrence of it in
-                             that same document is added. This is the repeat-marking fix, applied
-                             automatically so annotators never have to hunt repeats again.
-
-Outputs (default results/annotation/adjudication/):
-    worklist.md               how much human review is left, per document
-    worklist/<doc_id>.md      the human's actual to-do list (only the REVIEW items need reading)
-    proposed_gold/<id>.json   offsets + labels only (no document text) -> safe to commit
+Mechanical rules are applied automatically (delete stoplist/AA-role spans, accept agreed and consensus-lexicon
+spans, propagate repeats); only label, boundary and one-sided cases are left for a human.
+Writes worklist.md, worklist/<doc_id>.md and proposed_gold/<id>.json (offsets only) under --out.
 
 Usage:
     python -m consentledger.data.adjudicate --corpus data/aa/annotated/ls_import_tasks.json \
@@ -57,20 +36,20 @@ STOPLIST = {
     # umbrellas that PII/SPI abbreviate (Rule 13; Rule 9b decision table)
     "personally identifiable information", "sensitive personal information", "sensitive personal data",
     "personal details", "technical data",
-    # generic people & groups (Rule 8 table, added v7)
+    # generic people & groups (Rule 8 table)
     "stakeholders", "persons", "any person", "entities", "others", "third-party entities",
-    # device/usage telemetry (Rule 23a, v7.2) - collected by the device, not in any bank record
+    # device/usage telemetry (Rule 23a) - collected by the device, not in any bank record
     "ip address", "ip addresses", "browser type", "browser type and version", "browser types",
     "referring urls", "pages viewed", "in-app actions", "session duration", "device information",
     "location data", "device and usage data", "telemetry", "time zone settings", "time zone setting",
-    # Rule 9b decision table: umbrellas with a non-content modifier (D44)
+    # Rule 9b decision table: umbrellas with a non-content modifier
     "financial data", "financial details", "data categories", "categories of data",
 }
 # Rule 8b - AA-framework roles and regulators are never THIRD_PARTY (and never anything else).
 AA_ROLES = {
     "account aggregator", "aa", "financial information provider", "fip",
     "financial information user", "fiu", "reserve bank of india", "rbi", "sahamati",
-    # the other financial-sector regulators of the AA framework (D46) - part of the pipeline, like RBI
+    # the other financial-sector regulators of the AA framework - part of the pipeline, like RBI
     "sebi", "securities and exchange board of india", "irdai",
     "insurance regulatory and development authority of india", "pfrda",
     "pension fund regulatory and development authority",
@@ -82,7 +61,7 @@ AA_ROLES = {
     "information user", "information users", "iu",
 }
 DROP = STOPLIST | AA_ROLES
-# Variants no exact list can enumerate (D44): observed telemetry as DATA_TYPE (Rule 23a: "type of browser",
+# Variants no exact list can enumerate: observed telemetry as DATA_TYPE (Rule 23a: "type of browser",
 # "flash cookies", "IMEI", "web beacons") and any NAMED Account Aggregator as THIRD_PARTY (Rule 8b).
 TELEMETRY = re.compile(
     r"\b(ip address\w*|browser\w*|device (?:id\w*|identifier\w*|information|data|model)|operating systems?|"
@@ -99,16 +78,14 @@ def is_dropped(phrase: str, label: str) -> bool:
     return (phrase in DROP or (label == "DATA_TYPE" and bool(TELEMETRY.search(phrase)))
             or (label == "THIRD_PARTY" and bool(NAMED_AA.search(phrase))))
 
-# Rule 10 check 1 (D37): these are PURPOSEs only when the sentence says your data is used/kept for
-# them; as rights, procedures or bare headings (no data-use frame) they are not. The words cannot decide, so the tools never
-# assert them automatically - a human reads the sentence.
+# Rule 10 check 1: PURPOSEs only when the sentence says your data is used/kept for them, not as rights,
+# procedures or bare headings. The words cannot decide, so tools never assert them - a human reads the sentence.
 CONTEXT_PURPOSE = re.compile(r"grievance|complaint|dispute|revok|revocation|deregist|withdraw\w* consent"
                              r"|\bkyc\b|merger|acquisition|reorgani[sz]ation|restructuring|sale of (?:assets|business)",
-                             re.I)  # D37 + D43: only the sentence decides these
+                             re.I)
 
 
-# Rule 16: a THIRD_PARTY needs a data-flow verb in its sentence (checked with the span itself blanked out,
-# so "service PROVIDers" cannot vouch for itself).
+# Rule 16: a THIRD_PARTY needs a data-flow verb in its sentence, span blanked out ("PROVIDers" can't vouch).
 # ponytail: verb list, not a parser - a flow phrased unusually lands in THIRD_PARTY_CHECK for a human read.
 FLOW = re.compile(r"\b(shar\w*|disclos\w*|transfer\w*|sold|sell\w*|provid\w*|made available|access\w*|"
                   r"receiv\w*|pass\w*|process\w*|send\w*|sent|furnish\w*|report\w*|collect\w*|obtain\w*|"
@@ -148,7 +125,7 @@ def _tp_reason(text: str, i: int, j: int) -> str | None:
     a, _ = _bounds(text, i, j)
     preps = _PREP.findall(text[a:i])
     if preps and preps[-1].lower() == "from":
-        # D55: a source IS a THIRD_PARTY now (unless an AA-pipeline body). Still flagged, so a ruling confirms it.
+        # A source IS a THIRD_PARTY (unless an AA-pipeline body); still flagged so a ruling confirms it.
         return "data comes FROM them - a source (Rule 16; marked since D55 unless in the AA pipeline)"
     return None
 
@@ -166,7 +143,7 @@ def adjudicate_doc(text, spans_a, spans_b, lexicon):
         return is_dropped(norm(text[sp[0]:sp[1]]), sp[2])
 
     def suspect(sp):
-        """Rules 16/19 (D44): never auto-accept or propagate a THIRD_PARTY these rules put in doubt."""
+        """Rules 16/19: never auto-accept or propagate a THIRD_PARTY these rules put in doubt."""
         return _tp_reason(text, sp[0], sp[1]) if sp[2] == "THIRD_PARTY" else None
 
     # 1. DELETE - stoplist / AA-role violations, whoever marked them
@@ -220,7 +197,7 @@ def adjudicate_doc(text, spans_a, spans_b, lexicon):
     for s, e, lab in gold:
         accepted.setdefault(norm(text[s:e]), lab)
     accepted = {p: l for p, l in accepted.items() if len(p) >= 4 and p not in DROP
-                and not (l == "PURPOSE" and CONTEXT_PURPOSE.search(p))}   # D37: context decides
+                and not (l == "PURPOSE" and CONTEXT_PURPOSE.search(p))}   # context decides
     if accepted:
         occ = find_occurrences(text, sorted(accepted, key=lambda p: (-len(p), p)))
         occ.sort(key=lambda x: (x[0], -(x[1] - x[0])))
@@ -358,7 +335,7 @@ def _selfcheck() -> None:
     assert kinds["ADD_REPEAT"] == 1, kinds             # 2nd 'bank statements' added by Rule 7
     assert len(gold) == 2, gold
 
-    # D44: agreed indemnity 'affiliates' goes to a human; a data-sharing 'affiliates' is accepted and its
+    # agreed indemnity 'affiliates' goes to a human; a data-sharing 'affiliates' is accepted and its
     # repeat in the indemnity clause is NOT propagated into gold
     t2 = "We may share your data with affiliates. You agree to indemnify us and our affiliates."
     a1, a2 = t2.index("affiliates"), t2.rindex("affiliates")

@@ -1,8 +1,7 @@
 """Read CoNLL BIO files and turn them into tokenized, label-aligned HF datasets.
 
-Convention (D18): input is **word-level** CoNLL (word <TAB> tag, blank line between segments). Here we
-apply a backbone's subword tokenizer and align labels: the **first subword** of each word gets the word's
-label id; every other subword and all special tokens get **-100** (ignored by the loss).
+Input is word-level CoNLL (word<TAB>tag, blank line between segments). The first subword of each word gets
+the word's label; other subwords and special tokens get -100 (ignored by the loss).
 """
 from __future__ import annotations
 
@@ -10,7 +9,7 @@ from pathlib import Path
 
 from datasets import Dataset
 
-# The 7-tag scheme for the 3 transferable labels (D1).
+# The 7-tag scheme for the 3 labels that transfer from OPP-115.
 LABELS = ["O", "B-DATA_TYPE", "I-DATA_TYPE", "B-PURPOSE", "I-PURPOSE", "B-THIRD_PARTY", "I-THIRD_PARTY"]
 LABEL2ID = {t: i for i, t in enumerate(LABELS)}
 ID2LABEL = {i: t for t, i in LABEL2ID.items()}

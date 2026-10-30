@@ -8,19 +8,9 @@ Two conditions against each other (any number of seeds per side; paired over the
     python -m consentledger.ner.evaluate --compare artifacts_out/ner/legalbert_e2_s*/test_metrics.json \\
                                          --against artifacts_out/ner/legalbert_s*/test_metrics.json
 
-What is reported (D53, D58):
-  - exact-match entity P/R/F1, micro and macro over the three labels, per label (seqeval);
-  - RELAXED match (a prediction counts if it overlaps a gold entity of the same label) - the gold's boundary
-    conventions are specific to our guideline, so exact match alone understates a transferred model;
-  - 95% confidence intervals by bootstrap over DOCUMENT GROUPS (aa_split.json: documents of one organisation
-    or one template are one group) - segments of one document are not independent;
-  - per-group F1 and their unweighted mean, because one document holds a third of the test entities;
-  - an error breakdown, including false positives that are entities under OPP-115's definition but excluded
-    by ours (device telemetry, umbrella terms, AA-framework roles) and corporate-transaction words;
-  - a truncation check: a segment longer than --max-length would silently lose its tail.
-
-**TEST SET RULE (D4):** `data/ner_bio/aa_test.conll` is opened only with --open-test, with frozen models,
-and every opening is appended to results/ner/test_openings.jsonl. Never tune on it.
+Reports exact and relaxed (overlap) F1, 95% CIs by bootstrap over document groups (segments of one
+document are not independent), per-group F1, an error breakdown and a truncation check.
+The AA test set is opened only with --open-test; each opening is logged to results/ner/test_openings.jsonl.
 """
 from __future__ import annotations
 
@@ -275,7 +265,7 @@ def main() -> None:
         args.conll = NER_BIO / "aa_test.conll"
         args.out = args.out or args.model_dir / "test_metrics.json"
     elif args.conll.resolve() == (NER_BIO / "aa_test.conll").resolve():
-        raise SystemExit("aa_test.conll is the sealed test set (D4): frozen models only, and pass --open-test.")
+        raise SystemExit("aa_test.conll is the sealed test set: frozen models only, and pass --open-test.")
 
     tokens, gold, pred, truncated = predict(args.model_dir, args.conll, args.max_length)
     groups = group_ids(args.conll, len(gold), args.group_by)
@@ -299,7 +289,7 @@ def main() -> None:
     e = res["errors"]
     print(f"  predictions: {e.get('pred_exact', 0)} exact, {e.get('pred_boundary', 0)} right label / wrong boundary, "
           f"{e.get('pred_wrong_label', 0)} wrong label, {e.get('pred_spurious', 0)} spurious")
-    print(f"  spurious by kind: " + ", ".join(f"{k[9:]} {v}" for k, v in e.items() if k.startswith("spurious_"))
+    print("  spurious by kind: " + ", ".join(f"{k[9:]} {v}" for k, v in e.items() if k.startswith("spurious_"))
           + f"  -> {e['definition_mismatch']} are entities under OPP-115's definition, not ours")
     print(f"  gold: {e.get('gold_exact', 0)} found exactly, {e.get('gold_boundary', 0)} found with another boundary, "
           f"{e.get('gold_wrong_label', 0)} under another label, {e.get('gold_missed', 0)} missed")

@@ -1,12 +1,8 @@
 """Load best model; return char-span entities for the pipeline.
 
-Text in, highlights out: [{"start", "end", "label", "text"}], offsets into the text given. The text is cut and
-split into words exactly as the AA training data was (aa_to_conll.segment, bio_tagging.tokenize_with_offsets),
-and a word's tag is the tag of its first sub-word piece, as in training and evaluation.
-
-The default model is Legal-BERT E2-sequential, seed 44: the best of the three seeds on the adaptation mock test
-(dev F1 0.736). Choosing by the test set would be selecting on it (D4). It is loaded from the local
-artifacts_out/ner/<run> if present, otherwise from the private Hub repo (needs HF_TOKEN or `hf auth login`).
+Text in, [{"start", "end", "label", "text"}] out. Segmentation and word splitting match the AA training data.
+Default model: Legal-BERT E2-sequential seed 44, the best seed on the mock test (dev F1 0.736), chosen without
+the test set. Loaded from artifacts_out/ner/<run>, else the private Hub repo (needs HF_TOKEN or `hf auth login`).
 
     python -m consentledger.ner.predict --file <policy.txt>
     python -m consentledger.ner.predict --selfcheck

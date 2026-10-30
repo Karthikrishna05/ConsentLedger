@@ -1,0 +1,62 @@
+{
+ "protocol": "DECISIONS.md D93",
+ "commit": "6340c7d",
+ "test_file_sha256_prefix": "84be74a32a3bde9b",
+ "passages": 154,
+ "A_flant5base": {
+  "A1_accepted": "87 of 154",
+  "A1_accepted_with_facts": "18 of 84",
+  "A1_facts_kept_micro": 0.395,
+  "A1_facts_total": 779,
+  "A2_gate_verdicts": {
+   "reject": 23,
+   "add": 57,
+   "show": 74
+  },
+  "A2_withheld_reasons": {
+   "reversed": 17,
+   "swapped": 3,
+   "invented": 3
+  },
+  "A3_mean_summary_words": 42.6,
+  "A3_mean_coverage": 0.689,
+  "seconds": 338
+ },
+ "A_t5small": {
+  "A1_accepted": "84 of 154",
+  "A1_accepted_with_facts": "16 of 84",
+  "A1_facts_kept_micro": 0.347,
+  "A1_facts_total": 779,
+  "A2_gate_verdicts": {
+   "show": 69,
+   "add": 58,
+   "reject": 27
+  },
+  "A2_withheld_reasons": {
+   "reversed": 20,
+   "swapped": 10,
+   "invented": 1
+  },
+  "A3_mean_summary_words": 42.4,
+  "A3_mean_coverage": 0.672,
+  "seconds": 122
+ },
+ "B_whole_system_flant5base": {
+  "B1_verdicts_gold_facts": {
+   "reject": 23,
+   "add": 57,
+   "show": 74
+  },
+  "B1_verdicts_ner_facts": {
+   "reject": 23,
+   "show": 69,
+   "add": 62
+  },
+  "B1_verdict_agreement": "127 of 154",
+  "B2_mean_coverage_gold_facts": 0.689,
+  "B2_mean_coverage_ner_facts": 0.653,
+  "B3_facts_gold": 779,
+  "B3_facts_ner": 775,
+  "documents": 9
+ }
+}

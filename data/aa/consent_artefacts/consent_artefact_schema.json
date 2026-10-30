@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "consentledger/consent_artefact_schema.json",
   "title": "ReBIT AA Consent Artefact (ConsentDetail)",
-  "description": "Blank-form definition of the RBI Account Aggregator consent artefact, per the ReBIT technical spec (verified against Sahamati examples, DECISIONS D27). Validates the CANONICAL nesting where all blocks live inside ConsentDetail. NOTE: one rendered Sahamati example shows some blocks as siblings of ConsentDetail; parse.py must look keys up robustly, but generated + wire-format artefacts use this canonical shape.",
+  "description": "Blank-form definition of the RBI Account Aggregator consent artefact, per the ReBIT technical spec (verified against Sahamati examples). Validates the CANONICAL nesting where all blocks live inside ConsentDetail. NOTE: one rendered Sahamati example shows some blocks as siblings of ConsentDetail; parse.py must look keys up robustly, but generated + wire-format artefacts use this canonical shape.",
   "type": "object",
   "required": ["ConsentDetail"],
   "properties": {

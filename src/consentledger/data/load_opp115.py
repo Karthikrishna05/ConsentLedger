@@ -1,19 +1,7 @@
-"""Load OPP-115 -> normalized consent-entity span records (DATA_TYPE / PURPOSE / THIRD_PARTY).
+"""Load OPP-115 -> provenance-tagged char-span records (DATA_TYPE / PURPOSE / THIRD_PARTY) as JSONL.
 
-Reads the OPP-115 consolidation CSVs + the sanitized (segmented) policies, maps the three
-transferable attributes to our labels using each span's PER-SEGMENT character offsets, and writes
-provenance-tagged span records to JSONL.
-
-Output is char-span records (NOT final BIO): BIO is tokenizer-specific and is produced later, per
-backbone, by bio_tagging.py. This keeps one clean, auditable intermediate.
-
-Built-in integrity GATE: for every emitted span, segment[seg_start:seg_end] must equal the
-annotator's selectedText. If the match rate falls below the threshold, the script exits non-zero and
-you must NOT use the output — the offset/segmentation logic would be wrong.
-
-Mapping rationale: meta-documentation/NER_LABEL_MAPPING.md (v2). Format verified against
-documentation/manual.txt: annotation CSVs have no header, 9 cols (A..I); col G is attribute JSON with
-{selectedText, startIndexInSegment, endIndexInSegment, value}; sanitized policies split on '|||'.
+GATE: segment[seg_start:seg_end] must equal selectedText for >= GATE_MIN_MATCH_RATE of spans, else exit non-zero.
+Format (documentation/manual.txt): headerless 9-column CSVs, col G = attribute JSON; policies split on '|||'.
 
 Usage:
     python -m consentledger.data.load_opp115                 # consolidation, threshold 0.75 (default)
@@ -32,7 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 OPP_DIR = PROJECT_ROOT / "data" / "external" / "opp115" / "raw" / "OPP-115"
 OUT_DEFAULT = PROJECT_ROOT / "data" / "external" / "opp115" / "processed" / "opp115_spans.jsonl"
 
-# OPP-115 attribute name -> our NER label (see NER_LABEL_MAPPING.md v2, §1)
+# OPP-115 attribute name -> our NER label (the three attributes that transfer)
 LABEL_MAP = {
     "Personal Information Type": "DATA_TYPE",
     "Purpose": "PURPOSE",

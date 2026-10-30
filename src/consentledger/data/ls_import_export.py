@@ -1,10 +1,7 @@
 """Label Studio import/export helpers.
 
-`make-tasks` : build a Label Studio import file from data/aa/raw/text/*.txt, keeping each doc's `doc_id`
-               (so kappa.py and the CoNLL export can match documents reliably). Import THIS file into
-               Label Studio (not the raw .txt files) — that guarantees the `doc_id` survives to export.
-
-(Export -> CoNLL for the annotated AA test/adaptation sets is a later step, added after annotation.)
+`make-tasks` builds the import file from data/aa/raw/text/*.txt. Import THIS file (not the .txt files) so each
+task's `doc_id` survives to the export that kappa.py and the CoNLL export match documents on.
 
 Usage:
     python -m consentledger.data.ls_import_export make-tasks

@@ -1,16 +1,7 @@
 """Turn OPP-115 span records into word-level BIO CoNLL (train/dev for the E1 transfer experiment).
 
-Design (see meta-documentation/DECISIONS.md D18):
-- **Word-level** CoNLL, tokenizer-AGNOSTIC: one dataset shared by all 3 backbones. Each model's own
-  subword tokenizer aligns to these words at train time (dataset.py, first-subword=label, rest=-100).
-  This keeps the "offset-based, no cross-tokenizer subword reuse" guarantee (D7) while avoiding a
-  per-model regeneration of the data.
-- Word tokenization is offset-aware (regex over the segment text), never a naive whitespace `.split()`
-  that loses character positions.
-- Unit of a training example = one policy **segment** (the text an annotator saw). ALL segments are
-  emitted, including negatives (all `O`), so the model also learns what is NOT an entity.
-- Overlapping spans of different labels are resolved **longest-span-wins** (documented, deterministic).
-- Split is at the **policy level** (never segment level) to avoid leakage between train and dev.
+Word-level and tokenizer-agnostic: each backbone aligns its own subwords at train time (dataset.py). Every
+segment is emitted (all-O negatives too), overlaps resolve longest-span-wins, and train/dev split by policy.
 
 Input : data/external/opp115/processed/opp115_spans.jsonl  (+ sanitized_policies for segment text)
 Output: data/ner_bio/train.conll , data/ner_bio/dev.conll   (word <TAB> tag ; blank line between segments)
@@ -34,8 +25,7 @@ SANITIZED = PROJECT_ROOT / "data" / "external" / "opp115" / "raw" / "OPP-115" / 
 OUT_DIR = PROJECT_ROOT / "data" / "ner_bio"
 SEGMENT_DELIM = "|||"
 
-# Word tokenizer: word-characters OR a single non-space/non-word char (keeps punctuation as its own
-# token, with exact character offsets). Deterministic and model-independent.
+# A word, or one punctuation char as its own token, with exact character offsets.
 _TOKEN_RE = re.compile(r"\w+|[^\w\s]")
 
 
@@ -85,7 +75,7 @@ def load_opp115_segments(spans_jsonl: Path = SPANS_JSONL) -> dict[str, dict[int,
         out[pid] = {
             i: {"text": seg, "spans": spans_by_key.get((pid, i), [])}
             for i, seg in enumerate(segs)
-            if seg.strip()  # skip empty segments
+            if seg.strip()
         }
     return out
 
@@ -169,7 +159,6 @@ def main() -> None:
             if len(ents) >= 2:
                 for lab, surface in ents[:6]:
                     print(f"  [{lab:11}] {surface[:60]!r}")
-                # assert reconstructed labels are a subset of what we put in
                 in_labels = {s["label"] for s in resolve_overlaps(rec["spans"])}
                 out_labels = {lab for lab, _ in ents}
                 assert out_labels <= in_labels, f"label leak: {out_labels - in_labels}"

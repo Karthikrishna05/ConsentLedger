@@ -1,23 +1,14 @@
 """Train the ConsentLedger summariser and score it with the project's acceptance check.
 
-One file, no project imports, plain PyTorch loop (so it runs the same on Kaggle, Colab or a laptop,
-whatever the transformers version).
+No project imports and a plain PyTorch loop, so it also runs standalone (Kaggle, Colab). This script
+trained the two final models.
 
-    python train_summ.py --config summ_t5small.yaml    --data . --out out/t5small
-    python train_summ.py --config summ_flant5base.yaml --data . --out out/flant5base
-    python train_summ.py --selfcheck
-
-In this repo (P2 handed the summariser over to P1 on 16 Oct; this is the exact script, pack v2, that trained
-the two final models - D70, D73):
     python -m consentledger.summ.train --config configs/summ_flant5base.yaml --data data/summ --out artifacts_out/summ/flant5base
+    python -m consentledger.summ.train --selfcheck
 
---data is the folder holding train.jsonl and dev.jsonl. After every pass over the training data the model
-summarises the dev passages and the scores are printed. The model after the LAST pass is the one saved:
-13 dev passages are too few to pick a "best" pass from (the scores jump by chance), so dev only reports.
-Every summary is cut back to whole sentences that fit the passage's word cap (trim_to_cap) - the pipeline
-applies the same step, so the length rule always holds.
-Written to --out: the model + tokenizer, summ_meta.json (settings + scores), dev_predictions.jsonl.
-Do NOT turn on fp16 / mixed precision: T5 produces NaN losses with it.
+--data holds train.jsonl and dev.jsonl. Dev is scored after every epoch but only reported: the LAST epoch is
+saved (13 dev passages are too few to pick a best one). Summaries are trimmed to the word cap, as in the pipeline.
+Writes the model, tokenizer, summ_meta.json and dev_predictions.jsonl to --out. No fp16: T5 gives NaN losses.
 """
 import argparse
 import json

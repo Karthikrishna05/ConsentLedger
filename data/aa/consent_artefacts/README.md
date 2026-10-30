@@ -1,9 +1,9 @@
 # AA Consent Artefacts — parser fixtures (structured source, NOT NER)
 
-These are the **structured** side of the "split by source" design (DECISIONS D2). The three fields the
+These are the **structured** side of the "split by source" design. The three fields the
 prose T&C documents do NOT contain — RECIPIENT, DURATION, FREQUENCY — live here, as JSON, in the ReBIT
-**consent artefact** exchanged FIP↔AA↔FIU when a consent is actually granted. This was verified against a
-primary source on 2026-09-14 (see DECISIONS D27).
+**consent artefact** exchanged FIP↔AA↔FIU when a consent is actually granted. Verified against the
+ReBIT spec and Sahamati examples.
 
 ## Files
 - `consent_artefact_schema.json` — the **formal JSON Schema** (draft-07): the blank-form definition of

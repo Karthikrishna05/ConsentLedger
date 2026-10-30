@@ -5,7 +5,6 @@ from pathlib import Path
 from unittest.mock import Mock
 
 from eth_account import Account
-from eth_account.signers.local import LocalAccount
 from eth_utils import to_checksum_address
 from web3 import Web3
 
@@ -140,7 +139,6 @@ class ConsentRegistryTests(unittest.TestCase):
                     with self.assertRaisesRegex(RuntimeError, "refused"):
                         wc.get_web3()
 
-   
     def test_contract_address_defaults_to_the_recorded_deployment(self):
         """Use the recorded Sepolia address when no explicit address is configured."""
         from unittest.mock import patch
@@ -176,6 +174,18 @@ class ConsentRegistryTests(unittest.TestCase):
                 RuntimeError, "No ConsentRegistry address"
             ):
                 get_contract(w3)
+
+    def test_audit_link_and_consent_id(self):
+        """Etherscan link on Sepolia, none locally; a consent id must be 32 bytes."""
+        from consentledger.chain.revoke_consent import parse_consent_id
+        from consentledger.chain.web3_client import LOCAL, SEPOLIA, explorer_link
+
+        tx = "0x" + "ab" * 32
+        self.assertEqual(explorer_link(Mock(eth=Mock(chain_id=SEPOLIA)), tx), "https://sepolia.etherscan.io/tx/" + tx)
+        self.assertIsNone(explorer_link(Mock(eth=Mock(chain_id=LOCAL)), tx))
+        self.assertEqual(parse_consent_id("0x" + "11" * 32), bytes.fromhex("11" * 32))
+        with self.assertRaises(ValueError):
+            parse_consent_id("0x1234")
 
 
 if __name__ == "__main__":

@@ -1,17 +1,11 @@
-"""ConsentLedger demo server: paste an Account Aggregator policy (or upload it), optionally add the consent
-artefact, and see what the policy says - highlighted facts, a checked plain-language summary per passage, the
-consent's terms, and a tamper-proof fingerprint that can be recorded on the Sepolia test network.
+"""ConsentLedger demo server: what an Account Aggregator policy says, checked and fingerprinted on Sepolia.
 
-    python app.py                 # http://127.0.0.1:7860   the web frontend (frontend/)
-                                  #                /api/...  its JSON API   (/api/docs lists every route)
-                                  #                /gradio   the Gradio page, kept as a backup
-    python app.py --gradio-only   # the Gradio page alone, as before (supports --share and DEMO_PASSWORD)
+    python app.py                 # http://127.0.0.1:7860: frontend at /, JSON API at /api (/api/docs), Gradio at /gradio
+    python app.py --gradio-only   # the Gradio page alone (supports --share and DEMO_PASSWORD)
+    python app.py --selfcheck     # check the routes without loading any model
 
-Both pages call the same `pipeline.end_to_end.run()` as the experiments, through the same input checks, so the
-demo and the reported numbers cannot drift apart (bible 7.4). Research use only: the NER models were trained on
-non-commercial data (OPP-115). Settings come from the project's .env (see .env.example): SEPOLIA_RPC_URL for
-checking consents on-chain, plus SEPOLIA_PRIVATE_KEY (a throwaway test wallet) to record them. Without them the
-app still runs.
+Both pages use the same input checks and `pipeline.end_to_end.run()` as the experiments, so they cannot drift.
+Research use only (NER trained on non-commercial OPP-115). Optional .env: SEPOLIA_RPC_URL, SEPOLIA_PRIVATE_KEY.
 """
 from __future__ import annotations
 

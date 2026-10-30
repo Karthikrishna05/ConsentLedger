@@ -1,15 +1,7 @@
 """Convert scraped AA docs (data/aa/raw/{html,pdf}) into clean plain text (data/aa/raw/text).
 
-HTML: strip script/style/nav/footer/header/forms + obvious cookie/consent banners, keep the readable
-content (headings + paragraphs), preserve line/clause boundaries.
-PDF : pdfplumber page text, joined.
-
-Unicode normalization is applied to ALL output (before annotation, since annotation offsets index this
-text): unicode spaces -> normal space; curly quotes -> straight; zero-width chars + stray UI symbols
-(bullets/warning icons) removed. Legitimate punctuation (em/en dashes, currency, letters) is preserved.
-
-A short-text threshold flags JS-rendered shells / failed scrapes (D20) so you get the final usable list;
-those are reported and skipped (not written), leaving `text/` = the annotation-ready corpus.
+HTML drops scripts/nav/footers/cookie banners; PDF uses pdfplumber. Unicode is normalised before annotation,
+since offsets index this text. Docs under --min-chars (JS shells, failed scrapes) are reported and skipped.
 
 Usage:
     python -m consentledger.data.clean                 # process everything in raw/
@@ -29,7 +21,7 @@ _DROP_TAGS = ["script", "style", "noscript", "svg", "nav", "footer", "header", "
 _DROP_HINTS = re.compile(r"(cookie|consent-banner|nav|navbar|menu|footer|header|sidebar|breadcrumb|"
                          r"social|share|subscribe|newsletter|modal|popup)", re.I)
 
-# --- Unicode normalization table (D22) ---
+# --- Unicode normalization table ---
 _SPACE_CPS = [0x00A0, 0x2004, 0x2005, 0x2006, 0x2007, 0x2008, 0x2009, 0x200A,
               0x202F, 0x205F, 0x3000, 0x2028, 0x2029]                 # unicode spaces -> " "
 _REMOVE_CPS = [0x200B, 0x200C, 0x200D, 0x2060, 0xFEFF, 0x00AD,        # zero-width / soft hyphen
@@ -67,7 +59,7 @@ def clean_pdf(path: Path) -> str:
 def _normalize(text: str) -> str:
     text = text.translate(_TRANS)                       # unicode normalization first
     lines = [re.sub(r"[ \t]+", " ", ln).strip() for ln in text.splitlines()]
-    lines = [ln for ln in lines if ln]                  # drop blank lines
+    lines = [ln for ln in lines if ln]
     out = "\n".join(lines)
     out = re.sub(r"\n{3,}", "\n\n", out)
     return out.strip()

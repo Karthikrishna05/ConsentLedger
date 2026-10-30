@@ -1,4 +1,4 @@
-"""Global determinism helper — call set_seed(cfg.seed) at every train/eval entry point."""
+"""Global determinism helper: call set_seed(seed) at every train/eval entry point."""
 from __future__ import annotations
 
 import os

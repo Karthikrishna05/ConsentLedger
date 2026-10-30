@@ -1,16 +1,8 @@
-"""Trim OPP-115's long clause-spans down to concise noun-phrase entities.
+"""Trim OPP-115's long clause-spans down to concise noun-phrase entities, the AA span shape.
 
-WHY: OPP-115 annotates practice descriptions as long text selections (PURPOSE median ~14 tokens), but our
-target (and the AA annotation guideline) is a *minimal noun phrase*. Training on long spans teaches the
-wrong span shape and makes exact-match F1 near-impossible. This produces short, entity-shaped spans that
-match the AA target — better exact-match AND better transfer. (See DECISIONS D25.)
-
-IMPORTANT: this writes a SEPARATE file (`opp115_spans_trimmed.jsonl`); the original
-`opp115_spans.jsonl` is left untouched and can still be used later. Offsets are recomputed to the trimmed
-substring (still valid character offsets into the segment). The original span is kept in `orig_*` fields.
-
-Method: for each span, take the **longest noun chunk** (spaCy), capped at `--max-tokens` tokens
-(head-final for English NPs); if the span has no noun chunk, keep its last `--max-tokens` tokens.
+Long spans (PURPOSE median ~14 tokens) teach the wrong shape. Each span becomes its longest spaCy noun chunk
+(head-final, capped at --max-tokens), else its last --max-tokens tokens. Writes a SEPARATE file with offsets
+recomputed; the original span is kept in orig_* fields.
 
 Usage:
     python -m consentledger.data.trim_spans                 # max 6 tokens (default)

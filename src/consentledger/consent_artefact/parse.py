@@ -1,8 +1,7 @@
 """Parse RECIPIENT/DURATION/FREQUENCY/DATA_RANGE/DATA_LIFE from ReBIT-shaped consent JSON.
 
-A deterministic reader of the ReBIT consent artefact (D2, D27) - not a model. Keys are looked up anywhere in
-the object, because published artefacts nest the blocks either inside `ConsentDetail` or beside it.
-A missing block comes back as None; the artefact itself is never changed.
+A deterministic reader, not a model. Keys are found at any depth, since published artefacts put the blocks
+inside `ConsentDetail` or beside it. A missing block comes back as None.
 
     python -m consentledger.consent_artefact.parse data/aa/consent_artefacts/real_periodic_loan_monitoring.json
     python -m consentledger.consent_artefact.parse --selfcheck

@@ -1,30 +1,18 @@
-"""Automatic adjudication with a human sample check (D50).
+"""Automatic adjudication with a human sample check: every ruling is reproducible from the two exports
+plus results/annotation/adjudication/decisions.tsv, and a random sample is checked by both annotators.
 
-Three steps, each reproducible from the two exports plus one decisions file:
+  items    - normalise each export by the written rules, accept identical spans, list the rest as numbered items.
+  apply    - apply the rulings, write gold.json and a sample sheet per annotator.
+  score    - acceptance rate from the filled-in sample sheets.
+  negation - checked negation sheet -> negated.tsv.
 
-  items   - normalise each export on its own (written rules only: delete / trim / relabel / own company),
-            accept what both annotators marked identically, and list everything else as numbered ITEMS,
-            each shown inside its sentence, for a ruling.
-  apply   - read the rulings (results/annotation/adjudication/decisions.tsv: item id, decision code) and
-            write gold.json, plus a random SAMPLE sheet per annotator to verify the rulings.
-  score   - read the filled-in sample sheets and report the acceptance rate.
+decisions.tsv lines are "<item id> <code>". Kinds -> codes: O one-sided -> A / R<code> / M:<text>[:D|P|T];
+B boundary -> a / b / M:<text> / R<code>; L label conflict -> a / b / M:<text>:<L> / R<code>;
+G agreed but doubted -> A / R<code>; X repeat (second pass) -> A / R<code>. M:<text> re-draws the span over
+<text> nearest the item. Also: "agreed <L> <phrase> => <new>|-", "drop <L> <doc> <start> <end> <code> <text>",
+"new <L> <doc> <start> <end> <text>" (kind N). Reject codes and their meaning: REASON.
 
-Item kinds:
-  O  one-sided       only one annotator marked it              -> A (accept) / R<code> (reject) / M:<text>[:D|P|T]
-  B  boundary        both marked overlapping spans, same label -> a / b (whose span) / M:<text> / R<code>
-  L  label conflict  overlapping spans, different labels       -> a / b (whose span AND label) / M:<text>:<L> / R<code>
-  M:<text> re-draws the highlight over exactly <text> (found nearest the item), optionally with a new label.
-  G  agreed, doubted both marked it but a ruling doubts it     -> A / R<code>
-  X  repeat          a phrase accepted elsewhere in the doc     -> A / R<code>     (second pass)
-  "drop <L> <doc> <start> <end> <code> <text>" removes ONE span both annotators drew identically but a rule
-     excludes (D59: an agreed span is not automatically a correct one).
-  N  new             nobody marked it; a rule ratified after annotation (D55) needs it - the rest of a list
-                     whose other members are accepted. Written as "new <L> <doc> <start> <end> <text>".
-
-Reject codes name the rule: R8 umbrella/generic, R8b AA role or regulator, R9 purpose not an activity /
-too long, R9b umbrella data, R10 no data-use frame or not on the list, R16 no data flow to or from them, R17 own
-company, R19 named after data / law name, R23 telemetry, D47 data word with no data practice, CO the
-company's own data, FR a fragment or not an entity, DUP duplicate of a better span.
+    python -m consentledger.data.adjudicate_auto items|apply|score|negation|selfcheck
 """
 from __future__ import annotations
 
@@ -292,10 +280,8 @@ def cmd_apply(args):
                 keep.append(sp)
         final[d] = sorted(keep)
     gold_path = PROJECT_ROOT / "data" / "aa" / "annotated" / "gold.json"
-    # `negated` (D66): the passage says this practice is NOT done ("we shall not access your credentials"). The
-    # label and the span are unchanged - Rule 18 marks a denied practice like an affirmed one - so the BIO files
-    # and every score are unaffected; the flag is for the summariser and the ledger. Positions come from
-    # negated.tsv (doc, start, end, label), written by the `negation` command from the checked sheet.
+    # `negated`: the passage denies the practice. Span and label are unchanged (Rule 18), so BIO and scores are
+    # unaffected; the flag is for the summariser and ledger. Positions: negated.tsv, from the `negation` command.
     neg_path = args.out / "negated.tsv"
     neg = {tuple(ln.split("\t")) for ln in neg_path.read_text(encoding="utf-8").splitlines() if ln.strip()} if neg_path.exists() else set()
     spans_all = {(d, str(s), str(e), lab[0]) for d in final for s, e, lab in final[d]}

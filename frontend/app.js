@@ -1,4 +1,4 @@
-/* THREE.JS HERO - ULTRA-LIGHTWEIGHT 3D OBSIDIAN PRISM & MERIDIAN RING */
+/* HERO: three.js crystal, cage and ring */
 (function(){
   const canvas=document.getElementById('hero-canvas');
   if(!canvas||typeof THREE==='undefined')return;   // offline (no CDN): no 3D background, the page still works
@@ -6,7 +6,7 @@
   const heroSection=document.getElementById('hero');
   let isVisible=true;
 
-  // Ultra-lightweight configuration: capped pixel ratio to save GPU memory & fill rate
+  // Pixel ratio capped to save GPU fill rate
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true,powerPreference:'high-performance'});
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1, 1.25));
   renderer.setClearColor(0x000000,0);
@@ -28,7 +28,6 @@
   const group=new THREE.Group();
   scene.add(group);
 
-  // 1. Faceted Obsidian Diamond Crystal (Only 12 vertices / 20 clean facets)
   const crystalGeo=new THREE.IcosahedronGeometry(1.22,0);
   const crystalMat=new THREE.MeshPhongMaterial({
     color:0x08080a,
@@ -40,7 +39,6 @@
   const crystal=new THREE.Mesh(crystalGeo,crystalMat);
   group.add(crystal);
 
-  // 2. Ultra-fine Geometric Wireframe Cage (Only 12 vertices)
   const cageGeo=new THREE.IcosahedronGeometry(1.48,0);
   const cageMat=new THREE.MeshBasicMaterial({
     color:0xffffff,
@@ -51,7 +49,6 @@
   const cage=new THREE.Mesh(cageGeo,cageMat);
   group.add(cage);
 
-  // 3. Floating Minimalist Silver Meridian Ring (Only 48 segments)
   const ringGeo=new THREE.TorusGeometry(1.82,0.003,4,48);
   const ringMat=new THREE.MeshBasicMaterial({
     color:0xffffff,
@@ -63,7 +60,6 @@
   ring.rotation.y=0.25;
   group.add(ring);
 
-  // Clean, efficient lighting
   scene.add(new THREE.AmbientLight(0xffffff,0.12));
   const L1=new THREE.PointLight(0xffffff,2.5,14);
   L1.position.set(3.2,3,3.5);
@@ -80,7 +76,7 @@
     my=(e.clientY/window.innerHeight-.5)*2;
   },{passive:true});
 
-  // PAUSE OFF-SCREEN: Cuts GPU usage to 0% when scrolled to Studio or Results!
+  // No rendering while the hero is off-screen
   if('IntersectionObserver' in window && heroSection){
     const obs=new IntersectionObserver(([e])=>{isVisible=e.isIntersecting;},{threshold:0.04});
     obs.observe(heroSection);
@@ -89,7 +85,7 @@
   let t=0;
   function frame(){
     requestAnimationFrame(frame);
-    if(!isVisible)return; // Stop rendering when not in view!
+    if(!isVisible)return;
 
     t+=0.005;
     tx+=(mx-tx)*0.05;
@@ -132,9 +128,8 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-/* BACKEND - the same server in normal use (python app.py); the absolute URL covers opening index.html from disk
-   or from another local dev server. Nothing below computes or invents results in the browser: every fact, verdict,
-   term and fingerprint shown comes from the backend's report. */
+/* BACKEND: same origin normally; the absolute URL covers file:// and other local dev servers.
+   Every fact, verdict and fingerprint shown comes from the backend's report, never from the browser. */
 const API=(location.protocol==='file:'||(location.port&&location.port!=='7860'))?'http://127.0.0.1:7860':'';
 const $=id=>document.getElementById(id);
 let lastReport=null,uploadFile=null,canWrite=false;
@@ -377,7 +372,7 @@ document.getElementById('btn-reset').onclick=()=>{
   if(window.lenisInstance){window.lenisInstance.scrollTo(ana,{offset:-20,duration:1.2});}else{ana.scrollIntoView({behavior:'smooth'});}
 };
 
-/* LENIS SMOOTH SCROLL ENGINE & KINETIC LEDGER THREAD */
+/* SMOOTH SCROLL (Lenis) AND LEDGER BUS */
 let lenis=null;
 try{
   if(typeof Lenis!=='undefined'){
@@ -511,7 +506,7 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor=>{
   setTimeout(updateThread,150);
 })();
 
-/* CINEMATIC SCROLL EXPERIENCE & INTERACTION ENGINES */
+/* SCROLL EFFECTS */
 if('scrollRestoration' in history){history.scrollRestoration='manual';}
 const heroInner=document.querySelector('.hero-inner');
 const heroCanvas=document.getElementById('hero-canvas');
@@ -655,7 +650,7 @@ setTimeout(()=>onScrollFrame({velocity:0}),100);
 window.addEventListener('scroll',()=>{document.getElementById('nav').style.borderBottomColor=scrollY>60?'rgba(255,255,255,.1)':'rgba(255,255,255,.04)';});
 setTimeout(()=>document.querySelectorAll('#hero .rv').forEach((el,i)=>setTimeout(()=>el.classList.add('go'),200+i*130)),100);
 
-/* LEDGER BUS WORDING - shown only while the page scrolls (see style.css), so the rail stays clean at rest */
+/* LEDGER BUS LABELS: shown only while scrolling (see style.css) */
 (function(){
   const wrap=document.getElementById('ledger-thread-wrap');
   if(!wrap)return;

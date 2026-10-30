@@ -1,9 +1,7 @@
-"""Download the AA corpus from data/aa/manifest.csv into data/aa/raw/ (scrape-once, cache locally).
+"""Download the AA corpus in data/aa/manifest.csv into data/aa/raw/ (scrape once, then work from the cache).
 
-These are real companies' live pages — fetch once, be polite (delay + timeout + one GET each), and work
-from the cache afterward. Raw bytes are saved verbatim (HTML/PDF); cleaning to text is clean.py's job.
-Provenance (status, bytes, sha256, date) is logged to data/aa/raw/scrape_log.csv so a later re-scrape
-that returns a different hash is a noticeable event (don't silently overwrite provenance).
+Live company pages: one polite GET each (delay + timeout), raw bytes saved verbatim. Status, bytes, sha256 and
+date go to data/aa/raw/scrape_log.csv so a re-scrape returning a different hash is noticeable.
 
 Usage:
     python -m consentledger.data.scrape_aa            # skip docs already downloaded
@@ -39,7 +37,7 @@ def main() -> None:
     args = ap.parse_args()
 
     if not MANIFEST.is_file():
-        raise SystemExit(f"Missing {MANIFEST}. Build it first (see README/DECISIONS).")
+        raise SystemExit(f"Missing {MANIFEST}. Build it first (see README).")
 
     rows = list(csv.DictReader(MANIFEST.open(encoding="utf-8")))
     (RAW / "html").mkdir(parents=True, exist_ok=True)

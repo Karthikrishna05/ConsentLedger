@@ -11,11 +11,6 @@ Give it an AA policy (and, optionally, the consent artefact a user is asked to g
 4. **fingerprints** the consent together with the policy's facts and can record that fingerprint on the
    Ethereum **Sepolia** test network, so anyone can later check that neither was changed.
 
-> **New here?** Read [`meta-documentation/OVERVIEW.md`](meta-documentation/OVERVIEW.md) (plain-language tour), then
-> the project "bible" [`DETAILED_EXPLANATION.md`](meta-documentation/DETAILED_EXPLANATION.md). Every decision and
-> its reasoning: [`DECISIONS.md`](meta-documentation/DECISIONS.md) (D1–D88). Live status:
-> [`FLOW.md`](meta-documentation/FLOW.md).
-
 **Research prototype, research use only** — the NER models were trained partly on OPP-115 (CC BY-NC 4.0).
 Summaries are machine-written and only partly checked; this is not legal advice. Testnet only.
 
@@ -87,7 +82,7 @@ sequenceDiagram
 ## Quick start — run the demo (no training needed)
 
 1. Do the **Setup** below (clone, venv, libraries).
-2. Log in to Hugging Face with an account that can read the team's **private** model repos
+2. Log in to Hugging Face with an account that can read the model repos
    (`Karthikrishna05/consentledger-ner`, `Karthikrishna05/consentledger-summ`):
    ```powershell
    hf auth login
@@ -120,10 +115,9 @@ sequenceDiagram
 
 ---
 
-## Setup (each teammate does this once)
+## Setup
 
-The virtual environment (`.venv`) is **not** in the repo — everyone creates their own.
-Full detail / troubleshooting: [`meta-documentation/SETUP.md`](meta-documentation/SETUP.md).
+The virtual environment (`.venv`) is not in the repo; create your own.
 
 **Prerequisites:** Python **3.11**; `git`. For training: an NVIDIA GPU (built on an RTX A4500, CUDA 12.1) — the
 demo and the pipeline run on CPU too. Node.js 20 only for the contract (`contracts/`).
@@ -131,7 +125,7 @@ demo and the pipeline run on CPU too. Node.js 20 only for the contract (`contrac
 **Step 1 — Clone and enter the project** (the first line lets Windows handle the contract's long file names):
 ```bash
 git config --global core.longpaths true
-git clone <your-private-repo-url> ConsentLedger
+git clone https://github.com/Karthikrishna05/ConsentLedge.git ConsentLedger
 cd ConsentLedger
 ```
 > Clone into a short folder such as `C:\Users\<you>\ConsentLedger`, not a deeply nested one.
@@ -155,16 +149,11 @@ pip install -e .
 > **No NVIDIA GPU?** Use `pip install torch==2.3.1` (CPU build). **Exact reproduction:** after torch,
 > `pip install -r requirements.lock`. Do not upgrade `transformers` (pinned 4.46.3) or `numpy` (1.26.4).
 
-**Step 4 — Recreate the git-ignored folder skeleton**
-```bash
-python scaffold.py
-```
-
-**Step 5 — Verify** (expect `transformers 4.46.3`, `cuda True` on a GPU machine, and no conflicts):
+**Step 4 — Verify** (expect `transformers 4.46.3`, `cuda True` on a GPU machine, and no conflicts):
 ```bash
 python -c "import torch, transformers; print('cuda', torch.cuda.is_available(), '| transformers', transformers.__version__)"
 pip check
-pytest -q
+pytest contracts/test -q
 ```
 
 Activate the venv in every new terminal before running project commands.
@@ -173,26 +162,26 @@ Activate the venv in every new terminal before running project commands.
 
 ## Results at a glance
 
-| Part | Result | Where |
+| Part | Result | Files |
 |---|---|---|
-| NER, transfer from OPP-115 (E1) vs + a little AA data (E2) | exact micro-F1 on the sealed AA test set: E1 0.125 → E2-joint 0.252 → **E2-sequential 0.439** (each step significant); best single backbone Legal-BERT 0.479 | D63 |
-| LLM baseline (local 14B model, rules only) | 0.479 exact — ties fine-tuning on exact F1, behind on relaxed F1 | D64, D65 |
-| Annotation | 23 AA documents, 1,266 gold highlights; final inter-annotator kappa 0.43 (0.52 on a fresh document) | D43, D48, D57 |
-| Summariser | Flan-T5-base (main) and t5-small, fine-tuned on 174 passages; frozen | D73 |
-| Faithfulness check | on fresh documents (settled labels): Flan-T5-base summaries shown wrong 22% (28% unchecked); 1 of 2 reversals caught; 2 of 36 good summaries blocked | D82 |
-| Smart contract | `ConsentRegistry` on Sepolia `0x2De2051bAb111580a0F0C850E7C8318b94aAA4bF`; gas: create 459,911 · grant 31,603 · record access 25,051 · revoke 31,734 | D78 |
-
-The summariser's sealed test (154 passages) and the whole-system test are still to be run, once.
+| NER, transfer from OPP-115 (E1) vs + a little AA data (E2) | exact micro-F1 on the sealed AA test set: E1 0.125 → E2-joint 0.252 → **E2-sequential 0.439** (each step significant); Legal-BERT E2-sequential, three-seed mean, 0.479 | `results/ner/aa_test.md` |
+| LLM baseline (local 14B model, rules only) | 0.479 exact — ties fine-tuning on exact F1, behind on relaxed F1 | `results/ner/llm_*` |
+| Annotation | 23 AA documents, 1,266 gold highlights; final inter-annotator kappa 0.43 (0.52 on a fresh document) | `results/annotation/` |
+| Summariser | Flan-T5-base (main) and t5-small, fine-tuned on 174 passages | `configs/summ_*.yaml` |
+| Faithfulness check, development | on fresh documents: Flan-T5-base summaries shown wrong 22% (28% unchecked); 1 of 2 reversals caught; 2 of 36 good summaries blocked | `results/summ/gate_label_settled_P1.csv` |
+| Faithfulness check, sealed test (154 passages, run once) | Flan-T5-base: 74 shown, 57 shown with missing facts added, 23 withheld (17 reversals, 3 party swaps, 3 invented names); whole system with NER facts in place of gold: 127 of 154 verdicts unchanged | `results/summ/sealed_test_results.json` |
+| Smart contract | `ConsentRegistry` on Sepolia `0x2De2051bAb111580a0F0C850E7C8318b94aAA4bF`; gas: create 459,911 · grant 31,603 · record access 25,051 · revoke 31,734 | `contracts/` |
 
 ---
 
 ## Reproduce the experiments
 
 The AA corpus, the gold answer key (`data/aa/annotated/gold.json`) and the summariser data quote the scraped
-policies, so they are **not in git** — team members get them from P1. The external corpora are downloaded below.
+policies, so they are **not in git**; they are available from the authors on request. The external corpora are downloaded below.
 
-**Get the external data** (CC BY-NC, research use; Git Bash, or see `SETUP.md` for PowerShell):
+**Get the external data** (CC BY-NC, research use; Git Bash):
 ```bash
+mkdir -p data/external/opp115 data/external/mapp data/external/app350
 curl -L -o data/external/opp115/OPP-115_v1_0.zip https://usableprivacy.org/static/data/OPP-115_v1_0.zip
 unzip -o -q data/external/opp115/OPP-115_v1_0.zip -d data/external/opp115/raw
 curl -L -o data/external/mapp/MAPP_Corpus.zip https://usableprivacy.org/static/data/MAPP_Corpus.zip
@@ -215,7 +204,7 @@ python -m consentledger.ner.train --config configs/ner_legalbert.yaml --seed 42 
 python -m consentledger.ner.train --config configs/ner_legalbert.yaml --seed 42 --e2 sequential  # E2
 python -m consentledger.ner.collect                                                             # metrics table
 ```
-> **The AA test set is spent (D63):** it was opened once for the pre-specified runs and is never re-scored after
+> **The AA test set is spent:** it was opened once for the pre-specified runs and is never re-scored after
 > any change. `ner.evaluate` scores `aa_test.conll` only with `--open-test`, and logs every opening.
 
 **Summariser:**
@@ -232,7 +221,7 @@ python -m consentledger.consent_artefact.parse --selfcheck
 python -m consentledger.ner.predict --selfcheck
 python -m consentledger.summ.predict --selfcheck
 python -m consentledger.pipeline.end_to_end --selfcheck
-pytest -q
+pytest contracts/test -q
 ```
 
 **Contract:** see [`contracts/README.md`](contracts/README.md) (10 Hardhat tests, deploy, verify, Python CLIs).
@@ -241,7 +230,7 @@ pytest -q
 
 ## Deploy the demo to Hugging Face Spaces
 
-> Hosting a Gradio Space now needs a Hugging Face **PRO** subscription (D85). Without it, run the demo on your
+> Hosting a Gradio Space now needs a Hugging Face **PRO** subscription. Without it, run the demo on your
 > laptop and use `python app.py --gradio-only --share` for a temporary public link.
 
 
@@ -261,8 +250,8 @@ Details: [`space/README.md`](space/README.md).
 
 | In git | Not in git |
 |---|---|
-| `src/`, `app.py`, `space/`, `scaffold.py`, `pyproject.toml`, `configs/`, `tests/`, `contracts/` | `.venv/`, `.env` |
-| `meta-documentation/`, `requirements*.txt`, `.env.example` | `data/external/**` — OPP-115 / MAPP / APP-350 (licence forbids redistribution) |
+| `src/`, `app.py`, `frontend/`, `space/`, `pyproject.toml`, `configs/`, `contracts/` | `.venv/`, `.env` |
+| `requirements*.txt`, `.env.example` | `data/external/**` — OPP-115 / MAPP / APP-350 (licence forbids redistribution) |
 | `results/` (numbers only), `data/splits/`, the synthetic and real consent-artefact examples | `data/aa/raw/**`, `gold.json`, `data/summ/*.jsonl` — they quote the scraped policies |
 | the contract's ABI and Sepolia deployment record | `artifacts_out/**` — models (they live on the Hugging Face Hub) |
 
@@ -271,14 +260,14 @@ Details: [`space/README.md`](space/README.md).
 ## Project layout
 ```
 app.py               the demo server over pipeline/end_to_end.run: web app at /, JSON API at /api, Gradio backup at /gradio
-frontend/            the web app (HTML, CSS, JavaScript; P4's design), which shows only what the backend returns
+frontend/            the web app (HTML, CSS, JavaScript), which shows only what the backend returns
 src/consentledger/   data/ (corpus, annotation, adjudication, splits), ner/ (train, evaluate, predict, LLM baseline),
-                     summ/ (dataset, train, predict, faithfulness), consent_artefact/ (parse), chain/ (web3 client,
+                     summ/ (build_dataset, train, predict, faithfulness), consent_artefact/ (parse), chain/ (web3 client,
                      register / read / revoke), pipeline/ (end_to_end)
-configs/             one YAML per experiment            contracts/   Solidity + Hardhat (P3)
+configs/             one YAML per experiment            contracts/   Solidity + Hardhat, contract tests
 space/               the Hugging Face Space card, requirements and builder
 data/                external/ (git-ignored), aa/ (corpus, annotations, consent artefacts), splits/
-tests/               verification gates                 meta-documentation/   all project docs
+results/             numbers-only results: annotation agreement, NER metrics, summariser and gate tests
 ```
 
 ## Secrets
@@ -288,5 +277,5 @@ The code refuses any network other than Sepolia and a local Hardhat chain. Never
 commit or a screenshot.
 
 ## Team
-P1 — NER, annotation lead, integration, paper · P2 — summariser (handed over to P1, D77) · P3 — smart contract ·
-P4 — annotation, testing. Roles: [`TEAM.md`](meta-documentation/TEAM.md).
+Karthik (NER, annotation, summariser, integration) · Kishangurav (smart contract) · Kranthi K (frontend,
+annotation, testing).

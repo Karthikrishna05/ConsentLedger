@@ -1,10 +1,10 @@
 :root{
-      --bg:#000;--bg2:#080808;--bg3:#0f0f0f;
+      --bg:#000;--bg2:#080808;
       --glass:rgba(255,255,255,.03);--glass2:rgba(255,255,255,.06);
       --b:rgba(255,255,255,.08);--bhi:rgba(255,255,255,.18);
       --t:#f5f5f7;--t2:#a1a1a6;--t3:#6e6e73;
       --silver:#c7c7cc;
-      --green:#30d158;--amber:#ff9f0a;--red:#ff453a;
+      --green:#30d158;--red:#ff453a;
       --r:20px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -16,7 +16,7 @@
     body{background:var(--bg);color:var(--t);font-family:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
     ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#0a0a0a}::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:3px}
 
-    /* LEFT-SIDE CRYPTOGRAPHIC LEDGER SPAN (FULL-HEIGHT BUS) */
+    /* LEDGER BUS */
     #ledger-thread-wrap{
       position:fixed;
       left:clamp(6px,0.9vw,14px);
@@ -134,7 +134,7 @@
     .hero-sub{font-size:clamp(1.05rem,2.2vw,1.3rem);font-weight:400;color:#d1d1d6;max-width:620px;margin:0 auto 2.4rem;line-height:1.7;letter-spacing:-.01em}
     .hero-ctas{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem}
 
-    /* SCRUBBED BLUR-IN WORD TOKENS */
+    /* WORDS THAT UN-BLUR ON SCROLL */
     .scrub-text{display:inline}
     .scrub-word{
       display:inline-block;
@@ -151,7 +151,7 @@
       transform:translateY(0) scale(1);
     }
 
-    /* CRYPTOGRAPHIC CIPHER TEXT */
+    /* CIPHER-DECODE TEXT */
     .cipher-text{
       display:inline-block;
       font-feature-settings:"tnum";
@@ -164,7 +164,7 @@
       text-shadow:0 0 10px rgba(255,255,255,0.85);
     }
 
-    /* 3D CARD PERSPECTIVE TILT & SHIMMER BEAM */
+    /* CARD EDGE SHIMMER */
     .card-beam{
       position:absolute;
       inset:0;
@@ -182,7 +182,7 @@
       opacity:1;
     }
 
-    /* CARD ORBITING BRIGHT LIGHT DOT (HOVER EDGE GLOW) */
+    /* LIGHT DOT ORBITING THE CARD EDGE ON HOVER */
     .card-orbit-svg{
       position:absolute;
       inset:0;
@@ -330,7 +330,7 @@
     .footer-logo{font-size:.95rem;font-weight:700;letter-spacing:-.025em}
     .footer-copy{font-size:.75rem;color:var(--t3)}
 
-/* ---- integration with the ConsentLedger backend (verdict cards, Sepolia switch, verify section) ---- */
+/* BACKEND UI: verdict cards, Sepolia switch, verify section */
 input.inp{width:100%;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.07);border-radius:13px;color:var(--t);font-family:'SF Mono','Fira Code',monospace;font-size:.85rem;padding:12px 16px;outline:none}
 input.inp:focus{border-color:rgba(255,255,255,.22)}
 .opt-row{margin-top:1.6rem;display:flex;justify-content:center;align-items:center;gap:1.4rem;flex-wrap:wrap}
@@ -366,8 +366,7 @@ input.inp:focus{border-color:rgba(255,255,255,.22)}
 .v-verdict.bad{color:var(--red)}
 @media(max-width:860px){.nav-links li:not(:last-child){display:none}.opt-row{flex-direction:column;gap:.6rem}}
 
-/* Ledger bus: at rest only the path, checkpoints and tracer show; the wording (labels, leader lines, HUD) fades
-   in while the page scrolls, or when a checkpoint is hovered, then fades out again. */
+/* Ledger bus: labels, leader lines and HUD show only while scrolling or on hover */
 #ledger-thread-wrap .ledger-hud{transition:opacity .5s ease}
 #ledger-thread-wrap .wp-lead{transition:opacity .5s ease,stroke .3s,stroke-width .3s}
 #ledger-thread-wrap .wp-label{transition:opacity .5s ease,fill .25s,filter .25s}

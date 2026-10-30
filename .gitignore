@@ -1,9 +1,10 @@
-# Environments (never commit)
+# Environments
 .venv/
 .venv-annotation/
 env/
 venv/
 labelstudio/
+
 # Python
 __pycache__/
 *.py[cod]
@@ -11,78 +12,56 @@ __pycache__/
 .pytest_cache/
 .ruff_cache/
 
-
-
-# Model artifacts (large)
+# Models (on the Hugging Face Hub)
 artifacts_out/
 *.ckpt
 wandb/
 
-# Datasets & derived data — NEVER commit.
-# Reasons: OPP-115/MAPP/APP-350 are CC BY-NC (no redistribution); large; and fully regenerable from
-# the download + our seeded scripts. Recreate empty dirs after clone with `python scaffold.py`.
-# (Comments must be on their OWN line — inline "# ..." after a pattern is treated as part of the pattern.)
+# Local-only notes, paper drafts and tool settings
+meta-documentation/
+paper/
+research_notes/
+notebooks/
+.claude/
+
+# Data: external corpora are CC BY-NC (no redistribution); anything that quotes scraped policy text stays out.
+# Keep comments on their own line: an inline "# ..." becomes part of the pattern.
 data/external/
 data/aa/raw/
 data/ner_bio/
-# LS import scaffold embeds the scraped doc text (regenerable via `ls_import_export make-tasks`)
 data/aa/annotated/ls_import_tasks.json
-# Label Studio EXPORTS + adjudicated gold embed the full scraped doc text too — do NOT commit them
-# (same no-redistribution rule as data/aa/raw/). The safe provenance is results/annotation/kappa.json,
-# which has only doc_id + counts + kappa (no text) and IS committed.
 data/aa/annotated/[Ee]xport*.json
 data/aa/annotated/[Gg]old.json
-# Per-document agreement diffs quote the annotated phrases from the scraped docs.
-# summary.csv + report.md (numbers only) ARE committed.
-# ...any agreement_report --out folder, not just the default one (round2_calib etc.)
-results/annotation/*/docs/
-results/annotation/audit/per_doc/
-# Adjudication worklists quote span text -> ignored. proposed_gold/ is ALSO ignored: it is a
-# machine-merged snapshot derived from the FAILED round-1 annotation (kappa 0.28) and must never be
-# mistaken for the real answer key. Commit it only once it is regenerated from the round-2 exports.
-# worklist.md (counts only) IS committed.
-results/annotation/adjudication/worklist/
-results/annotation/adjudication/proposed_gold/
-# Per-annotator fix lists quote span text; fixlist/README.md (counts only) IS committed.
-results/annotation/fixlist/P*/
-# Synthetic consent artefacts are regenerable (fixed seed) via `gen_consent_artefacts.py`.
-# The 2 REAL examples + README + schema in data/aa/consent_artefacts/ ARE committed (reference fixtures).
 data/aa/consent_artefacts/synthetic/
-# Summarizer datasets: train/test are regenerable via `summ.make_dataset`; gold_refs.jsonl (P1/P4's
-# handwritten summaries + gold facts — team's own work, no raw scraped text) IS committed.
-# Everything the summarizer builds quotes scraped policy text (chunks, prompts, LLM references,
-# train/test pairs, predictions) -> ignored. Regenerate with `summ.build_dataset chunks`.
 data/summ/*.jsonl
-# ...except the team's own hand-written references, which ARE committed.
 !data/summ/gold_refs.jsonl
 
-# COMMITTED (team's own work, needed for collaboration in this private repo, tracked by default):
-#   data/aa/annotated/ (except exports/gold/import above)   data/aa/consent_artefacts/ (except synthetic/)
-#   data/summ/gold_refs.jsonl   data/splits/   results/   contracts/ (address+ABI, NOT .env)
-
-# Node (Phase 4)
-node_modules/
-
-# OS
-.DS_Store
-Thumbs.db
-# automatic adjudication (D50): item lists and sample sheets quote document text; decisions.tsv (ids + codes) is committed
+# Results that quote document text (the numbers-only summaries are committed)
+results/annotation/*/docs/
+results/annotation/audit/per_doc/
+results/annotation/adjudication/worklist/
+results/annotation/adjudication/proposed_gold/
 results/annotation/adjudication/items*.txt
 results/annotation/adjudication/sample_check_P*
 results/annotation/adjudication/negation_check*
-# faithfulness gate (D74): the blind label sheet quotes passages and model summaries
-results/summ/gate_label_check*
-# pipeline reports (end_to_end.py) quote the policy and its summaries
-results/pipeline/*.json
 results/annotation/adjudication/decisions.tsv
 results/annotation/adjudication/rules_to_ratify.md
 results/annotation/adjudication/gold_audit.md
+results/annotation/fixlist/P*/
+results/summ/gate_label_check*
+results/pipeline/*.json
 
-# Hardhat generated files
+# Node / Hardhat
+node_modules/
 contracts/artifacts/
 contracts/cache/
 contracts/ignition/deployments/chain-31337/
 
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
 .env
 .env.*
 !.env.example

@@ -1,14 +1,7 @@
-"""Leakage-safe test / adaptation split of the AA corpus, fixed BEFORE any model sees AA data (D52).
+"""Leakage-safe test / adaptation split of the AA corpus, fixed before any model sees AA data.
 
-Two documents must be on the same side if they come from the same organisation OR share a large part of
-their text (many AA terms are one template with the company name changed). So:
-
-  1. similarity(a, b) = share of the smaller document's 8-word sequences that also occur in the other;
-  2. link documents with the same organisation, or similarity >= --threshold;
-  3. connected components = GROUPS; a group is never split;
-  4. assign whole groups to `test` or `adapt`.
-
-Uses document text and the manifest only - never the gold labels, never a model output.
+Documents from the same organisation, or sharing >= --threshold of 8-word sequences (many AA terms are one
+template), form a group; whole groups go to `test` or `adapt`. Uses text + manifest only, never labels.
 
     python -m consentledger.data.aa_split                      # show the groups
     python -m consentledger.data.aa_split --write --test-groups <ids>
@@ -28,7 +21,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 CORPUS = PROJECT_ROOT / "data" / "aa" / "annotated" / "ls_import_tasks.json"
 MANIFEST = PROJECT_ROOT / "data" / "aa" / "manifest.csv"
 OUT = PROJECT_ROOT / "data" / "splits" / "aa_split.json"
-# Scraping defect (glued words, D36): usable for adaptation, kept out of the test set.
+# Scraping defect (glued words): usable for adaptation, kept out of the test set.
 GLUED = ("02_digio_terms", "10_perfios_terms")
 # One organisation under several manifest spellings ("Setu AA (Agya Technologies)", "Setu AA").
 ORG_KEY = re.compile(r"^[a-z]+")

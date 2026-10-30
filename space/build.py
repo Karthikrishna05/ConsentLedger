@@ -3,10 +3,7 @@
     python space/build.py
     hf upload <user>/<space> artifacts_out/space . --repo-type space
 
-Copied: app.py, the consentledger package, the demo consent, the contract's ABI and Sepolia address, and this
-folder's README.md (the Space card) and requirements.txt. Never copied: scraped documents, annotations, the
-summariser data, models (they come from the Hub at start-up), .env or keys. The build refuses to include any
-git-ignored file, so nothing the repo keeps private can slip in.
+No data, models (fetched from the Hub at start-up), .env or keys; any git-ignored file aborts the build.
 """
 from __future__ import annotations
 

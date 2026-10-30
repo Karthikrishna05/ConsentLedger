@@ -1,35 +1,7 @@
-"""Per-annotator fix lists: tell EACH annotator exactly what to change, where, in their own export.
+"""Per-annotator fix lists: one file per annotator per document, saying what to change in their own export.
 
-adjudicate.py produces a JOINT worklist - it assumes P1 and P4 sit together and decide 1,351 items.
-This module instead produces ONE FILE PER ANNOTATOR PER DOCUMENT, so both can work alone, in parallel,
-in their own Label Studio project. After both apply their fixes and re-export, agreement should jump
-because most one-sided spans are simply the other person's omission.
-
-Buckets. MECHANICAL (exact offsets, no judgement): 1, 1b, 1c, 1d, 1f, 2, 4b, 4c.
-CHECK IN CONTEXT (sentence shown, a human decides): 1e, 3, 3b, 4d, 4e. Quick reads: 4, 5.
-
-  1.  DELETE        - Rules 8 / 8b / 9b (stoplist, AA roles incl. NAMED AAs, umbrellas) and 23a (observed
-                      telemetry, incl. variants like "type of browser", "IMEI", "web beacons").
-  1b. TRIM          - Rule 11 (edge space/punctuation), Rule 12 (bracketed abbreviation tail, incl. FIU-IND),
-                      Rule 1 (leading your/the/any...), Rule 9 step 1 (leading to/for on a PURPOSE).
-  1c. OVERLAP       - Rule 15: two of your highlights overlap, nest or duplicate - keep the outer one.
-  1d. OWN_COMPANY   - Rule 17: a THIRD_PARTY that is the policy's own company or its own staff.
-  1e. THIRD_PARTY_CHECK - Rules 16/19: no data-flow verb, data comes FROM them, or part of a law's name.
-  1f. RELABEL       - Rule 22: you give this phrase another label everywhere else - a mis-click.
-  2.  ADD_REPEAT    - you marked this phrase elsewhere IN THIS SAME DOCUMENT but skipped this occurrence
-                      (Rule 7).
-  3.  ADD_MISSED    - the phrase is in the corpus consensus lexicon (BOTH of you endorse it somewhere),
-                      appears here, and you did not mark it.
-  3b. RULE23_ADD    - Rule 23b/c phrases (communication content, "for KYC") left blank.
-  4.  SHORTEN       - the other annotator marked a shorter version of your span (Rule 1).
-  4b. RULE9_SHORTEN - PURPOSE span over 5 words (Rule 9).
-  4c. RULE9B_DELETE - umbrella data/information with a non-content modifier (Rule 9b).
-  4d. PURPOSE_CHECK - Rule 10 check 1 (D37, D43): grievance/dispute/KYC/merger words - the sentence decides.
-  4e. LIST_CHECK    - Rules 2/14: you and the other annotator split/joined the same list differently.
-  5.  SELF_CHECK    - a phrase only YOU ever use in the corpus. Needs judgement (Rule 8 test).
-
-Not automatable (left to the annotator and to adjudication): Rule 13 completeness of example lists beyond
-what the lexicon proposes, Rule 18 (negation - nothing to check), Rule 21 glued words.
+Unlike adjudicate.py's joint worklist, each annotator works alone. MECHANICAL buckets need no judgement; CHECK
+buckets show the sentence for a human decision. _render describes each bucket and the rule behind it.
 
 Usage:
     python -m consentledger.data.fixlist --corpus data/aa/annotated/ls_import_tasks.json \\
@@ -61,10 +33,10 @@ R9B_KEEP = {"credit information", "transaction data", "account information",
 EDGE_CHARS = set(",.;:\"'()[]-")
 # Rule 1: leading your/the/a/any/all/such...; Rule 9 step 1: a PURPOSE never starts with to/for/purpose of.
 LEAD_ANY = re.compile(r"(?:your|the|a|an|any|all|such|our|its|their)\s+", re.I)
-# Rule 1 (D46): status words on a DATA_TYPE - "registered email address" -> "email address". Not permanent/
+# Rule 1: status words on a DATA_TYPE - "registered email address" -> "email address". Not permanent/
 # current/primary: those are part of real field names (Permanent Account Number, current address).
 LEAD_STATUS = re.compile(r"(?:registered|verified|valid|updated|latest)\s+", re.I)
-# Rule 12 (D46): the abbreviation/expansion in the bracket (or quotes) right after a name is its own highlight.
+# Rule 12: the abbreviation/expansion in the bracket (or quotes) right after a name is its own highlight.
 BRACKET_AFTER = re.compile(r"\s*(?:\(\s*[\"']?\s*(?P<c>[^()\"']{1,60}?)\s*[\"']?\s*\)|[\"'](?P<q>[^\"']{1,20})[\"'])")
 LEAD_PURPOSE = re.compile(r"(?:(?:in order |so as )?to|for(?: the purposes? of)?|the purposes? of)\s+", re.I)
 # Rule 12: a bracketed or quoted tail holding an ABBREVIATION or its EXPANSION is cut off.
@@ -73,8 +45,7 @@ BRACKET_TAIL = re.compile(r"\s*\(\s*[\"']?\s*(?P<c>[^()\"']{1,60}?)\s*[\"']?\s*\
 ACRONYM = re.compile(r"^[A-Z][A-Z0-9-]{1,9}s?$")                    # PAN, REs, IU, SIP, TAN, FIU-IND
 EXPANSION = re.compile(r"^[A-Z][a-z]+(?:\s+(?:of|and|&)?\s*[A-Z][a-z]+)+$")   # Permanent Account Number
 
-# Rule 17: each policy's own company names, taken from the document's own opening text / legal name
-# (extend when documents are added). Keyed by doc_id prefix.
+# Rule 17: each policy's own company names (from its opening text / legal name), keyed by doc_id prefix.
 OWNERS = {
     "01_setu": r"setu|agya", "06_setu": r"setu|agya", "22_setu": r"setu|agya",
     "02_digio": r"digio",
@@ -204,15 +175,12 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None,
         if p in STAFF or (owner_re is not None and owner_re.search(p) and not NOT_OWNER.search(p)):
             out["OWN_COMPANY"].append((sp, p))
 
-    # 2 / 3. Suggested additions. Never inside/overlapping another highlight or suggestion (Rule 15: longest
-    # term wins, as terms are searched longest-first), and a THIRD_PARTY
-    # only where THAT occurrence passes Rules 16/19 - otherwise an indemnity-clause "affiliates", a data
-    # source ("from registrars (CAMS)") or a law's name ("SEBI (...) Regulations") would be propagated.
-    # Nothing is suggested over text the rules removed either ("CAMS" inside a deleted "CAMS Finserv").
+    # 2 / 3. Suggestions never overlap a highlight, a suggestion (longest first) or deleted text; a THIRD_PARTY
+    # only where THAT occurrence passes Rules 16/19 (not indemnity "affiliates", a source or a law's name).
     taken = list(keep) + [sp for sp, _ in out["DELETE"]]
     acronyms = set()            # 3-letter abbreviations (PAN, OTP, UPI) repeat only in the same CAPITALS
 
-    # Rule 12 (v7.4): "Permanent Account Number (PAN)" is TWO highlights - the name, and PAN inside the bracket
+    # Rule 12: "Permanent Account Number (PAN)" is TWO highlights - the name, and PAN inside the bracket
     for s, e, lab in keep:
         m = BRACKET_AFTER.match(text, e)
         if not m or (lab == "THIRD_PARTY" and _tp_reason(text, s, e)):
@@ -235,9 +203,8 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None,
             taken.append((i, j, lab))
             out[bucket].append(((i, j, lab), term))
 
-    # 2. ADD_REPEAT - phrases I marked in THIS doc, at occurrences I skipped. Copied only from my spans that
-    # no rule doubts: a mis-click (Rule 22) or a doubtful THIRD_PARTY (Rules 16/19) must
-    # not be multiplied ("SEBI" marked once inside a regulation's name would otherwise be copied 16 times).
+    # 2. ADD_REPEAT - occurrences I skipped of phrases I marked in THIS doc. Never copied from a mis-click or a
+    # doubtful THIRD_PARTY ("SEBI" inside a regulation's name would otherwise be copied 16 times).
     mis_clicked = {norm(text[sp[0]:sp[1]]) for sp, _, _ in out["RELABEL"]}
     my_phrases = {}
     for s, e, lab in keep:
@@ -251,9 +218,8 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None,
                 acronyms.add(p)
     _suggest("ADD_REPEAT", my_phrases, my_phrases)
 
-    # 3. ADD_MISSED - consensus-lexicon phrases present here that I never marked. Context-blind word match
-    # ("title" of a document vs "title" in "all rights, title and interest"), so it is a CHECK bucket shown
-    # with the sentence - not mechanical.
+    # 3. ADD_MISSED - consensus phrases here that I never marked. Context-blind ("title" vs "rights, title and
+    # interest"), so a CHECK bucket shown with the sentence.
     already = {norm(text[s:e]) for s, e, _ in keep}
     cand = [p for p in lexicon if p not in already and p not in DROP and len(p) >= 4
             and not (lexicon[p] == "PURPOSE" and CONTEXT_PURPOSE.search(p))]
@@ -298,7 +264,7 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None,
                 out["SHORTEN"].append((sp, tp, text[sp[0]:sp[1]], text[tp[0]:tp[1]]))
                 break
 
-    # 4b. RULE9_SHORTEN - PURPOSE spans longer than 5 words (round-2 failure, D32)
+    # 4b. RULE9_SHORTEN - PURPOSE spans longer than 5 words (Rule 9)
     for sp in keep:
         if sp[2] != "PURPOSE":
             continue
@@ -315,7 +281,7 @@ def fixes_for(text, mine, theirs, lexicon, own_vocab, both_vocab, owner_re=None,
             out["RULE9B_DELETE"].append((sp, p_norm))
 
     # 4d. PURPOSE_CHECK - grievance/dispute/consent-right phrases: a PURPOSE only if the sentence says your
-    # data is used or kept for it (Rule 10 check 1, D37). Shown with the sentence so it is a quick read.
+    # data is used or kept for it (Rule 10 check 1). Shown with the sentence so it is a quick read.
     for sp in keep:
         if sp[2] == "PURPOSE" and CONTEXT_PURPOSE.search(text[sp[0]:sp[1]]):
             out["PURPOSE_CHECK"].append((sp, _sentence(text, sp[0], sp[1])))
@@ -593,7 +559,7 @@ def _selfcheck() -> None:
     flagged = sorted(p for _, p in o6["OWN_COMPANY"])
     assert flagged == ["icici hfc limited", "officers"], flagged   # Rule 1 trims "its" first
 
-    # D37: a grievance PURPOSE is checked, never auto-propagated
+    # a grievance PURPOSE is checked, never auto-propagated
     t7 = "We use your data for grievance redressal. You may raise a grievance under grievance redressal."
     g0 = t7.index("grievance redressal")
     o7 = fixes_for(t7, [(g0, g0 + 19, "PURPOSE")], [], {"grievance redressal": "PURPOSE"}, set(), set())
@@ -613,7 +579,7 @@ def _selfcheck() -> None:
     assert len(o8["THIRD_PARTY_CHECK"]) == 1 and o8["THIRD_PARTY_CHECK"][0][0][0] == t8.rindex("affiliates")
     assert not _has_flow("You agree to indemnify our service providers.", 26, 43)   # span can't vouch for itself
 
-    # D44 - every new detector, on the real round-4 failure it was built from
+    # each detector, on the real annotation error it was built from
     def one(t, phrase, lab, **kw):
         i = t.index(phrase)
         return fixes_for(t, [(i, i + len(phrase), lab)], kw.pop("theirs", []), {}, set(), set(), **kw)
@@ -639,8 +605,8 @@ def _selfcheck() -> None:
     assert "FROM" in o["THIRD_PARTY_CHECK"][0][1], o["THIRD_PARTY_CHECK"]
     o = one(t9, "UIDAI", "THIRD_PARTY")
     assert "law" in o["THIRD_PARTY_CHECK"][0][1], o["THIRD_PARTY_CHECK"]
-    # D45: a table row label is ordinary text - a named or category recipient under a sharing lead-in passes
-    # Rule 16 (the lead-in's verb is in its sentence) and its repeats are proposed
+    # a table row label is ordinary text: a recipient under a sharing lead-in passes Rule 16 (the lead-in's verb
+    # is in its sentence) and its repeats are proposed
     t10 = ("Your data may be shared with the following recipients:\nService providers\n— cloud (AWS)\n"
            "PostHog\n— for product analytics\nService providers\n— document storage\n")
     o = one(t10, "PostHog", "THIRD_PARTY")
@@ -664,7 +630,7 @@ def _selfcheck() -> None:
     assert not one(t13, "UIDAI", "THIRD_PARTY")["ADD_REPEAT"]
     assert not fixes_for(t13, [], [], {"address": "DATA_TYPE"}, set(), set())["ADD_MISSED"]
     assert len(fixes_for(t13, [(s0, s0 + 5, "THIRD_PARTY")] * 2, [], {}, set(), set())["THIRD_PARTY_CHECK"]) == 1
-    # D46: status word trimmed; bracket abbreviation proposed after a name marked WITHOUT its bracket; a banned
+    # status word trimmed; bracket abbreviation proposed after a name marked WITHOUT its bracket; a banned
     # abbreviation is not; a 3-letter acronym repeats only in capitals
     text_ = "via your registered email address"
     assert trimmed(one(text_, "registered email address", "DATA_TYPE")) == [("email address", "1")]

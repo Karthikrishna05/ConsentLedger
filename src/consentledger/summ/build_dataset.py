@@ -1,33 +1,12 @@
 """Build the summarizer dataset: real policy chunks + NER fact checklists + length-checked references.
 
-Why this shape (fixes what P2 hit when summarising with GPT: 30 lines in, 25 lines out):
-  * An un-bounded instruction ("summarise this") yields paraphrase, not compression. So every reference
-    summary is held to a COUNTABLE rule - at most 25% of the source words and at most 60 words - and is
-    rejected automatically if it breaks it.
-  * A summary is only useful if it keeps the facts. So every chunk carries a MUST-MENTION checklist built
-    from the NER annotations (DATA_TYPE / PURPOSE / THIRD_PARTY spans inside that chunk), and references
-    that drop more than 20% of the checklist are rejected. This is the faithfulness audit applied at
-    dataset-construction time.
-  * Whole documents (850-8,000 words) do not fit T5's 512-token input, so documents are cut into
-    ~180-260-word chunks at section boundaries.
+Documents are cut into ~180-260-word chunks (T5 takes 512 tokens). References must be at most 25% of the
+source and 60 words, and keep 80% of the chunk's NER fact checklist, or they are rejected (an unbounded
+"summarise this" gives paraphrase, not compression). Facts are silver (adjudicated merge of the two
+annotators) unless --gold is given. The split is by document, the same as the NER split (aa_split.json).
 
-Facts: without --gold, facts are SILVER - the auto-adjudicated merge of the two annotators' exports
-(Rules 7/8/8b applied). With `--gold data/aa/annotated/gold.json` the final answer key's highlights are
-used as they are, so the checklists are GOLD.
-
-Testing is REFERENCE-FREE (D34): generated summaries are scored against the gold facts of their source
-chunk (coverage, hallucination via the NER model, compression). No hand-written test summaries needed.
-
-Split is at DOCUMENT level (no chunk of a test document is ever trained on). Since D70 it is the SAME
-split as the NER models (data/splits/aa_split.json): pass its "test" documents to --test-docs.
-
-Subcommands:
-    chunks    -> data/summ/chunks_train.jsonl, chunks_test.jsonl,
-                 prompts_train.jsonl  (one ready-to-send LLM prompt per training chunk),
-                 prompts_test.jsonl   (same, for test chunks -> SILVER references, optional ROUGE only)
-    validate  -> reads data/summ/refs_train.jsonl ({"id", "summary"} per line, from the LLM run),
-                 writes data/summ/train.jsonl (accepted pairs, the format summ/train.py reads) and
-                 data/summ/rejected_train.jsonl (with the reason each was rejected)
+    chunks    -> data/summ/chunks_{train,test}.jsonl and prompts_{train,test}.jsonl (one LLM prompt per chunk)
+    validate  -> reads data/summ/refs_train.jsonl, writes train.jsonl, dev.jsonl and rejected_train.jsonl
 
 Usage:
     python -m consentledger.summ.build_dataset chunks
@@ -165,15 +144,13 @@ def cmd_chunks(args) -> None:
                 "n_src_words": len(src.split()), "cd": cd, "facts_kind": "gold" if args.gold else "silver",
             })
 
-    # training keeps only informative chunks: enough text and at least 2 facts to preserve
+    # training keeps only informative chunks: enough text and at least --min-facts facts
     train = [r for r in rows["train"] if r["n_src_words"] >= 60 and len(_flat(r["cd"])) >= args.min_facts]
     for name, data in (("chunks_train", train), ("chunks_test", rows["test"])):
         with (OUT / f"{name}.jsonl").open("w", encoding="utf-8") as fh:
             fh.writelines(json.dumps(r, ensure_ascii=False) + "\n" for r in data)
 
-    # prompts for train AND test. Test prompts produce SILVER references, used only for the optional
-    # ROUGE/BERTScore numbers - never for training. The headline test metric is reference-free
-    # (faithfulness against gold facts), so no hand-written test summaries are needed.
+    # test prompts give silver references for the optional ROUGE/BERTScore only; the headline metric is reference-free
     scorable_test = [r for r in rows["test"] if r["n_src_words"] >= 60]
     for name, data in (("prompts_train", train), ("prompts_test", scorable_test)):
         with (OUT / f"{name}.jsonl").open("w", encoding="utf-8") as fh:
@@ -236,8 +213,7 @@ def cmd_validate(args) -> None:
                "cd": c["cd"], "n_src_words": c["n_src_words"], "n_ref_words": len(summary.split()),
                "coverage": round(cov, 3)}
         (ok if accepted else bad).append(rec if accepted else {**rec, "reasons": reasons})
-    # hold out ~10% of accepted TRAINING pairs as dev (early stopping / model selection) - the test set
-    # is opened exactly once, at the end, never for tuning
+    # dev = a share of the accepted training pairs, for early stopping; the test set is never used for tuning
     rng = random.Random(42)
     rng.shuffle(ok)
     n_dev = int(round(len(ok) * args.dev_frac)) if len(ok) >= 10 else 0

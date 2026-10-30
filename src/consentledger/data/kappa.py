@@ -1,14 +1,7 @@
 """Inter-annotator agreement between two Label Studio exports.
 
-Primary metric: **entity-level** precision/recall/F1 (treat annotator A as reference, B as hypothesis).
-Secondary metric: **token-level Cohen's kappa** (the number people usually quote).
-
-Both are computed on ONE shared tokenization per document (we tokenize each doc's text once, via
-`bio_tagging`, and map BOTH annotators' character spans onto those same tokens). This avoids the classic
-bug of tokenizing each annotator differently or truncating to a common length (D10): no min_len, full
-document, token-for-token.
-
-Works on any set of docs both annotators labelled — 1 doc (the pilot/calibration check) or all 23.
+Primary: entity-level P/R/F1 (A = reference, B = hypothesis). Secondary: token-level Cohen's kappa. Both use ONE
+tokenization per document, with both annotators' spans mapped onto it (no per-annotator tokens, no truncation).
 
 Usage:
     python -m consentledger.data.kappa --a exportA.json --b exportB.json

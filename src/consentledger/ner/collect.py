@@ -7,7 +7,7 @@ small files into results/ner/<run>/, and writes:
   - results/ner/ablation.csv/.md    : AGGREGATED by (backbone, condition) with mean ± std across seeds
 
 Columns cover entity macro-F1, token-F1, and (once present) AA-test macro/micro-F1, tagged E1/E2.
-The big weights stay out of git and go to the HF Hub (D23).
+The weights stay out of git (they go to the HF Hub).
 
 Usage:
     python -m consentledger.ner.collect
@@ -100,8 +100,7 @@ def aa_test_report(n_boot: int = 5000, seed: int = 0) -> None:
             if (bb, a) in runs and (bb, b) in runs:
                 d[bb] = compare([f for f, _ in runs[(bb, a)]], [f for f, _ in runs[(bb, b)]], n_boot, seed)
         rep["differences"][f"{a} minus {b}"] = {k: {m: v[m] for m in KEYS} for k, v in d.items()}
-    # LLM baseline (D64): one run per model and number of examples, compared with each fine-tuned condition and
-    # with the best fine-tuned backbone. Their metrics hold numbers only and are copied next to the others.
+    # LLM baseline: one run per model and shot count, compared with each fine-tuned condition and the best backbone.
     llm = {f.parts[-3]: (f, json.loads(f.read_text(encoding="utf-8")))
            for f in sorted((ART.parent / "llm").glob("*/test/metrics.json"))}
     rep["llm"], rep["llm_differences"] = {}, {}

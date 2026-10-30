@@ -1,8 +1,7 @@
-"""Guideline-prompted LLM baseline for the three AA entity labels (D64).
+"""Guideline-prompted LLM baseline for the three AA entity labels.
 
-A chat model is given the labelling rules (PROMPT) and, in the few-shot condition, SHOTS worked examples from the
-adaptation TRAINING documents. It returns the entities of one passage as JSON; they are aligned back onto the
-passage's words and scored by the same code as the fine-tuned models (evaluate.evaluate).
+A chat model gets the labelling rules (PROMPT) plus optional worked examples, returns one passage's entities
+as JSON, and is scored by the same code as the fine-tuned models (evaluate.evaluate).
 
     # develop on the AA dev documents only (never on the test set):
     python -m consentledger.ner.llm_baseline --model llama3.1:8b --shots 0
@@ -10,13 +9,9 @@ passage's words and scored by the same code as the fine-tuned models (evaluate.e
     # once, with everything frozen:
     python -m consentledger.ner.llm_baseline --model llama3.1:8b --shots 8 --open-test
 
-Any OpenAI-compatible chat endpoint works (--base-url). The default is a local Ollama server, so no document text
-leaves the machine. For a hosted model put the key in the environment variable LLM_API_KEY (never in a file).
-
-Two rules that keep the comparison honest:
-  - PROMPT states the guideline's general rules only. The guideline's "tricky cases" quote test documents and are
-    NOT in it; the self-check refuses a prompt that names a test organisation.
-  - Few-shot examples come from aa_adapt_train.conll only - the same 10 documents E2 trains on.
+Any OpenAI-compatible endpoint works (--base-url); the default is local Ollama. A hosted key goes in LLM_API_KEY.
+PROMPT holds only the guideline's general rules (no test-document examples; the self-check enforces this), and
+few-shot examples come only from aa_adapt_train.conll, the documents E2 trains on.
 """
 from __future__ import annotations
 
@@ -27,7 +22,6 @@ import random
 import re
 import urllib.request
 from datetime import datetime
-from pathlib import Path
 
 from consentledger.data.bio_tagging import tokenize_with_offsets
 from consentledger.ner.dataset import read_conll
@@ -120,7 +114,7 @@ def parse(reply: str) -> list[tuple[str, str]]:
 
 def to_tags(tokens: list[str], ents: list[tuple[str, str]]) -> tuple[list[str], int]:
     """Align returned phrases onto the passage's words -> (BIO tags, number of phrases not found in the passage).
-    Every occurrence of a phrase is tagged (Rule 7); longer phrases first; nothing overlaps."""
+    Every occurrence of a phrase is tagged; longer phrases first; nothing overlaps."""
     low = [t.lower() for t in tokens]
     tags, unmatched = ["O"] * len(tokens), 0
     for lab, text in sorted(set(ents), key=lambda e: -len(e[1])):

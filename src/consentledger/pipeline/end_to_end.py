@@ -5,7 +5,7 @@ One policy document (and, optionally, the consent artefact the user is asked to 
   2. NER       data types, purposes, third parties, with positions (ner/predict.py)
   3. parse     recipient, duration, frequency, data range, data life from the consent JSON (consent_artefact/parse.py)
   4. passages  the document cut as the summariser was trained (summ/predict.py), each summarised
-  5. gate      every summary checked against its passage and its facts (summ/faithfulness.py, D74):
+  5. gate      every summary checked against its passage and its facts (summ/faithfulness.py):
                reject -> the passage's facts are shown instead; add -> summary + the missing facts; show
   6. record    the assembled artefact = the consent JSON + the policy's facts (+ the document's SHA-256).
                Its Keccak-256 fingerprint is in the report; with --chain it is registered on Sepolia (chain/)

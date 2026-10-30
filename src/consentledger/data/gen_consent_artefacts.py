@@ -1,8 +1,7 @@
 """Generate synthetic ReBIT consent artefacts by varying the field values of the real templates.
 
-The scraped AA corpus has ~0 filled consent artefacts, so the structured-parser eval set = the 2 real
-Sahamati examples (data/aa/consent_artefacts/real_*.json) + synthetic variants from here. These are
-fake-but-schema-valid: same keys/nesting as the real ReBIT artefact, randomized values. (DECISIONS D27.)
+The corpus has almost no filled artefacts, so the structured-parser eval set is the 2 real Sahamati examples
+(data/aa/consent_artefacts/real_*.json) plus these schema-valid synthetic variants.
 
 Usage:
     python -m consentledger.data.gen_consent_artefacts --n 30 --out data/aa/consent_artefacts/synthetic
@@ -88,7 +87,7 @@ def _selfcheck() -> None:
 
 
 def _validate() -> None:
-    """Validate generated + the real ONETIME example against the formal schema (D27)."""
+    """Validate generated + the real ONETIME example against the formal schema."""
     import jsonschema
     schema = json.loads((ART_DIR / "consent_artefact_schema.json").read_text(encoding="utf-8"))
     real = json.loads((ART_DIR / "real_onetime_loan_application.json").read_text(encoding="utf-8"))

@@ -14,7 +14,7 @@
 </head>
 <body>
 
-<!-- LEFT-SIDE CRYPTOGRAPHIC LEDGER SPAN (FULL-HEIGHT HIGH-TECH BUS) -->
+<!-- Ledger bus: scroll-progress rail on the left -->
 <div id="ledger-thread-wrap" aria-label="Interactive Navigation Ledger Bus">
   <div class="ledger-hud">
     <div class="hud-tag"><span class="hud-dot"></span>LEDGER BUS</div>
@@ -43,7 +43,7 @@
       </filter>
     </defs>
 
-    <!-- ARCHITECTURAL GHOST RAIL -->
+    <!-- Rail -->
     <path id="ghost-path" 
           d="M 14 40 L 14 70 L 14 210 L 34 230 L 34 330 L 14 350 L 14 380 L 14 520 L 34 540 L 34 640 L 14 660 L 14 690 L 14 820 L 34 840 L 34 930 L 14 950 L 14 960 L 14 985" 
           stroke="rgba(255,255,255,0.08)" 
@@ -51,7 +51,7 @@
           stroke-linecap="round" 
           stroke-linejoin="round"/>
 
-    <!-- CIRCUIT VIAS (PCB micro solder pads at each 45-degree angle) -->
+    <!-- Vias at each bend -->
     <g class="circuit-vias" opacity="0.6">
       <circle cx="14" cy="210" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
       <circle cx="34" cy="230" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
@@ -69,7 +69,7 @@
       <circle cx="14" cy="950" r="2.2" fill="#080808" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
     </g>
 
-    <!-- ACTIVE PROGRESS AMBIENT HALO -->
+    <!-- Progress halo -->
     <path id="active-halo-path" 
           d="M 14 40 L 14 70 L 14 210 L 34 230 L 34 330 L 14 350 L 14 380 L 14 520 L 34 540 L 34 640 L 14 660 L 14 690 L 14 820 L 34 840 L 34 930 L 14 950 L 14 960 L 14 985" 
           stroke="rgba(255,255,255,0.2)" 
@@ -78,7 +78,7 @@
           stroke-linejoin="round"
           filter="url(#ledgerGlow)"/>
 
-    <!-- ACTIVE GLOWING PROGRESS PATH -->
+    <!-- Progress path -->
     <path id="active-path" 
           d="M 14 40 L 14 70 L 14 210 L 34 230 L 34 330 L 14 350 L 14 380 L 14 520 L 34 540 L 34 640 L 14 660 L 14 690 L 14 820 L 34 840 L 34 930 L 14 950 L 14 960 L 14 985" 
           stroke="url(#threadGrad)" 
@@ -86,14 +86,14 @@
           stroke-linecap="round" 
           stroke-linejoin="round"/>
 
-    <!-- KINETIC TRACER BEACON -->
+    <!-- Tracer -->
     <g id="tracer-group">
       <circle id="tracer-glow" cx="14" cy="40" r="10" fill="rgba(255,255,255,0.38)" filter="url(#tracerBloom)"/>
       <circle id="tracer-reticle" cx="14" cy="40" r="13" fill="none" stroke="rgba(255,255,255,0.32)" stroke-width="0.8" stroke-dasharray="2 2"/>
       <circle id="tracer-core" cx="14" cy="40" r="3.4" fill="#ffffff"/>
     </g>
 
-    <!-- MILESTONE WAYPOINT NODES WITH LEADER LINES -->
+    <!-- Waypoints, one per section -->
     <g class="wp-node" id="wp-0" data-target="#hero" transform="translate(14, 70)">
       <circle class="wp-hit" r="18" fill="transparent"/>
       <circle class="wp-outer" r="7.5" fill="#050505" stroke="rgba(255,255,255,0.3)" stroke-width="1.4"/>

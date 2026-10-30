@@ -1,28 +1,8 @@
 """Inter-annotator agreement under RELAXED span matching, alongside strict exact match.
 
-Why this exists: exact-match entity F1 scores `raise a grievance` against
-`to raise a grievance with the grievance resolution officer of the FIU` as a complete miss, even though
-the two annotators clearly agree on the substance. PURPOSE spans are inherently phrasal - they carry
-function words (to, for, a, the, within, during) and trailing circumstance clauses that two careful
-people will bracket differently. DATA_TYPE and THIRD_PARTY are mostly short noun phrases and suffer far
-less. So a single strict number hides whether the disagreement is about MEANING or about EDGES.
-
-Four matching criteria, strictest first (same label required in all four):
-
-  EXACT    - identical character offsets.
-  PARTIAL  - the two spans overlap by at least one character.           (MUC-style partial credit)
-  CONTENT  - after removing function words, the content-word sets have an overlap coefficient
-             |A and B| / min(|A|,|B|) >= --threshold (default 0.6). This is the criterion that matches
-             "raise a grievance" to the long version: {raise, grievance} is fully contained in
-             {raise, grievance, resolution, officer, fiu}, so the coefficient is 1.0.
-  TOKEN    - token-level micro-F1 over non-O tags (ignores span boundaries entirely).
-
-Matching is greedy and ONE-TO-ONE within a label, so one long span cannot absorb several short ones and
-inflate the score.
-
-Reading the output: if PURPOSE jumps sharply from EXACT to CONTENT while DATA_TYPE barely moves, the
-annotators agree on the purposes and differ only on how much text to bracket - which is a reportable
-finding, not a failure.
+PURPOSE spans are phrasal, so exact match scores "raise a grievance" vs a longer bracketing of it as a miss.
+Criteria (same label, greedy one-to-one): EXACT offsets; PARTIAL any overlap; CONTENT content-word overlap
+coefficient |A&B|/min(|A|,|B|) >= --threshold; TOKEN micro-F1 over non-O tags.
 
 Usage:
     python -m consentledger.data.relaxed_agreement --a ExportA.json --b ExportB.json
@@ -64,8 +44,7 @@ def overlap_coeff(a: set, b: set) -> float:
 def greedy_match(gold, pred, ok) -> int:
     """Greedy one-to-one matching: how many gold spans find a distinct partner satisfying ok()?
 
-    Callers pre-filter by label, so no label check here (an earlier version compared index 2, which is
-    the END offset, not the label - that silently forced exact end-matching under every criterion).
+    No label check: callers pre-filter by label (index 2 is the END offset, not the label).
     """
     used, hits = set(), 0
     for g in gold:

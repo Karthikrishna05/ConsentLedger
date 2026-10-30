@@ -1,12 +1,8 @@
-"""Passage -> plain-language summary, exactly as P2's final models were trained and checked (D70, D73).
+"""Passage -> plain-language summary, exactly as the final models were trained and checked.
 
-Three things must match training or the summaries quietly get worse: the passage cutter, the settings in the
-model's summ_meta.json (prefix, lengths, generation) and the trim step. `chunk` and `cap_for` are copies of
-summ/build_dataset.py and `trim_to_cap` of P2's train_summ.py (pack v2), kept here so the pipeline does not
-depend on files that are not in the repo; the selfcheck compares them with the originals when present.
-
-Models: P2's final Flan-T5-base (the main one) and t5-small, loaded from artifacts_out/summ/p2_final/<name> or
-the private Hub repo. The t5-small was saved by transformers 5 and needs the config fix in `load` (D72).
+The passage cutter, summ_meta.json settings and trim step must match training. `chunk`, `cap_for` and
+`trim_to_cap` are copies of build_dataset.py / summ/train.py; the selfcheck compares them when present.
+Models: Flan-T5-base (main) and t5-small, from artifacts_out/summ/p2_final/<name> or the private Hub repo.
 
     python -m consentledger.summ.predict --file <policy.txt>
     python -m consentledger.summ.predict --selfcheck
@@ -109,7 +105,7 @@ def load(name: str = MODEL):
                                "token (HF_TOKEN or `hf auth login`), then try again - finished files are kept.")
     raw =json.loads((d / "config.json").read_text(encoding="utf-8"))
     cfg = AutoConfig.from_pretrained(str(d))
-    if "scale_decoder_outputs" in raw:     # saved by transformers 5: our 4.46 misreads the tying flag (D72)
+    if "scale_decoder_outputs" in raw:     # saved by transformers 5: our 4.46 misreads the tying flag
         cfg.tie_word_embeddings = raw["scale_decoder_outputs"]
     model = AutoModelForSeq2SeqLM.from_pretrained(str(d), config=cfg, use_safetensors=True).eval()
     meta = json.loads((d / "summ_meta.json").read_text(encoding="utf-8"))
@@ -145,7 +141,7 @@ def _selfcheck() -> None:
         for name in ("flant5base", "t5small"):
             tok, model, meta = load(name)
             assert len(summarise(["We collect your bank statements to assess your loan. " * 5], tok, model, meta)[0].split()) >= 3
-        return print("data/summ not here: models load and summarise; comparison with P2's summaries skipped")
+        return print("data/summ not here: models load and summarise; comparison with the reference summaries skipped")
     dev = [json.loads(l) for l in dev_path.read_text(encoding="utf-8").splitlines()]
     for name in ("flant5base", "t5small"):
         tok, model, meta = load(name)
@@ -153,7 +149,7 @@ def _selfcheck() -> None:
         sent = PROJECT_ROOT / "artifacts_out" / "summ" / "p2_final" / name / "dev_predictions.jsonl"
         want = {r["id"]: r["summary"] for r in map(json.loads, sent.read_text(encoding="utf-8").splitlines())}
         same = sum(want[r["id"]] == g for r, g in zip(dev, got))
-        print(f"{name}: {same} of {len(dev)} mock-test summaries identical to P2's")
+        print(f"{name}: {same} of {len(dev)} mock-test summaries identical to the reference run")
         assert same == len(dev)
     print("selfcheck ok")
 

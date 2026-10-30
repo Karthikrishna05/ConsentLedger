@@ -1,26 +1,12 @@
-"""Faithfulness gate for a passage summary: facts kept, names/numbers invented, meaning reversed, party swapped (D74).
+"""Faithfulness gate for a passage summary: facts kept, names/numbers invented, meaning reversed, party swapped.
 
-Every summary of a policy passage is checked before a user sees it:
-  kept      which of the passage's facts can be recognised in the summary - the same word-overlap rule
-            that accepted the reference summaries (build_dataset.check);
-  invented  numbers, names or acronyms in the summary that the passage never mentions;
-  reversed  each summary clause is matched to the passage clause it restates (most shared content words)
-            and their stance compared. A clause DENIES when it carries a negation ("not", "never", "no",
-            "disclaim", a plain "without X") - unless the negation is lifted by an exception or a condition:
-              "will not share without consent"         -> affirms (it shares, with consent)
-              "except with consent, you may not share"  -> affirms (the same)
-              "shares without consent"                  -> denies  => reversed.
-            An exception or condition the summary simply leaves out ("may change the terms [without notice]")
-            is not held against it, and a negation inside an "if ..." part, a relative clause ("a number
-            that does not have a meaning"), on a single word ("not current") or in boilerplate ("not limited
-            to") is not the clause's stance. A list's items inherit a denying lead-in ("you shall not:"),
-            also one at the end of the previous passage (`context`);
-  swapped   the same stance with the other party acting ("you may assign" for "we may assign").
-Verdict:   reject  anything invented, reversed or swapped -> the user is shown the passage's facts instead;
-           add     facts missing -> the summary is shown with the missing facts listed under it;
-           show    as it is.
-Facts are (text, label, start) triples: gold highlights when evaluating, NER predictions in the pipeline;
-`start` (a character offset into the passage) may be None.
+  kept      passage facts recognisable in the summary (the same overlap rule as build_dataset.check)
+  invented  numbers, names or acronyms the passage never mentions
+  reversed  a summary clause takes the opposite stance of the passage clause it restates; an exception or
+            condition lifts a negation ("will not share without consent" affirms sharing with consent)
+  swapped   the same stance with the other party acting ("you may assign" for "we may assign")
+Verdict: reject (invented/reversed/swapped: show the facts instead), add (facts missing: list them), or show.
+Facts are (text, label, start) triples; `start` is a character offset into the passage, or None.
 
     python -m consentledger.summ.faithfulness --selfcheck
     python -m consentledger.summ.faithfulness score --data data/summ/dev.jsonl data/summ/chunks_train.jsonl --preds <dev_predictions.jsonl>
@@ -115,7 +101,7 @@ def _stems(toks: list[str]) -> set[str]:
 
 def sentences(text: str) -> list[tuple[int, int]]:
     """Sentence spans; an enumerator or abbreviation ("f.", "Ltd.") does not end a sentence - except a list's
-    closing "etc." before a capital letter ("... Bank Account Information etc. Once you register", D88)."""
+    closing "etc." before a capital letter ("... Bank Account Information etc. Once you register")."""
     spans, start = [], 0
     for m in SENT_END.finditer(text):
         before = text[start:m.start()].rstrip()
@@ -152,7 +138,7 @@ def _subject_of(toks: list[str], ignore: set) -> frozenset | None:
                 found.add("user" if toks[k] in USER_SUBJ else "company")
     if any(w in PASSIVE_ASK and toks[i - 1] in ("are", "is", "be", "been") for i, w in enumerate(toks[1:10], 1)
            if i not in ignore):
-        found |= {"user", "company"}                 # "you are asked for your name": the company asks (D88)
+        found |= {"user", "company"}                 # "you are asked for your name": the company asks
     return frozenset(found)
 
 
@@ -353,7 +339,7 @@ def invented(passage: str, summary: str) -> list[str]:
 
 
 def fact_denied(passage: str, start: int | None, text: str, context: str = "") -> bool:
-    """D66's definition: the fact's clause says the practice is NOT done (a legal carve-out keeps the
+    """The fact's clause says the practice is NOT done (a legal carve-out keeps the
     denial; a fact named inside the exception - 'will not share, except for fraud checks' - is affirmed).
     Not a denial of the practice: a negation in brackets that do not hold the fact ("Aadhaar (full number
     not stored), Voter ID"), or one about scope or obligation ("does not apply to", "is not mandatory")."""
@@ -508,7 +494,7 @@ def _selfcheck() -> None:
     assert not fact_denied("This Policy does not apply to information collected by merchants.", None, "merchants")
     assert not fact_denied("Submission of your Aadhaar number is not mandatory for KYC.", None, "Aadhaar number")
     etc = "We ask for your name, mobile number etc. Once you sign in you are not anonymous to us."
-    assert len(sentences(etc)) == 2 and not fact_denied(etc, None, "mobile number")   # D88: "etc." ended the list
+    assert len(sentences(etc)) == 2 and not fact_denied(etc, None, "mobile number")   # "etc." ended the list
     assert len(sentences("We collect PAN, Aadhaar etc. and we use them.")) == 1         # mid-sentence "etc." still joins
     asked = "When you register with PB Financial, you are asked for your name and mobile number."
     assert not compare(asked, "PB Financial asks for your name and mobile number.")["swapped"]   # passive: no swap

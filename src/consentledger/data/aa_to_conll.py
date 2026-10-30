@@ -1,19 +1,7 @@
-"""AA gold (gold.json) + split (aa_split.json) -> word-level BIO CoNLL, same format as the OPP-115 files.
+"""AA gold.json + aa_split.json -> word-level BIO CoNLL (OPP-115 format) + .docmap.json in data/ner_bio/.
 
-    data/ner_bio/aa_test.conll   + aa_test.docmap.json     (the sealed test set)
-    data/ner_bio/aa_adapt.conll  + aa_adapt.docmap.json    (E2 adaptation data, all 14 documents)
-    data/ner_bio/aa_adapt_train.conll / aa_adapt_dev.conll (the same data split for E2 training, D61:
-                                                            dev = ADAPT_DEV, used only to stop training)
-
-An AA document is one long text; the models read at most 256 sub-word pieces at a time and the trainer
-TRUNCATES anything longer - which would silently drop gold entities. So each document is cut into SEGMENTS:
-  - at a sentence end (. ; or a line break), never inside a gold span;
-  - closed at the first such boundary after TARGET tokens, and force-closed at MAX tokens (long lists), still
-    never inside a span.
-OPP-115 segments are paragraphs of comparable size (median 83 tokens), so E1 sees familiar-length input.
-
-The docmap lists the document of every segment, in order - evaluation bootstraps over DOCUMENT GROUPS, not
-segments. Every gold span is checked to come back out of the BIO tags unchanged.
+Segments end at a sentence boundary after TARGET tokens (forced at MAX), never inside a gold span, so the
+256-piece model window never truncates an entity. The docmap names each segment's document, for bootstrapping.
 
     python -m consentledger.data.aa_to_conll
 """
@@ -32,9 +20,8 @@ GOLD = PROJECT_ROOT / "data" / "aa" / "annotated" / "gold.json"
 SPLIT = PROJECT_ROOT / "data" / "splits" / "aa_split.json"
 OUT_DIR = PROJECT_ROOT / "data" / "ner_bio"
 TARGET, MAX = 60, 100          # tokens; 100 word-tokens stays well inside 256 sub-word pieces
-# E2's "mock test" (D61, revised D62): the adaptation documents that share the LEAST text with the ones left in
-# training (at most 18% - aa_split.similarity), about 100 entities, no glued-text document. The earlier pick
-# 09_saafe_terms is 75% identical to 16_oms_aa_privacy, which trains - a memory test, not a mock test.
+# E2 dev set (early stopping only): adapt docs sharing the least text (<=18%) with the training ones, no glued doc.
+# Not 09_saafe_terms: 75% identical to 16_oms_aa_privacy, which trains - a memory test, not a mock test.
 ADAPT_DEV = ("01_setu_aa_terms", "19_saafe_privacy", "20_scoremeaa_charter", "22_setu_aa_charter")
 
 
@@ -86,8 +73,7 @@ def write(name: str, docs: list[dict], out_dir: Path) -> dict:
             got = Counter(lab for rows in segs for lab, _ in reconstruct(rows))
             want = Counter(s["label"] for s in doc["spans"])
             if got != want:                             # a span was lost, split or merged
-                # Only possible where two spans sit inside one glued "word" (D36) - which is why those
-                # documents are barred from the test set. Anywhere else it is a bug.
+                # Only possible inside one glued "word" (why those docs are barred from test); elsewhere a bug.
                 assert doc["doc_id"] in GLUED, (doc["doc_id"], dict(want), dict(got))
                 lost = sum((want - got).values())
                 stats["lost_in_glued_words"] += lost

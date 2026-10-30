@@ -1,30 +1,8 @@
-"""Comprehensive per-document audit of two annotators against the source corpus.
+"""Audit two annotators against the source text, including what BOTH missed.
 
-Goes beyond agreement_report.py (which only compares A vs B) by bringing in the ORIGINAL text, so it
-can also estimate what SHOULD have been annotated and was missed by BOTH.
-
-Method for the "should have been annotated" proxy (no hand-adjudication of 575k chars needed):
-
-  CONSENSUS LEXICON - every (phrase, label) that BOTH annotators independently marked at least once
-  anywhere in the corpus. If A and B both decided "credit bureaus" is a THIRD_PARTY in some document,
-  that judgement is high-confidence and should hold everywhere it appears.
-
-  Then for each document we locate every occurrence of every consensus term in the raw text and ask:
-    - marked by BOTH        -> agreed hit
-    - marked by A only      -> B missed a term B itself endorses elsewhere
-    - marked by B only      -> A missed a term A itself endorses elsewhere
-    - marked by NEITHER     -> both missed it (the recall gap)
-
-  This is deliberately conservative: it only counts terms the annotators themselves already validated,
-  so a "miss" cannot be blamed on a disputed judgement call.
-
-Also reports, per annotator: label mix, span-length profile, repeat behaviour, and the vocabulary each
-one uses that the other never does (their "perspective").
-
-Outputs (default results/annotation/audit/):
-    corpus_audit.md       overall: perspectives, lexicon, recall gap, per-doc table
-    per_doc/<id>.md       per document: what A marked, what B marked, missed-by-both, divergence
-    missed_terms.csv      consensus terms ranked by how often BOTH annotators skipped them
+"Should have been marked" proxy: the consensus lexicon of (phrase, label) pairs both annotators marked somewhere.
+Each occurrence in the raw text counts as both / A only / B only / neither. Also per-annotator label mix,
+span lengths, repeats and private vocabulary. Writes corpus_audit.md, per_doc/<id>.md, missed_terms.csv.
 
 Usage:
     python -m consentledger.data.annotation_audit --corpus data/aa/annotated/ls_import_tasks.json \
@@ -71,9 +49,7 @@ def build_consensus_lexicon(A: dict, B: dict, min_count: int = 1, multiword: boo
                             drop_generic: bool = False) -> dict[str, str]:
     """(normalized phrase -> label) for phrases BOTH annotators marked with the SAME label.
 
-    Filters matter: with no filtering a single sloppy mark by each annotator promotes a word like
-    "financial" into the lexicon, where it then matches ~400 times and inflates the recall gap.
-    --strict (min_count=2, multiword, drop_generic) gives the defensible number.
+    Unfiltered, one sloppy mark each promotes e.g. "financial" (~400 hits); --strict's filters avoid that.
     """
     def vocab(X):
         v = defaultdict(Counter)

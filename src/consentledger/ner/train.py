@@ -1,11 +1,11 @@
-"""Fine-tune a token-classification backbone: E1 on OPP-115, or E2 with the AA adaptation documents (D61).
+"""Fine-tune a token-classification backbone: E1 on OPP-115, or E2 with the AA adaptation documents.
 
     --e2 joint       pretrained backbone, trained once on OPP-115 + AA adaptation together   -> <name>_e2j_s<seed>
     --e2 sequential  the finished E1 model of the same seed, trained on AA adaptation only   -> <name>_e2s_s<seed>
 Both stop on the AA dev documents (aa_adapt_dev.conll). The E1 folder is only read, never written.
 
-Uniform recipe across backbones, NO layer-freezing (D5). Entity-level seqeval metrics; early stopping
-on dev. Reads a YAML config (configs/ner_*.yaml). Saves best model + tokenizer + metrics + run_meta.
+Same recipe for every backbone, no layer freezing; early stopping on dev entity F1.
+Reads configs/ner_*.yaml; saves the best model, tokenizer, metrics and run_meta.
 
 Usage:
     python -m consentledger.ner.train --config configs/ner_bert_base.yaml
@@ -133,7 +133,7 @@ def main() -> None:
         weight_decay=float(cfg.get("weight_decay", 0.01)),
         warmup_ratio=float(cfg.get("warmup_ratio", 0.1)),
         load_best_model_at_end=True,
-        metric_for_best_model=cfg.get("metric_for_best_model", "eval_f1").replace("eval_", "eval_"),
+        metric_for_best_model=cfg.get("metric_for_best_model", "eval_f1"),
         greater_is_better=True,
         bf16=torch.cuda.is_available(),
         logging_steps=25,
